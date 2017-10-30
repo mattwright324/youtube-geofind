@@ -1,69 +1,11 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<link rel="icon" href="img/icon.png">
-
-		<title>Discover Geo-tagged Videos - YouTube Geofind</title>
-
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
-		<script src="http://code.jquery.com/jquery-3.2.1.min.js" type="text/javascript"></script>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
-		<style>
-			* {
-				font-family: 'Open Sans', sans-serif;
-			}
-			body, html {
-				height: 100%;
-			}
-			#map {
-				height: 400px;
-				width: 100%;
-			}
-			#geotags {
-				width: 100%;
-				display: block;
-				overflow: auto;
-			}
-			#geotag {
-				padding: 8;
-				border-color: lightgray;
-				border-radius: 5;
-			}
-			#channelField {
-				width: 100%;
-				border-radius: 5;
-			}
-			#brand {
-				display: inline;
-				text-align: left;
-				padding-left: 25px;
-			}
-		</style>
+		<title>About - YouTube Geofind</title>
+		{% include head.html %}
 	</head>
-
 	<body>
-
-		<nav class="navbar navbar-expand-md navbar-light bg-light static-top">
-			<img src="img/icon.png" width=32 height=32  />
-			<a  id="brand" class="navbar-brand" href="#">YouTube Geofind</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item active">
-						<a class="nav-link" href="/youtube-geofind/">Home</a>
-					</li>
-					<li class="nav-item active">
-						<a class="nav-link" href="/youtube-geofind/about">About</a>
-					</li>
-				</ul>
-			</div>
-		</nav>
-
+		{% include nav.html %}
 		<main role="main" class="container">
 			<br>
 			<h3>About YouTube Geofind</h3>

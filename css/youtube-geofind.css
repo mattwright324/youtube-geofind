@@ -1,0 +1,29 @@
+* {
+	font-family: 'Open Sans', sans-serif;
+}
+body, html {
+	height: 100%;
+}
+#map {
+	height: 400px;
+	width: 100%;
+}
+#geotags {
+	width: 100%;
+	display: block;
+	overflow: auto;
+}
+#geotag {
+	padding: 8;
+	border-color: lightgray;
+	border-radius: 5;
+}
+#channelField {
+	width: 100%;
+	border-radius: 5;
+}
+#brand {
+	display: inline;
+	text-align: left;
+	padding-left: 25px;
+}
