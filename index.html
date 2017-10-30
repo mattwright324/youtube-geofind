@@ -1,8 +1,13 @@
+---
+layout: null
+title: Discover Geo-tagged Videos 1 - YouTube Geofind
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<title>Discover Geo-tagged Videos - YouTube Geofind</title>
-		{% include head.html %}
+		{% include_relative head.html %}
 		<script>
 			var map = null;
 			var map_init = false;
@@ -10,7 +15,7 @@
 	</head>
 
 	<body>
-		{% include nav.html %}
+		{% include_relative nav.html %}
 		<main role="main" class="container">
 			<div id="map"></div>
 			<br>
