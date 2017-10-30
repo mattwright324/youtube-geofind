@@ -42,10 +42,6 @@
 				padding-left: 25px;
 			}
 		</style>
-		<script>
-			var map = null;
-			var map_init = false;
-		</script>
 	</head>
 
 	<body>
@@ -69,40 +65,8 @@
 		</nav>
 
 		<main role="main" class="container">
-			<div id="map"></div>
 			<br>
-			<p>Paste the link to a YouTube channel to check their videos for geo-tags.</p>
-			<div align=right>
-				<input id="channelField" type="text" name="channel" placeholder="https://www.youtube.com/channel/UCUcyEsEjhPEDf69RRVhRh4A" value="https://www.youtube.com/channel/UCUcyEsEjhPEDf69RRVhRh4A">
-				<div style="padding: 5">
-					<button id="btnFind" onclick="submitTest()">Find</button>
-					<button id="btnSave">Save to CSV</button>
-				</div>
-			</div>
-			<h4>Geotag Entries</h4>
-			<div id="geotags" align=center></div>
-			<script>
-				function initMap() {
-					var uluru = {lat: 40.697, lng: -74.259};
-					map = new google.maps.Map(document.getElementById('map'), {
-						zoom: 7,
-						center: uluru
-					});
-					map_init = true;
-				}
-				function submitTest() {
-					$('#geotags').append('<div id="geotag"><h5>Hello world</h5></div>');
-				}
-				setInterval(function() {
-					if(map_init) {
-						let marker = new google.maps.Marker({
-							position:{lat:40.697+Math.random()*3-1.5, lng: -74.259+Math.random()*5-2.5}, 
-							map: map
-						});
-					}
-				}, 1000);
-			</script>
-		</main><!-- /.container -->
-		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
+			<h3>About YouTube Geofind</h3>
+		</main>
 	</body>
 </html>
