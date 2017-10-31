@@ -1,12 +1,11 @@
 ---
 layout: null
-title: Discover Geo-tagged Videos 1 - YouTube Geofind
+title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>Discover Geo-tagged Videos - YouTube Geofind</title>
 		{% include_relative head.html %}
 		<script>
 			var map = null;
@@ -41,14 +40,14 @@ title: Discover Geo-tagged Videos 1 - YouTube Geofind
 				function submitTest() {
 					$('#geotags').append('<div id="geotag"><h5>Hello world</h5></div>');
 				}
-				setInterval(function() {
-					if(map_init) {
-						let marker = new google.maps.Marker({
-							position:{lat:40.697+Math.random()*3-1.5, lng: -74.259+Math.random()*5-2.5}, 
-							map: map
-						});
-					}
-				}, 1000);
+				//setInterval(function() {
+				//	if(map_init) {
+				//		let marker = new google.maps.Marker({
+				//			position:{lat:40.697+Math.random()*3-1.5, lng: -74.259+Math.random()*5-2.5}, 
+				//			map: map
+				//		});
+				//	}
+				//}, 1000);
 			</script>
 		</main><!-- /.container -->
 		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
