@@ -16,37 +16,79 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 
 	<body>
 		{% include_relative nav.html %}
+		<div id="map"></div>
 		<main role="main" class="container">
-			<div id="map"></div>
 			<br>
-			<p>Paste the link to a YouTube channel to check their videos for geo-tags.</p>
-			<div align=right>
-				<input id="channelField" type="text" name="channel" placeholder="https://www.youtube.com/channel/UCUcyEsEjhPEDf69RRVhRh4A" value="https://www.youtube.com/channel/UCUcyEsEjhPEDf69RRVhRh4A">
-				<div style="padding: 5">
-					<button id="btnFind" onclick="submitTest()">Find</button>
-					<button id="btnSave">Save to CSV</button>
+			<form>
+				<div class="form-group">
+					<label for="channelInput">Channel link</label>
+					<input type="text" class="form-control" id="channelInput" aria-describedby="help" 
+						placeholder="http://www.youtube.com/channel/UCUcyEsEjhPEDf69RRVhRh4A"
+						value="https://www.youtube.com/channel/UCv61IAZLDELwk2Kk5hfX0mg"></input>
+					<small id="help" class="form-text text-muted">Paste the link to a YouTube channel to check their videos for geo-tags.</small>
 				</div>
-			</div>
+				<div class="form-group" align=right>
+					<button type="button"  class="btn btn-primary" id="btnFind" onclick="submitTest()">Check Videos</button>
+					<button type="button" class="btn btn-link" id="btnSave" disabled>Save to CSV</button>
+				</div>
+			</form>
 			<h4>Geotag Entries</h4>
-			<div id="geotags" align=center></div>
+			<div class="progress">
+				<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+			</div>
+			<br>
+			<div id="geotags" align=left></div>
 			<script>
 				function initMap() {
-					var uluru = {lat: 40.697, lng: -74.259};
+					let centerPos = {lat: 40.697, lng: -74.259};
 					map = new google.maps.Map(document.getElementById('map'), {
 						zoom: 7,
-						center: uluru
+						center: centerPos
 					});
 					map_init = true;
 				}
 				function submitTest() {
-					$('#geotags').append('<div id="geotag"><h5>Hello world</h5></div>');
+					$.ajax({
+						cache: false,
+						data: $.extend({
+							key: GOOGLE_API_KEY,
+							q: 'thegreatwarchannel',
+							part: 'snippet'
+						},{
+							maxResults:50,
+							pageToken:''
+						}),
+						dataType: 'json',
+						type: 'GET',
+						timeout: 5000,
+						url: 'https://www.googleapis.com/youtube/v3/search'
+					}).done(function(response) {
+						console.log(response);
+						let results  = '';
+						for(let i=0; i<response.items.length; i++) {
+							let searchItem = response.items[i];
+							let snippet = searchItem.snippet;
+							let html = '<div id="geotag"><h5>'+i+': '+snippet.title+'</h5></div>';
+							$('#geotags').append(html);
+						}
+					})
 				}
+				function refitMapToMarkers() {
+					let bounds = new google.maps.LatLngBounds();
+					for(let i=0; i<markers.length; i++) {
+						bounds.extend(markers[i].getPosition());
+					}
+					map.fitBounds(bounds);
+				}
+				
 				//setInterval(function() {
 				//	if(map_init) {
-				//		let marker = new google.maps.Marker({
+				//		// Simulate found coordinates.
+				//		markers.push(new google.maps.Marker({
 				//			position:{lat:40.697+Math.random()*3-1.5, lng: -74.259+Math.random()*5-2.5}, 
 				//			map: map
-				//		});
+				//		}));
+				//		refitMapToMarkers();
 				//	}
 				//}, 1000);
 			</script>
