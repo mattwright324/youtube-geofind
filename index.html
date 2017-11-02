@@ -37,7 +37,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 			<div class="progress">
 				<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 			</div>
-			<br>
 			<div id="geotags" align=left></div>
 			<script>
 				function initMap() {
@@ -50,6 +49,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				}
 				function submitTest() {
 					$('#btnFind').attr("disabled",true);
+					$('#videoProg').css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
 					let input = document.getElementById('channelInput').value;
 					let payload = null
 					if(input.length <= 20) { // Unsure of actual limits but max of 20 chars found online.
@@ -72,107 +72,97 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 							timeout: 5000,
 							url: 'https://www.googleapis.com/youtube/v3/channels'
 						}).done(function(res) {
-							console.log(res);
-							// Go through all pages of playlist items and get videos ids.
-							let thumbUrl = res.items[0].snippet.thumbnails.default.url;
+							var thumbUrl = res.items[0].snippet.thumbnails.default.url;
 							let uploadPlaylistId = res.items[0].contentDetails.relatedPlaylists.uploads;
-							let videoIds = [];
-							let pil = null;
-							let hasNextPageToken = false;
-							let token = '';
-							do {
-								hasNextPageToken = false;
-								$.ajax({
-									cache: false,
-									async: false,
-									data: {
-										key: GOOGLE_API_KEY,
-										part: 'snippet',
-										maxResults: 50,
-										playlistId: uploadPlaylistId,
-										pageToken: token
-									},
-									dataType: 'json',
-									type: 'GET',
-									timeout: 5000,
-									url: 'https://www.googleapis.com/youtube/v3/playlistItems'
-								}).done(function(res) {
-									console.log(res);
-									if(res.hasOwnProperty('nextPageToken')) {
-										hasNextPageToken = true;
-										token = res.nextPageToken;
-									}
-									for(let i=0; i<res.items.length; i++) {
-										videoIds.push(res.items[i].snippet.resourceId.videoId);
-									}
-								});
-							} while (hasNextPageToken);
-							console.log('Finished playlistItems');
-							let pos = 0;
-							$('#videoProg').attr("aria-valuemax",videoIds.length.toString());
-							while(pos < videoIds.length) {
-								let vidLeft = videoIds.length - pos;
-								let size = 50;
-								if(vidLeft <= 50) size = vidLeft;
-								let sublist = videoIds.slice(pos, pos+size);
-								$.ajax({
-									cache: false,
-									data: {
-										key: GOOGLE_API_KEY,
-										part: 'snippet,recordingDetails',
-										maxResults: 50,
-										id: sublist.join(',')
-									},
-									dataType: 'json',
-									type: 'GET',
-									timeout: 5000,
-									url: 'https://www.googleapis.com/youtube/v3/videos'
-								}).done(function(res) {
-									for(let i=0; i<res.items.length; i++) {
-										let item = res.items[i];
-										if(item.hasOwnProperty('recordingDetails')) {
-											if(item.recordingDetails.hasOwnProperty('location')) {
-												let location = item.recordingDetails.location;
-												if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
-													let latitude = location.latitude;
-													let longitude = location.longitude;
-													let infowindow = new google.maps.InfoWindow({
-														content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
-													});
-													let icon = {
-														url: thumbUrl,
-														scaledSize: new google.maps.Size(20, 20),
-														origin: new google.maps.Point(0,0),
-														anchor: new google.maps.Point(0,0)
-													}
-													let marker = new google.maps.Marker({
-														position:{lat: latitude, lng: longitude}, 
-														map: map,
-														icon: icon
-													});
-													marker.addListener('click', function() {
-														infowindow.open(map, marker);
-													});
-													markers.push(marker);
-													refitMapToMarkers();
-													let html = '<div id="geotag"><img id="geotag-thumb" src="'+thumbUrl+'" width=25px height=25px/><a href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a></div>';
-													$('#geotags').append(html);
-												}
-											}
-										}
-									}
-									let percentComplete = (pos / videoIds.length) * 100;
-									console.log(percentComplete);
-									$('#videoProg').css('width', percentComplete+'%').attr("aria-valuenow",pos.toString());
-								});
-								pos += size;
-								let percentComplete = (pos / videoIds.length) * 100;
-								console.log(percentComplete);
-								$('#videoProg').css('width', percentComplete+'%').attr("aria-valuenow",pos.toString());
-							}
+							progCurrent = 0;
+							checkPlaylistItems(uploadPlaylistId, '', thumbUrl);
 						});
 					}
-					$('#btnFind').attr("disabled",false);
+				}
+				function checkPlaylistItems(playlistId, pageToken, thumbUrl) {
+					console.log("Playlist["+playlistId+"]["+pageToken+"]: "+thumbUrl);
+					$.ajax({
+						cache: false,
+						data: {
+							key: GOOGLE_API_KEY,
+							part: 'snippet',
+							maxResults: 50,
+							playlistId: playlistId,
+							pageToken: pageToken
+						},
+						dataType: 'json',
+						type: 'GET',
+						timeout: 5000,
+						url: 'https://www.googleapis.com/youtube/v3/playlistItems'
+					}).done(function(res) {
+						if(pageToken == '') {
+							progTotal = res.pageInfo.totalResults;
+						}
+						let ids = [];
+						for(let i=0; i<res.items.length; i++) {
+							ids.push(res.items[i].snippet.resourceId.videoId);
+						}
+						progCurrent += res.items.length;
+						checkVideoIds(ids, thumbUrl);
+						$('#videoProg').text(progCurrent+" / "+progTotal);
+						if(res.hasOwnProperty('nextPageToken')) {
+							checkPlaylistItems(playlistId, res.nextPageToken, thumbUrl);
+						} else {
+							$('#videoProg').css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
+							$('#btnFind').attr("disabled",false);
+						}
+					});
+				}
+				// videoIds an array of max 50 entries, places in map if location exists
+				function checkVideoIds(videoIds, thumbUrl) {
+					console.log("VideoIds: "+thumbUrl);
+					$.ajax({
+						cache: false,
+						data: {
+							key: GOOGLE_API_KEY,
+							part: 'snippet,recordingDetails',
+							maxResults: 50,
+							id: videoIds.join(',')
+						},
+						dataType: 'json',
+						type: 'GET',
+						timeout: 5000,
+						url: 'https://www.googleapis.com/youtube/v3/videos'
+					}).done(function(res) {
+						for(let i=0; i<res.items.length; i++) {
+							let item = res.items[i];
+							if(item.hasOwnProperty('recordingDetails')) {
+								if(item.recordingDetails.hasOwnProperty('location')) {
+									let location = item.recordingDetails.location;
+									if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
+										let latitude = location.latitude;
+										let longitude = location.longitude;
+										let infowindow = new google.maps.InfoWindow({
+											content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
+										});
+										let icon = {
+											url: thumbUrl,
+											scaledSize: new google.maps.Size(20, 20),
+											origin: new google.maps.Point(0,0),
+											anchor: new google.maps.Point(0,0)
+										}
+										let marker = new google.maps.Marker({
+											position:{lat: latitude, lng: longitude}, 
+											map: map,
+											icon: icon
+										});
+										marker.addListener('click', function() {
+											infowindow.open(map, marker);
+										});
+										markers.push(marker);
+										refitMapToMarkers();
+										let html = '<div id="geotag"><img id="geotag-thumb" src="'+thumbUrl+'" width=25px height=25px/><a href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a></div>';
+										$('#geotags').append(html);
+									}
+								}
+							}
+						}
+					});
 				}
 				function refitMapToMarkers() {
 					let bounds = new google.maps.LatLngBounds();
