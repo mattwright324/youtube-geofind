@@ -8,15 +8,25 @@ body, html {
 	height: 400px;
 	width: 100%;
 }
+.progress {
+	height: 25px;
+	margin-bottom: 10px;
+}
 #geotags {
 	width: 100%;
 	display: block;
 	overflow: auto;
+	margin-bottom: 50px;
 }
 #geotag {
 	padding: 8;
-	border-color: lightgray;
-	border-radius: 5;
+	border-left: 6px solid green;
+   background-color: rgba(127,127,127,0.1);
+	padding: 5px;
+	margin-bottom: 2px;
+}
+#geotag-thumb {
+	margin-right: 5px;
 }
 #channelField {
 	width: 100%;
