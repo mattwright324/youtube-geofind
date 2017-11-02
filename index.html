@@ -155,7 +155,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 													});
 													markers.push(marker);
 													refitMapToMarkers();
-													let html = '<div id="geotag"><a href="https://youtu.be/'+item.id+'">'+item.id+'</a></div>';
+													let html = '<div id="geotag"><img id="geotag-thumb" src="'+thumbUrl+'" width=25px height=25px/><a href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a></div>';
 													$('#geotags').append(html);
 												}
 											}
