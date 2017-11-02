@@ -139,10 +139,16 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 													let infowindow = new google.maps.InfoWindow({
 														content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
 													});
+													let icon = {
+														url: thumbUrl,
+														scaledSize: new google.maps.Size(20, 20),
+														origin: new google.maps.Point(0,0),
+														anchor: new google.maps.Point(0,0)
+													}
 													let marker = new google.maps.Marker({
 														position:{lat: latitude, lng: longitude}, 
 														map: map,
-														// icon: thumbUrl
+														icon: icon
 													});
 													marker.addListener('click', function() {
 														infowindow.open(map, marker);
