@@ -12,6 +12,9 @@ body, html {
 	height: 25px;
 	margin-bottom: 10px;
 }
+#btnFind {
+	cursor: pointer;
+}
 #geotags {
 	width: 100%;
 	display: block;
