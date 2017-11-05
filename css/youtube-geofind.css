@@ -28,12 +28,39 @@ body, html {
 #geotag-thumb {
 	margin-right: 5px;
 }
-#channelField {
-	width: 100%;
-	border-radius: 5;
+#channelInput {
+	margin-right: 15px;
 }
 #brand {
 	display: inline;
 	text-align: left;
 	padding-left: 25px;
+}
+#channel {
+	background-color: rgba(127,127,127,0.05);
+	padding: 10px;
+	margin-bottom: 10px;
+}
+#channel-thumb {
+	margin-right: 25px;
+}
+#channel-name {
+	font-size: 1.3em;
+}
+#geotag-header {
+	border-style: none none solid none;
+	border-color: rgb(153, 192, 255);
+	border-width: 6px;
+	padding-bottom: 10px;
+	margin-bottom: 15px;
+}
+.footer {
+	background-color: rgba(127,127,127,0.1);
+	padding-top: 15px;
+	padding-bottom: 30px;
+	font-size: 0.8em;
+}
+.blurry {
+	-webkit-filter: blur(5px); /* Safari */
+    filter: blur(5px);
 }

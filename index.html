@@ -23,22 +23,46 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 			<form>
 				<div class="form-group">
 					<label for="channelInput">Channel ID or Username</label>
-					<input type="text" class="form-control" id="channelInput" aria-describedby="help" 
-						placeholder="e.g. UCUcyEsEjhPEDf69RRVhRh4A or TheGreatWar"
-						value="oceanexplorergov"></input>
+					<div class="d-flex flex-row">
+						<input type="text" class="form-control" id="channelInput" aria-describedby="help" 
+							placeholder="e.g. UCUcyEsEjhPEDf69RRVhRh4A or TheGreatWar"
+							value="oceanexplorergov"></input>
+						<button type="button"	class="btn btn-primary" id="btnFind" onclick="checkChannels()">Check Videos</button>
+					</div>
 					<small id="help" class="form-text text-muted">Enter the channel id or channel name to check their videos for geo-tags.</small>
 				</div>
-				<div class="form-group" align=right>
-					<button type="button"  class="btn btn-primary" id="btnFind" onclick="submitTest()">Check Videos</button>
-					<button type="button" class="btn btn-link" id="btnSave" disabled>Save to CSV</button>
-				</div>
 			</form>
-			<h4>Geotag Entries</h4>
+			<div id="geotag-header" class="d-flex justify-content-between">
+				<h4>Geotag Entries</h4>
+				<button type="button" class="btn btn-link" id="btnSaveAll" disabled>Save all to CSV</button>
+			</div>
+			
+			<!--
 			<div class="progress">
 				<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 			</div>
+			-->
+			<div id="channels" class="d-flex flex-column">
+				<div id="channel-list" class="d-flex flex-column-reverse"></div>
+				<div id="channel" class="d-flex flex-row align-content-center blurry">
+					<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
+					<div class="d-flex justify-content-between" style="width: 100%">
+						<div class="d-flex flex-column">
+							<label id="channel-name">Channel Name</label>
+							<label id="tag-count">0 videos geo-tagged</label>
+						</div>
+						<div class="d-flex flex-column" style="width: 18%">
+							<div class="progress">
+								<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+							</div>
+							<button type="button" class="btn btn-link" id="btnSave" disabled>Save to CSV</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div id="geotags" align=left></div>
 			<script>
+				channelIds = []
 				function initMap() {
 					let centerPos = {lat: 40.697, lng: -74.259};
 					map = new google.maps.Map(document.getElementById('map'), {
@@ -47,9 +71,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 					});
 					map_init = true;
 				}
-				function submitTest() {
-					$('#btnFind').attr("disabled",true);
-					$('#videoProg').css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
+				function checkChannels() {
 					let input = document.getElementById('channelInput').value;
 					let payload = null
 					if(input.length <= 20) { // Unsure of actual limits but max of 20 chars found online.
@@ -72,15 +94,41 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 							timeout: 5000,
 							url: 'https://www.googleapis.com/youtube/v3/channels'
 						}).done(function(res) {
-							var thumbUrl = res.items[0].snippet.thumbnails.default.url;
-							let uploadPlaylistId = res.items[0].contentDetails.relatedPlaylists.uploads;
+							let channel = res.items[0];
+							let channelId = channel.id;
+							let channelUrl = "https://www.youtube.com/channel/"+channelId;
+							let thumbUrl = channel.snippet.thumbnails.default.url;
+							let channelName = channel.snippet.title;
+							let uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+							if($.inArray(channelId, channelIds) == -1) {
+								channelIds.push(channelId);
+								let html = '<div id="channels" class="d-flex flex-column">' +
+													'<div id="channel" class="d-flex flex-row align-content-center ' + channelId + '">' +
+														'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
+														'<div class="d-flex justify-content-between" style="width: 100%">' +
+															'<div class="d-flex flex-column">' +
+																'<label id="channel-name">' + channelName + '</label>' +
+																'<label id="tag-count">0 videos geo-tagged</label>' +
+															'</div>' +
+															'<div class="d-flex flex-column" style="width: 18%">' +
+																'<div class="progress">' +
+																	'<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>' +
+																'</div>' +
+																'<button type="button" class="btn btn-link" id="btnSave" disabled>Save to CSV</button>' +
+															'</div>' +
+														'</div>' +
+													'</div>' +
+												'</div>';
+								$("#channel-list").append(html);
+							}
+							$("."+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
 							progCurrent = 0;
-							checkPlaylistItems(uploadPlaylistId, '', thumbUrl);
+							checkPlaylistItems(uploadPlaylistId, '', thumbUrl, channelId, 0);
 						});
 					}
 				}
-				function checkPlaylistItems(playlistId, pageToken, thumbUrl) {
-					console.log("Playlist["+playlistId+"]["+pageToken+"]: "+thumbUrl);
+				function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found) {
+					console.log("Playlist["+playlistId+"]["+pageToken+"]["+found+"]: "+thumbUrl);
 					$.ajax({
 						cache: false,
 						data: {
@@ -94,29 +142,68 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 						type: 'GET',
 						timeout: 5000,
 						url: 'https://www.googleapis.com/youtube/v3/playlistItems'
-					}).done(function(res) {
+					}).done(function(res_pi) {
 						if(pageToken == '') {
-							progTotal = res.pageInfo.totalResults;
+							progTotal = res_pi.pageInfo.totalResults;
 						}
 						let ids = [];
-						for(let i=0; i<res.items.length; i++) {
-							ids.push(res.items[i].snippet.resourceId.videoId);
+						for(let i=0; i<res_pi.items.length; i++) {
+							ids.push(res_pi.items[i].snippet.resourceId.videoId);
 						}
-						progCurrent += res.items.length;
-						checkVideoIds(ids, thumbUrl);
-						$('#videoProg').text(progCurrent+" / "+progTotal);
-						if(res.hasOwnProperty('nextPageToken')) {
-							checkPlaylistItems(playlistId, res.nextPageToken, thumbUrl);
-						} else {
-							$('#videoProg').css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
-							$('#btnFind').attr("disabled",false);
-						}
+						progCurrent += res_pi.items.length;
+						checkVideoIds(ids).done(function(res) {
+							let f = 0;
+							for(let i=0; i<res.items.length; i++) {
+								let item = res.items[i];
+								if(item.hasOwnProperty('recordingDetails')) {
+									if(item.recordingDetails.hasOwnProperty('location')) {
+										let location = item.recordingDetails.location;
+										if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
+											let latitude = location.latitude;
+											let longitude = location.longitude;
+											let infowindow = new google.maps.InfoWindow({
+												content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
+											});
+											let icon = {
+												url: thumbUrl,
+												scaledSize: new google.maps.Size(20, 20),
+												origin: new google.maps.Point(0,0),
+												anchor: new google.maps.Point(0,0)
+											}
+											let marker = new google.maps.Marker({
+												position:{lat: latitude, lng: longitude}, 
+												map: map,
+												icon: icon
+											});
+											marker.addListener('click', function() {
+												infowindow.open(map, marker);
+											});
+											markers.push(marker);
+											refitMapToMarkers();
+											f = f + 1;
+										}
+									}
+								}
+							}
+							let newFound = found + f;
+							$("."+channelId).find("#tag-count").text(newFound+" videos geo-tagged");
+							if(newFound > 0) {
+								$("#btnSaveAll").attr("disabled", false);
+								$("."+channelId).find("#btnSave").attr("disabled", false);
+							}
+							$("."+channelId).find("#videoProg").text(progCurrent+" / "+progTotal);
+							if(res_pi.hasOwnProperty('nextPageToken')) {
+								checkPlaylistItems(playlistId, res_pi.nextPageToken, thumbUrl, channelId, newFound);
+							} else {
+								$("."+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
+								$('#btnFind').attr("disabled",false);
+							}
+						})
 					});
 				}
 				// videoIds an array of max 50 entries, places in map if location exists
-				function checkVideoIds(videoIds, thumbUrl) {
-					console.log("VideoIds: "+thumbUrl);
-					$.ajax({
+				function checkVideoIds(videoIds) {
+					return $.ajax({
 						cache: false,
 						data: {
 							key: GOOGLE_API_KEY,
@@ -128,41 +215,16 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 						type: 'GET',
 						timeout: 5000,
 						url: 'https://www.googleapis.com/youtube/v3/videos'
-					}).done(function(res) {
-						for(let i=0; i<res.items.length; i++) {
-							let item = res.items[i];
-							if(item.hasOwnProperty('recordingDetails')) {
-								if(item.recordingDetails.hasOwnProperty('location')) {
-									let location = item.recordingDetails.location;
-									if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
-										let latitude = location.latitude;
-										let longitude = location.longitude;
-										let infowindow = new google.maps.InfoWindow({
-											content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
-										});
-										let icon = {
-											url: thumbUrl,
-											scaledSize: new google.maps.Size(20, 20),
-											origin: new google.maps.Point(0,0),
-											anchor: new google.maps.Point(0,0)
-										}
-										let marker = new google.maps.Marker({
-											position:{lat: latitude, lng: longitude}, 
-											map: map,
-											icon: icon
-										});
-										marker.addListener('click', function() {
-											infowindow.open(map, marker);
-										});
-										markers.push(marker);
-										refitMapToMarkers();
-										let html = '<div id="geotag"><img id="geotag-thumb" src="'+thumbUrl+'" width=25px height=25px/><a href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a></div>';
-										$('#geotags').append(html);
-									}
-								}
-							}
-						}
 					});
+				}
+				function saveDataCSV(filename, data) {
+					let content = "data:text/csv;charset=utf-8,";
+					let encodedURI = encodeURI(content);
+					let a = document.createElement("a");
+					a.setAttribute("href", encodedURI);
+					a.setAttribute("download", filename+".csv");
+					document.body.appendChild(a);
+					a.click();
 				}
 				function refitMapToMarkers() {
 					let bounds = new google.maps.LatLngBounds();
@@ -173,6 +235,16 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				}
 			</script>
 		</main><!-- /.container -->
+		
+		<footer class="footer" align=center>
+			<div class="container">
+				<span class="text-muted">© 2017 Matthew Wright. <br>
+					<a target="_blank" href="https://github.com/mattwright324"><img src="https://github.com/favicon.ico" width=16px height=16px /> mattwright324</a>
+				</span>
+			</div>
+		</footer>
+		
+		
 		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
 	</body>
 </html>
