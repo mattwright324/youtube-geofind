@@ -54,6 +54,9 @@ body, html {
 	padding-bottom: 10px;
 	margin-bottom: 15px;
 }
+#example-list li {
+	font-size: 1.2em;
+}
 .btn-link {
 	cursor: pointer;
 }
