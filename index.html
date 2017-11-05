@@ -23,7 +23,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 			<label for="channelInput">Channel ID or Username</label>
 			<div class="d-flex flex-row">
 				<input type="text" class="form-control" id="channelInput" aria-describedby="help"
-					placeholder="e.g. UCUcyEsEjhPEDf69RRVhRh4A or TheGreatWar"
+					placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
 					value="oceanexplorergov"></input>
 				<button type="button" class="btn btn-primary" id="btnFind" onclick="checkChannels()">Check Videos</button>
 			</div>
@@ -141,7 +141,8 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 							$("."+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
 							checkPlaylistItems(uploadPlaylistId, '', thumbUrl, channelId, 0, 0, 0);
 						}).fail(function(err) {
-							$("."+channelId).find("#videoProg").addClass("bg-danger");
+							console.error(err);
+							$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
 						});
 					}
 				}
@@ -233,10 +234,20 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 								$('#btnFind').attr("disabled",false);
 							}
 						}).fail(function(err) {
-							$("."+channelId).find("#videoProg").addClass("bg-warning");
+							fails = fails+1;
+							if(fails <= 5) {
+								console.error("Failed to grab playlist []"+playlistId+"] retry: #"+fails);
+								$("."+channelId).find("#videoProg").addClass("bg-warning");
+								checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, newFound, progTotal, progCurrent, fails);
+							} else {
+								console.error(err);
+								$("."+channelId).find("#videoProg").removeClass("bg-warning");
+								$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
+							}
 						});
 					}).fail(function(err) {
-						$("."+channelId).find("#videoProg").addClass("bg-danger");
+						console.error(err);
+						$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
 					});
 				}
 				// videoIds an array of max 50 entries, places in map if location exists
