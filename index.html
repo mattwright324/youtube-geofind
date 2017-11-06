@@ -76,7 +76,14 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				</span>
 			</div>
 		</footer>
-
+		
+		<script>
+			$("#channelInput").keyup(function(event) {
+				if (event.keyCode === 13) {
+					$("#btnFind").click();
+				}
+			});
+		</script>
 		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
 	</body>
 </html>
