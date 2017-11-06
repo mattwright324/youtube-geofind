@@ -8,11 +8,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 	<head>
 		<title>Discover Geo-tagged Videos - YouTube Geofind</title>
 		{% include_relative head.html %}
-		<script>
-			var map = null;
-			var map_init = false;
-			var markers = [];
-		</script>
 	</head>
 
 	<body>
@@ -25,7 +20,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				<input type="text" class="form-control" id="channelInput" aria-describedby="help"
 					placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
 					value="oceanexplorergov"></input>
-				<button type="button" class="btn btn-primary" id="btnFind" onclick="checkChannels()">Check Videos</button>
+				<button type="button" class="btn btn-primary" id="btnFind" onclick="submitChannelList()">Check Videos</button>
 			</div>
 			<small id="help" class="form-text text-muted">Enter the channel id or channel name to check their videos for geo-tags. Comma-separated lists are accepted.</small>
 			<br>
@@ -38,12 +33,12 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				<div id="channel-list" class="d-flex flex-column-reverse"></div>
 				<div id="channel-example" class="d-flex flex-row align-content-center channel blurry">
 					<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
-					<div class="d-flex justify-content-between" style="width: 100%">
-						<div class="d-flex flex-column">
+					<div id="example-content" class="d-flex justify-content-between" style="width: 100%">
+						<div id="ec1" class="d-flex flex-column">
 							<label id="channel-name">Channel Name</label>
 							<label id="tag-count">0 videos geo-tagged</label>
 						</div>
-						<div class="d-flex flex-column" style="width: 18%">
+						<div id="ec2" class="d-flex flex-column" style="width: 25%">
 							<div class="progress">
 								<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 							</div>
@@ -72,247 +67,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				<small class="form-text text-muted">All of the listed channels above will have geotagged videos.</small>
 				<br>
 			</div>
-			<script>
-				channelIds = []
-				function initMap() {
-					let centerPos = {lat: 40.697, lng: -74.259};
-					map = new google.maps.Map(document.getElementById('map'), {
-						zoom: 7,
-						center: centerPos
-					});
-					map_init = true;
-				}
-				function checkChannels() {
-					$("#channel-example").css("display", "hidden");
-					let input = document.getElementById('channelInput').value;
-					let list = input.split(",");
-					for(let i=0; i<list.length; i++) {
-						checkChannel(list[i]);
-					}
-				}
-				function checkChannel(input) {
-					let payload = null
-					if(input.length <= 20) { // Unsure of actual limits but max of 20 chars found online.
-						console.log('Attempting forUsername');
-						payload = {forUsername: input};
-					} else if(input.length == 24) {
-						console.log('Attempting by channel id');
-						payload = {id: input};
-					}
-					if(payload != null){
-						// Get channel data.
-						$.ajax({
-							cache: false,
-							data: $.extend({
-								key: GOOGLE_API_KEY,
-								part: 'snippet,contentDetails',
-							},payload),
-							dataType: 'json',
-							type: 'GET',
-							timeout: 5000,
-							url: 'https://www.googleapis.com/youtube/v3/channels'
-						}).done(function(res) {
-							let channel = res.items[0];
-							let channelId = channel.id;
-							let channelUrl = "https://www.youtube.com/channel/"+channelId;
-							let thumbUrl = channel.snippet.thumbnails.default.url;
-							let channelName = channel.snippet.title;
-							let uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-							if($.inArray(channelId, channelIds) == -1) {
-								channelIds.push(channelId);
-								let html = '<div id="channels" class="d-flex flex-column">' +
-													'<div id="' + channelId + '" class="d-flex flex-row align-content-center channel ">' +
-														'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
-														'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
-															'<div class="d-flex flex-column">' +
-																'<label id="channel-name">' + channelName + '</label>' +
-																'<label id="tag-count">0 videos geo-tagged</label>' +
-															'</div>' +
-															'<div class="d-flex flex-column" style="width: 18%">' +
-																'<div class="progress">' +
-																	'<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>' +
-																'</div>' +
-																'<button type="button" class="btn btn-link" id="btnSave" onclick="saveAsCSV(\''+channelId+'\')" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>' +
-															'</div>' +
-														'</div>' +
-													'</div>' +
-												'</div>';
-								$("#channel-list").append(html);
-							}
-							$("#"+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
-							checkPlaylistItems(uploadPlaylistId, '', thumbUrl, channelId, 0, 0, 0, 0);
-						}).fail(function(err) {
-							console.error(err);
-							$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
-						});
-					}
-				}
-				function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found, progTotal, progCurrent, fails) {
-					$.ajax({
-						cache: false,
-						data: {
-							key: GOOGLE_API_KEY,
-							part: 'snippet',
-							maxResults: 50,
-							playlistId: playlistId,
-							pageToken: pageToken
-						},
-						dataType: 'json',
-						type: 'GET',
-						timeout: 5000,
-						url: 'https://www.googleapis.com/youtube/v3/playlistItems'
-					}).done(function(res_pi) {
-						if(pageToken == '') {
-							progTotal = res_pi.pageInfo.totalResults;
-						}
-						let ids = [];
-						for(let i=0; i<res_pi.items.length; i++) {
-							ids.push(res_pi.items[i].snippet.resourceId.videoId);
-						}
-						progCurrent += res_pi.items.length;
-						checkVideoIds(ids).done(function(res) {
-							let f = 0;
-							for(let i=0; i<res.items.length; i++) {
-								let item = res.items[i];
-								if(item.hasOwnProperty('recordingDetails')) {
-									if(item.recordingDetails.hasOwnProperty('location')) {
-										let location = item.recordingDetails.location;
-										if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
-											let displayed = false;
-											for(let i=0; i<markers.length; i++) {
-												if(markers[i].videoId == item.id) {
-													displayed = true;
-												}
-											}
-											if(!displayed) {
-												let latitude = location.latitude;
-												let longitude = location.longitude;
-												let infowindow = new google.maps.InfoWindow({
-													content: '<div id="geotag"><a target="_blank" href="https://youtu.be/'+item.id+'">'+item.snippet.title+'</a><br>Latitude: '+latitude+'<br>Longitude: '+longitude+'</div>'
-												});
-												let icon = {
-													url: thumbUrl,
-													scaledSize: new google.maps.Size(20, 20),
-													origin: new google.maps.Point(0,0),
-													anchor: new google.maps.Point(0,0)
-												}
-												let marker = new google.maps.Marker({
-													position:{lat: latitude, lng: longitude},
-													map: map,
-													icon: icon,
-													channelId: channelId,
-													videoId: item.id
-												});
-												marker.addListener('click', function() {
-													infowindow.open(map, marker);
-												});
-												markers.push(marker);
-												refitMapToMarkers();
-											}
-											f = f + 1;
-										}
-									}
-								}
-							}
-							let newFound = found + f;
-							$("#"+channelId).find("#tag-count").text(newFound+" videos geo-tagged");
-							if(newFound > 0) {
-								$("#btnSaveAll").attr("disabled", false);
-								$("#"+channelId).find("#btnSave").attr("disabled", false);
-							}
-							$("#"+channelId).find("#videoProg").text(progCurrent+" / "+progTotal);
-							$("#"+channelId).find("#videoProg").removeClass("bg-warning");
-							$("#"+channelId).find("#videoProg").removeClass("bg-danger");
-							if(res_pi.hasOwnProperty('nextPageToken')) {
-								checkPlaylistItems(playlistId, res_pi.nextPageToken, thumbUrl, channelId, newFound, progTotal, progCurrent, fails);
-							} else {
-								if(newFound) {
-									$("#"+channelId).find("#videoProg").addClass("bg-success");
-								} else {
-									$("#"+channelId).find("#videoProg").css("background-color", "gray");
-								}
-								$("#"+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
-								$('#btnFind').attr("disabled",false);
-							}
-						}).fail(function(err) {
-							fails = fails+1;
-							if(fails <= 5) {
-								console.error("Failed to grab videos ["+playlistId+"] retry: #"+fails);
-								$("#"+channelId).find("#videoProg").addClass("bg-warning");
-								checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, newFound, progTotal, progCurrent, fails);
-							} else {
-								console.error(err);
-								$("#"+channelId).find("#videoProg").removeClass("bg-warning");
-								$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
-							}
-						});
-					}).fail(function(err) {
-						console.error(err);
-						$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
-					});
-				}
-				// videoIds an array of max 50 entries, places in map if location exists
-				function checkVideoIds(videoIds) {
-					return $.ajax({
-						cache: false,
-						data: {
-							key: GOOGLE_API_KEY,
-							part: 'snippet,recordingDetails',
-							maxResults: 50,
-							id: videoIds.join(',')
-						},
-						dataType: 'json',
-						type: 'GET',
-						timeout: 5000,
-						url: 'https://www.googleapis.com/youtube/v3/videos'
-					});
-				}
-				function saveAsCSV(channelId) {
-					let filename = "geotags_all";
-					if(channelId != '0') { filename = channelId; }
-					let content = "data:text/csv;charset=utf-8,channelId,videoId,latitude,longitude\n";
-					let lineArray = [];
-					for(let i=0; i<markers.length; i++) {
-						let m = markers[i];
-						if(channelId == '0' || markers[i].channelId == channelId) {
-							lineArray.push([m.channelId, m.videoId, m.getPosition().lat(), m.getPosition().lng()]);
-						}
-					}
-					content += lineArray.join("\n");
-					let encodedURI = encodeURI(content);
-					let a = document.createElement("a");
-					a.setAttribute("href", encodedURI);
-					a.setAttribute("download", filename+".csv");
-					document.body.appendChild(a);
-					a.click();
-				}
-				function refitMapToMarkers() {
-					let bounds = new google.maps.LatLngBounds();
-					for(let i=0; i<markers.length; i++) {
-						bounds.extend(markers[i].getPosition());
-					}
-					map.fitBounds(bounds);
-				}
-				function resize() {
-					let width = $(window).width();
-					if(width <= 768) {
-						$("#channel").removeClass("flex-row").addClass("flex-column");
-						$("#channel-content").addClass("flex-row");
-					} else {
-						$("#channel").removeClass("flex-column").addClass("flex-row");
-						$("#channel-content").removeClass("flex-row");
-					}
-				}
-				resize();
-				$(window).on('resize', function() {
-					resize();
-				});
-				$("#channelInput").keyup(function(event) {
-					if (event.keyCode === 13) {
-						$("#btnFind").click();
-					}
-				});
-			</script>
 		</main><!-- /.container -->
 
 		<footer class="footer" align=center>
