@@ -36,7 +36,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 
 			<div id="channels" class="d-flex flex-column">
 				<div id="channel-list" class="d-flex flex-column-reverse"></div>
-				<div id="channel" class="d-flex flex-row align-content-center blurry">
+				<div id="channel-example" class="d-flex flex-row align-content-center channel blurry">
 					<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
 					<div class="d-flex justify-content-between" style="width: 100%">
 						<div class="d-flex flex-column">
@@ -83,6 +83,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 					map_init = true;
 				}
 				function checkChannels() {
+					$("#channel-example").css("display", "hidden");
 					let input = document.getElementById('channelInput').value;
 					let list = input.split(",");
 					for(let i=0; i<list.length; i++) {
@@ -120,7 +121,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 							if($.inArray(channelId, channelIds) == -1) {
 								channelIds.push(channelId);
 								let html = '<div id="channels" class="d-flex flex-column">' +
-													'<div id="channel" class="d-flex flex-row align-content-center ' + channelId + '">' +
+													'<div id="' + channelId + '" class="d-flex flex-row align-content-center channel ">' +
 														'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
 														'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
 															'<div class="d-flex flex-column">' +
@@ -138,15 +139,15 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 												'</div>';
 								$("#channel-list").append(html);
 							}
-							$("."+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
-							checkPlaylistItems(uploadPlaylistId, '', thumbUrl, channelId, 0, 0, 0);
+							$("#"+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
+							checkPlaylistItems(uploadPlaylistId, '', thumbUrl, channelId, 0, 0, 0, 0);
 						}).fail(function(err) {
 							console.error(err);
-							$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
+							$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
 						});
 					}
 				}
-				function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found, progTotal, progCurrent) {
+				function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found, progTotal, progCurrent, fails) {
 					$.ajax({
 						cache: false,
 						data: {
@@ -214,40 +215,40 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 								}
 							}
 							let newFound = found + f;
-							$("."+channelId).find("#tag-count").text(newFound+" videos geo-tagged");
+							$("#"+channelId).find("#tag-count").text(newFound+" videos geo-tagged");
 							if(newFound > 0) {
 								$("#btnSaveAll").attr("disabled", false);
-								$("."+channelId).find("#btnSave").attr("disabled", false);
+								$("#"+channelId).find("#btnSave").attr("disabled", false);
 							}
-							$("."+channelId).find("#videoProg").text(progCurrent+" / "+progTotal);
-							$("."+channelId).find("#videoProg").removeClass("bg-warning");
-							$("."+channelId).find("#videoProg").removeClass("bg-danger");
+							$("#"+channelId).find("#videoProg").text(progCurrent+" / "+progTotal);
+							$("#"+channelId).find("#videoProg").removeClass("bg-warning");
+							$("#"+channelId).find("#videoProg").removeClass("bg-danger");
 							if(res_pi.hasOwnProperty('nextPageToken')) {
-								checkPlaylistItems(playlistId, res_pi.nextPageToken, thumbUrl, channelId, newFound, progTotal, progCurrent);
+								checkPlaylistItems(playlistId, res_pi.nextPageToken, thumbUrl, channelId, newFound, progTotal, progCurrent, fails);
 							} else {
 								if(newFound) {
-									$("."+channelId).find("#videoProg").addClass("bg-success");
+									$("#"+channelId).find("#videoProg").addClass("bg-success");
 								} else {
-									$("."+channelId).find("#videoProg").css("background-color", "gray");
+									$("#"+channelId).find("#videoProg").css("background-color", "gray");
 								}
-								$("."+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
+								$("#"+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
 								$('#btnFind').attr("disabled",false);
 							}
 						}).fail(function(err) {
 							fails = fails+1;
 							if(fails <= 5) {
-								console.error("Failed to grab playlist []"+playlistId+"] retry: #"+fails);
-								$("."+channelId).find("#videoProg").addClass("bg-warning");
+								console.error("Failed to grab videos ["+playlistId+"] retry: #"+fails);
+								$("#"+channelId).find("#videoProg").addClass("bg-warning");
 								checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, newFound, progTotal, progCurrent, fails);
 							} else {
 								console.error(err);
-								$("."+channelId).find("#videoProg").removeClass("bg-warning");
-								$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
+								$("#"+channelId).find("#videoProg").removeClass("bg-warning");
+								$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
 							}
 						});
 					}).fail(function(err) {
 						console.error(err);
-						$("."+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
+						$("#"+channelId).find("#videoProg").addClass("bg-danger").removeClass("progress-bar-animated");
 					});
 				}
 				// videoIds an array of max 50 entries, places in map if location exists
