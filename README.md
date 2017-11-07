@@ -1,2 +1,4 @@
 # youtube-geofind
-Discover and search for YouTube videos with geo-tags through standard search or an entire channel.
+Search YouTube channels for geo-tagged videos. View in map and export to CSV.
+
+* https://mattwright324.github.io/youtube-geofind/

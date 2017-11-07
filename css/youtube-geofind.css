@@ -28,11 +28,6 @@ body, html {
 #channelInput {
 	margin-right: 15px;
 }
-#brand {
-	display: inline;
-	text-align: left;
-	padding-left: 25px;
-}
 #channel {
 	background-color: rgba(127,127,127,0.05);
 	padding: 10px;
