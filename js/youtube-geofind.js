@@ -41,7 +41,7 @@ function submitChannelList() {
 	let input = document.getElementById('channelInput').value;
 	let list = input.split(",");
 	for(let i=0; i<list.length; i++) {
-		checkChannel(list[i]);
+		checkChannel(list[i].trim());
 	}
 }
 
@@ -207,6 +207,7 @@ function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found, p
 				}
 				$("#"+channelId).find("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
 				$('#btnFind').attr("disabled",false);
+				channelSort();
 			}
 		}).fail(function(err) {
 			fails = fails+1;
