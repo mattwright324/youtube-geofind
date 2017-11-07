@@ -36,13 +36,6 @@ $(window).on('resize', function() {
 	resize();
 });
 
-// Enter keypress clicks "Check Videos" button
-$("#channelInput").keyup(function(event) {
-	if (event.keyCode === 13) {
-		$("#btnFind").click();
-	}
-});
-
 // Takes (comma-separated list of) channel name(s) and/or id(s) from text field.
 function submitChannelList() {
 	let input = document.getElementById('channelInput').value;
@@ -81,8 +74,7 @@ function checkChannel(input) {
 			let uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
 			if($.inArray(channelId, channelIds) == -1) {
 				channelIds.push(channelId);
-				let html = '<div id="channels" class="d-flex flex-column">' +
-									'<div id="' + channelId + '" class="d-flex flex-row align-content-center channel ">' +
+				let html = '<div id="' + channelId + '" class="d-flex flex-row align-content-center channel " tagcount="0">' +
 										'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
 										'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
 											'<div id="cc1" class="d-flex flex-column">' +
@@ -96,8 +88,7 @@ function checkChannel(input) {
 												'<button type="button" class="btn btn-link" id="btnSave" onclick="saveAsCSV(\''+channelId+'\')" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>' +
 											'</div>' +
 										'</div>' +
-									'</div>' +
-								'</div>';
+									'</div>';
 				removeExample();
 				$("#channel-list").append(html);
 			}
@@ -107,6 +98,13 @@ function checkChannel(input) {
 			dangerError(channelId, err);
 		});
 	}
+}
+
+function channelSort() {
+	var $wrapper = $('#channel-list');
+	$wrapper.find('.channel').sort(function(a, b) {
+		return +a.getAttribute('tagcount') - +b.getAttribute('tagcount');
+	}).appendTo($wrapper);
 }
 
 // Recursively checks playlistitems and its videos in groups of 50. 
@@ -187,7 +185,11 @@ function checkPlaylistItems(playlistId, pageToken, thumbUrl, channelId, found, p
 				}
 			}
 			let newFound = found + f;
+			if(f > 0) {
+				channelSort();
+			}
 			$("#"+channelId).find("#tag-count").text(newFound+" videos geo-tagged");
+			$("#"+channelId).attr("tagcount", newFound);
 			if(newFound > 0) {
 				$("#btnSaveAll").attr("disabled", false);
 				$("#"+channelId).find("#btnSave").attr("disabled", false);
