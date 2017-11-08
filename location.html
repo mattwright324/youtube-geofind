@@ -7,3 +7,64 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <div id="geotag-header">
 	<h4>By Location</h4>
 </div>
+
+<label for="channelInput">Location</label>
+<div id="topic-form" class="d-flex flex-column">
+	<input type="text" class="form-control" id="q" aria-describedby="help"
+		placeholder="Name, address, or city"
+		value=""></input>
+	<select id="distance" class="custom-select">
+		<option value="1">1km</option>
+		<option value="2">2km</option>
+		<option value="5">5km</option>
+		<option value="10" selected>10km</option>
+		<option value="15">15km</option>
+		<option value="20">20km</option>
+		<option value="50">50km</option>
+		<option value="100">100km</option>
+		<option value="200">200km</option>
+		<option value="500">500km</option>
+		<option value="1000">1000km</option>
+	</select>
+	<select id="order-by" aria-describedby="orderhelp" class="custom-select">
+		<option value="date" selected>By Date</option>
+		<option value="relevance">By Relevance</option>
+		<option value="viewCount">By Views</option>
+		<option value="rating">By Rating</option>
+	</select>
+	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
+</div>
+<small id="help" class="form-text text-muted">Type keywords as if searching for videos actually on YouTube.</small>
+<small id="orderhelp" class="form-text text-muted">
+	* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
+</small>
+<br>
+<div class="progress" height=30>
+	<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<br>
+
+<script>
+var geocoder = new google.maps.Geocoder;
+var locationMarker;
+whenAvailable("google", function() {
+	locationMarker = new google.maps.Marker({
+		position: map.center,
+		map: map,
+		draggable: true,
+		title: "Drag me!"
+	});
+	markers.push(marker);
+	geocoder.geocode({"location", locationMarker.position}, function(results, status) {
+		if (status === 'OK') {
+			if(results[0]) {
+				$("q").text(results[0].formatted_address);
+			} else {
+				window.alert('No results found');
+			}
+		} else {
+			window.alert('Geocoder failed due to: ' + status);
+		}
+	});
+});
+</script>
