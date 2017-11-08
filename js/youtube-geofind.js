@@ -250,3 +250,15 @@ function saveAsCSV(channelId) {
 	document.body.appendChild(a);
 	a.click();
 }
+
+// Waits for object to load in JS
+function whenAvailable(objName, callback) {
+	let interval = 10;
+	window.setTimeout(function() {
+		if(window[objName]) {
+			callback();
+		} else {
+			window.setTimeout(arguments.callee, interval);
+		}
+	}, interval);
+}

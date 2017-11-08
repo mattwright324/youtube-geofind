@@ -7,3 +7,173 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <div id="geotag-header">
 	<h4>By Topic</h4>
 </div>
+
+<label for="channelInput">Topic Keywords</label>
+<div id="topic-form" class="d-flex flex-column">
+	<input type="text" class="form-control" id="q" aria-describedby="help"
+		placeholder="Search"
+		value="philadelphia pa"></input>
+	<!--
+	<select id="distance" class="custom-select">
+		<option value="1">1km</option>
+		<option value="2">2km</option>
+		<option value="5">5km</option>
+		<option value="10" selected>10km</option>
+		<option value="15">15km</option>
+		<option value="20">20km</option>
+		<option value="50">50km</option>
+		<option value="100">100km</option>
+		<option value="200">200km</option>
+		<option value="500">500km</option>
+		<option value="1000">1000km</option>
+	</select>
+	-->
+	<select id="order-by" aria-describedby="orderhelp" class="custom-select">
+		<option value="date" selected>By Date</option>
+		<option value="relevance">By Relevance</option>
+		<option value="viewCount">By Views</option>
+		<option value="rating">By Rating</option>
+	</select>
+	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
+</div>
+<small id="help" class="form-text text-muted">Type keywords as if searching for videos actually on YouTube.</small>
+<small id="orderhelp" class="form-text text-muted">
+	* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
+</small>
+<br>
+<div class="progress" height=30>
+	<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+<br>
+<script>
+//var locationMarker;
+whenAvailable("google", function() {
+	console.log("GOOGLE defined");
+	/*locationMarker = new google.maps.Marker({
+		position: map.center,
+		map: map,
+		draggable: true,
+		title: "Drag me!"
+	});
+	markers.push(marker);*/
+});
+// Logs error and changes progressbar.
+function dangerError(err) {
+	console.error(err);
+	$("#videoProg").removeClass("bg-warning").addClass("bg-danger").removeClass("progress-bar-animated");
+}
+function search() {
+	$("#topic-form *").attr("disabled",true);
+	let q = document.getElementById("q").value;
+	//let dist_list = document.getElementById("distance");
+	//let distance = dist_list.options[dist_list.selectedIndex].value;
+	let e = document.getElementById("order-by");
+	let orderBy = e.options[e.selectedIndex].value;
+	let data = {
+		q: q,
+		orderBy: orderBy
+	};
+	$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
+	doSearch(data, "", 0);
+}
+function doSearch(data, pageToken, page) {
+	$("#videoProg").text("Page "+page+" . . .");
+	console.log({
+		q: data.q,
+		orderBy: data.orderBy,
+		pageToken: pageToken,
+		page: page
+	});
+	youtube.ajax("search", {
+		q: data.q,
+		maxResults: 50,
+		order: data.orderBy,
+		type: "video",
+		part: "snippet",
+		pageToken: pageToken,
+	}).done(function(res) {
+		let videoIds = [];
+		for(let i=0; i<res.items.length; i++) {
+			let item = res.items[i];
+			videoIds.push(item.id.videoId);
+		}
+		$("#videoProg").text("Page "+page+": "+videoIds.length+" videos . . .");
+		youtube.ajax("videos", {
+			id: videoIds.join(","), 
+			maxResults: 50, 
+			part: "snippet,recordingDetails"
+		}).done(function(res2) {
+			console.log(res2);
+			let f = 0;
+			for(let i=0; i<res2.items.length; i++) {
+				let item = res2.items[i];
+				if(item.hasOwnProperty('recordingDetails')) {
+					if(item.recordingDetails.hasOwnProperty('location')) {
+						let location = item.recordingDetails.location;
+						if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
+							let displayed = false;
+							for(let i=0; i<markers.length; i++) {
+								if(markers[i].videoId == item.id) {
+									displayed = true;
+								}
+							}
+							if(!displayed) {
+								let displayTitle = item.snippet.title.substring(0,65);
+								if(item.snippet.title.length > 65) displayTitle += "...";
+								let latitude = location.latitude;
+								let longitude = location.longitude;
+								let infowindow = new google.maps.InfoWindow({
+									content: '<div id="geotag">' +
+														'<table class="table table-sm">'+
+															'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
+															'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+															'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
+															'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
+														'</table>'+
+													'</div>'
+								});
+								/*let icon = {
+									url: thumbUrl,
+									scaledSize: new google.maps.Size(20, 20),
+									origin: new google.maps.Point(0,0),
+									anchor: new google.maps.Point(0,0)
+								}*/
+								let marker = new google.maps.Marker({
+									position:{lat: latitude, lng: longitude},
+									map: map,
+									//icon: icon,
+									videoId: item.id,
+									publishedAt: item.snippet.publishedAt,
+									channelTitle: item.snippet.channelTitle,
+									title: item.snippet.title
+								});
+								marker.addListener('click', function() {
+									infowindow.open(map, marker);
+								});
+								markers.push(marker);
+								refitMapToMarkers();
+							}
+							f = f + 1;
+						}
+					}
+				}
+			}
+			page = page + 1;
+			if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
+				doSearch(data, res.nextPageToken, page);
+			} else {
+				console.log("DONE -- "+res.items.length);
+				$("#videoProg").addClass("bg-success");
+				$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
+				$("#topic-form *").attr("disabled",false);
+			}	
+		}).fail(function(err2) {
+			console.log(err2);
+			dangerError(err2);
+		});
+	}).fail(function(err) {
+		console.log(err);
+		dangerError(err);
+	});
+}
+</script>

@@ -8,6 +8,7 @@
 	<body>
 		{% include_relative nav.html %}
 		<div id="map"></div>
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
 		<main id="content" role="main" class="container">
 			{{ content }}
 		</main><!-- /.container -->
@@ -20,6 +21,5 @@
 			</div>
 		</footer>
 		
-		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
 	</body>
 </html>
