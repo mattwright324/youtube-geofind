@@ -45,26 +45,197 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <br>
 
 <script>
-var geocoder = new google.maps.Geocoder;
 var locationMarker;
+var geocoder;
+var circle;
 whenAvailable("google", function() {
+	console.log("Google Defined");
+	geocoder = new google.maps.Geocoder();
+	circle = new google.maps.Circle({
+		strokeColor: "#00fff0",
+		strokeOpacity: 0.5,
+		strokeWeight: 2,
+		fillColor: "#00fff0",
+		fillOpacity: 0.15,
+		map: map,
+		radius: 5000,
+		center: map.center
+	});
 	locationMarker = new google.maps.Marker({
 		position: map.center,
 		map: map,
 		draggable: true,
-		title: "Drag me!"
+		icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+		title: "Drag me!",
+		optimized: false,
+		zIndex:99999999
 	});
-	markers.push(marker);
-	geocoder.geocode({"location", locationMarker.position}, function(results, status) {
-		if (status === 'OK') {
-			if(results[0]) {
-				$("q").text(results[0].formatted_address);
-			} else {
-				window.alert('No results found');
-			}
-		} else {
-			window.alert('Geocoder failed due to: ' + status);
-		}
+	locationMarker.addListener("dragend", function() {
+		console.log("Drag end");
+		updateLocationAddress();
+		updateCircle();
 	});
+	document.getElementById("distance").onchange = function() {
+		updateCircle();
+	}
+	markers.push(locationMarker);
+	updateLocationAddress();
+	updateCircle();
 });
+function getDistance() {
+	let dist_list = document.getElementById("distance");
+	let distance = dist_list.options[dist_list.selectedIndex].value * 1000;
+	return distance;
+}
+function clearMarkers() {
+	for(let i=1; i<markers.length; i++) {
+		if(markers[i].type != "main") {
+			markers[i].map = null;
+		}
+	}
+}
+function updateCircle() {
+	circle.setRadius(getDistance());
+	circle.center = locationMarker.getPosition();
+}
+function updateLocationAddress() {
+	if(locationMarker != null) {
+		let pos = locationMarker.getPosition();
+		geocoder.geocode({"location": pos}, function(res, stat) {
+			console.log(res);
+			console.log(stat);
+			if(stat === "OK") {
+				if(res[0]) {
+					$("#q").attr("value", res[0].formatted_address);
+					console.log(res[0].formatted_address);
+				} else {
+					$("#q").attr("value", pos.lat()+","+pos.lng());
+					console.log("No results found");
+				}
+			} else {
+				console.log("Geocoder failed due to "+status);
+			}
+		});
+	}
+}
+function dangerError(err) {
+	console.error(err);
+	$("#videoProg").removeClass("bg-warning").addClass("bg-danger").removeClass("progress-bar-animated");
+}
+function search() {
+	$("#topic-form *").attr("disabled",true);
+	let q = document.getElementById("q").value;
+	let e = document.getElementById("order-by");
+	let orderBy = e.options[e.selectedIndex].value;
+	let data = {
+		q: q,
+		orderBy: orderBy,
+		distance: getDistance()
+	};
+	$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
+	locationMarker.draggable = false;
+	doSearch(data, "", 0);
+}
+function doSearch(data, pageToken, page) {
+	$("#videoProg").text("Page "+page+" . . .");
+	console.log({
+		data: data,
+		pageToken: pageToken,
+		page: page
+	});
+	let pos = locationMarker.getPosition();
+	youtube.ajax("search", {
+		q: "",
+		maxResults: 50,
+		order: data.orderBy,
+		location: pos.lat()+","+pos.lng(),
+		locationRadius: getDistance()/1000+"km",
+		type: "video",
+		part: "snippet",
+		pageToken: pageToken,
+	}).done(function(res) {
+		let videoIds = [];
+		for(let i=0; i<res.items.length; i++) {
+			let item = res.items[i];
+			videoIds.push(item.id.videoId);
+		}
+		$("#videoProg").text("Page "+page+": "+videoIds.length+" videos . . .");
+		youtube.ajax("videos", {
+			id: videoIds.join(","), 
+			maxResults: 50, 
+			part: "snippet,recordingDetails"
+		}).done(function(res2) {
+			console.log(res2);
+			let f = 0;
+			for(let i=0; i<res2.items.length; i++) {
+				let item = res2.items[i];
+				if(item.hasOwnProperty('recordingDetails')) {
+					if(item.recordingDetails.hasOwnProperty('location')) {
+						let location = item.recordingDetails.location;
+						if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
+							let displayed = false;
+							for(let i=0; i<markers.length; i++) {
+								if(markers[i].videoId == item.id) {
+									displayed = true;
+								}
+							}
+							if(!displayed) {
+								let displayTitle = item.snippet.title.substring(0,65);
+								if(item.snippet.title.length > 65) displayTitle += "...";
+								let latitude = location.latitude;
+								let longitude = location.longitude;
+								let infowindow = new google.maps.InfoWindow({
+									content: '<div id="geotag">' +
+														'<table class="table table-sm">'+
+															'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
+															'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+															'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
+															'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
+														'</table>'+
+													'</div>'
+								});
+								/*let icon = {
+									url: thumbUrl,
+									scaledSize: new google.maps.Size(20, 20),
+									origin: new google.maps.Point(0,0),
+									anchor: new google.maps.Point(0,0)
+								}*/
+								let marker = new google.maps.Marker({
+									position:{lat: latitude, lng: longitude},
+									map: map,
+									//icon: icon,
+									videoId: item.id,
+									publishedAt: item.snippet.publishedAt,
+									channelTitle: item.snippet.channelTitle,
+									title: item.snippet.title
+								});
+								marker.addListener('click', function() {
+									infowindow.open(map, marker);
+								});
+								markers.push(marker);
+								refitMapToMarkers();
+							}
+							f = f + 1;
+						}
+					}
+				}
+			}
+			page = page + 1;
+			if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
+				doSearch(data, res.nextPageToken, page);
+			} else {
+				console.log("DONE -- "+res.items.length);
+				$("#videoProg").addClass("bg-success");
+				$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
+				$("#topic-form *").attr("disabled",false);
+			}	
+		}).fail(function(err2) {
+			console.log(err2);
+			dangerError(err2);
+		});
+	}).fail(function(err) {
+		console.log(err);
+		dangerError(err);
+	});
+}
 </script>
