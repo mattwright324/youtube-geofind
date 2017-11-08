@@ -1,2 +1,3 @@
-
-Example.html
+*.sh
+_site/
+Gemfile.lock

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Discover Geo-tagged Videos - YouTube Geofind</title>
+		{% include_relative head.html %}
+	</head>
+
+	<body>
+		{% include_relative nav.html %}
+		<div id="map"></div>
+		<main id="content" role="main" class="container">
+			{{ content }}
+		</main><!-- /.container -->
+
+		<footer class="footer" align=center>
+			<div class="container">
+				<span class="text-muted">© 2017 Matthew Wright. <br>
+					<a target="_blank" href="https://github.com/mattwright324"><img src="https://github.com/favicon.ico" width=16px height=16px /> mattwright324</a>
+				</span>
+			</div>
+		</footer>
+		
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=initMap"></script>
+	</body>
+</html>
