@@ -10,8 +10,11 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 
 <label for="channelInput">Location</label>
 <div id="topic-form" class="d-flex flex-column">
-	<input type="text" class="form-control" id="q" aria-describedby="help"
+	<input type="text" class="form-control" id="address" aria-describedby="help"
 		placeholder="Name, address, or city"
+		value=""></input>
+	<input type="text" class="form-control" id="q" aria-describedby="help"
+		placeholder="search keywords here"
 		value=""></input>
 	<select id="distance" class="custom-select">
 		<option value="1">1km</option>
@@ -34,7 +37,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 	</select>
 	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
 </div>
-<small id="help" class="form-text text-muted">Type keywords as if searching for videos actually on YouTube.</small>
+<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
 <small id="orderhelp" class="form-text text-muted">
 	* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
 </small>
@@ -45,6 +48,12 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <br>
 
 <script>
+$("#address").keyup(function(event) {
+	if (event.keyCode === 13) {
+		geocodeAddress();
+		updateAll();
+	}
+});
 var locationMarker;
 var geocoder;
 var circle;
@@ -72,8 +81,7 @@ whenAvailable("google", function() {
 	});
 	locationMarker.addListener("dragend", function() {
 		console.log("Drag end");
-		updateLocationAddress();
-		updateCircle();
+		updateAll();
 	});
 	document.getElementById("distance").onchange = function() {
 		updateCircle();
@@ -82,6 +90,33 @@ whenAvailable("google", function() {
 	updateLocationAddress();
 	updateCircle();
 });
+function refitMapToLocation() {
+	let bounds = new google.maps.LatLngBounds();
+	bounds.extend(locationMarker.getPosition());
+	bounds.union(circle.getBounds());
+	map.fitBounds(bounds);
+}
+function updateAll() {
+	updateLocationAddress();
+	updateCircle();
+	refitMapToLocation();
+}
+function geocodeAddress() {
+	geocoder.geocode({address: document.getElementById("address").value}, function(res, stat) {
+		if(stat === "OK") {
+			if(res[0]) {
+				let results = res[0];
+				let latlng = results.geometry.location;
+				locationMarker.setPosition(latlng);
+				updateAll();
+			} else {
+				console.log("No results");
+			}
+		} else {
+			console.log(stat);
+		}
+	});
+}
 function getDistance() {
 	let dist_list = document.getElementById("distance");
 	let distance = dist_list.options[dist_list.selectedIndex].value * 1000;
@@ -106,10 +141,10 @@ function updateLocationAddress() {
 			console.log(stat);
 			if(stat === "OK") {
 				if(res[0]) {
-					$("#q").attr("value", res[0].formatted_address);
+					$("#address").attr("value", res[0].formatted_address);
 					console.log(res[0].formatted_address);
 				} else {
-					$("#q").attr("value", pos.lat()+","+pos.lng());
+					$("#address").attr("value", pos.lat()+","+pos.lng());
 					console.log("No results found");
 				}
 			} else {
@@ -124,10 +159,12 @@ function dangerError(err) {
 }
 function search() {
 	$("#topic-form *").attr("disabled",true);
+	let addr = document.getElementById("address").value;
 	let q = document.getElementById("q").value;
 	let e = document.getElementById("order-by");
 	let orderBy = e.options[e.selectedIndex].value;
 	let data = {
+		addr: addr,
 		q: q,
 		orderBy: orderBy,
 		distance: getDistance()
@@ -145,7 +182,7 @@ function doSearch(data, pageToken, page) {
 	});
 	let pos = locationMarker.getPosition();
 	youtube.ajax("search", {
-		q: "",
+		q: data.q,
 		maxResults: 50,
 		order: data.orderBy,
 		location: pos.lat()+","+pos.lng(),
@@ -194,21 +231,15 @@ function doSearch(data, pageToken, page) {
 														'</table>'+
 													'</div>'
 								});
-								/*let icon = {
-									url: thumbUrl,
-									scaledSize: new google.maps.Size(20, 20),
-									origin: new google.maps.Point(0,0),
-									anchor: new google.maps.Point(0,0)
-								}*/
 								let marker = new google.maps.Marker({
 									position:{lat: latitude, lng: longitude},
 									map: map,
-									//icon: icon,
 									videoId: item.id,
 									publishedAt: item.snippet.publishedAt,
 									channelTitle: item.snippet.channelTitle,
 									title: item.snippet.title
 								});
+								slowLoadProfile(marker, item.snippet.channelId);
 								marker.addListener('click', function() {
 									infowindow.open(map, marker);
 								});

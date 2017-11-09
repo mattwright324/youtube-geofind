@@ -13,21 +13,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 	<input type="text" class="form-control" id="q" aria-describedby="help"
 		placeholder="Search"
 		value="exploring &quot;abandonded&quot;"></input>
-	<!--
-	<select id="distance" class="custom-select">
-		<option value="1">1km</option>
-		<option value="2">2km</option>
-		<option value="5">5km</option>
-		<option value="10" selected>10km</option>
-		<option value="15">15km</option>
-		<option value="20">20km</option>
-		<option value="50">50km</option>
-		<option value="100">100km</option>
-		<option value="200">200km</option>
-		<option value="500">500km</option>
-		<option value="1000">1000km</option>
-	</select>
-	-->
 	<select id="order-by" aria-describedby="orderhelp" class="custom-select">
 		<option value="date" selected>By Date</option>
 		<option value="relevance">By Relevance</option>
@@ -46,16 +31,10 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 </div>
 <br>
 <script>
-//var locationMarker;
-whenAvailable("google", function() {
-	console.log("GOOGLE defined");
-	/*locationMarker = new google.maps.Marker({
-		position: map.center,
-		map: map,
-		draggable: true,
-		title: "Drag me!"
-	});
-	markers.push(marker);*/
+$("#q").keyup(function(event) {
+	if (event.keyCode === 13) {
+		$("#btnFind").click();
+	}
 });
 // Logs error and changes progressbar.
 function dangerError(err) {
@@ -65,8 +44,6 @@ function dangerError(err) {
 function search() {
 	$("#topic-form *").attr("disabled",true);
 	let q = document.getElementById("q").value;
-	//let dist_list = document.getElementById("distance");
-	//let distance = dist_list.options[dist_list.selectedIndex].value;
 	let e = document.getElementById("order-by");
 	let orderBy = e.options[e.selectedIndex].value;
 	let data = {
@@ -132,21 +109,15 @@ function doSearch(data, pageToken, page) {
 														'</table>'+
 													'</div>'
 								});
-								/*let icon = {
-									url: thumbUrl,
-									scaledSize: new google.maps.Size(20, 20),
-									origin: new google.maps.Point(0,0),
-									anchor: new google.maps.Point(0,0)
-								}*/
 								let marker = new google.maps.Marker({
 									position:{lat: latitude, lng: longitude},
 									map: map,
-									//icon: icon,
 									videoId: item.id,
 									publishedAt: item.snippet.publishedAt,
 									channelTitle: item.snippet.channelTitle,
 									title: item.snippet.title
 								});
+								slowLoadProfile(marker, item.snippet.channelId);
 								marker.addListener('click', function() {
 									infowindow.open(map, marker);
 								});

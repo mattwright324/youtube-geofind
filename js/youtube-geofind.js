@@ -22,6 +22,22 @@ function refitMapToMarkers() {
 	map.fitBounds(bounds);
 }
 
+function slowLoadProfile(marker, channelId) {
+	youtube.ajax("channels", {
+		part: "snippet",
+		id: channelId
+	}).done(function(res) {
+		let channel = res.items[0];
+		let icon = {
+			url: channel.snippet.thumbnails.default.url,
+			scaledSize: new google.maps.Size(20, 20),
+			origin: new google.maps.Point(0,0),
+			anchor: new google.maps.Point(0,0)
+		}
+		marker.setIcon(icon);
+	});
+}
+
 // 
 function resize() {
 	let width = $(window).width();
