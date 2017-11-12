@@ -7,15 +7,22 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <div id="geotag-header">
 	<h4>By Channel</h4>
 </div>
-<label for="channelInput">Channel ID or Username</label>
-<div class="d-flex flex-row">
-	<input type="text" class="form-control" id="channelInput" aria-describedby="help"
-		placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
-		value="oceanexplorergov"></input>
+
+<div class="d-flex flex-column">
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Channel</label>
+		<div class="col-10">
+			<input type="text" class="form-control" id="channelInput" aria-describedby="help"
+				placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
+				value="oceanexplorergov"></input>
+			<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
+		</div>
+	</div>
 	<button type="button" class="btn btn-primary" id="btnFind" onclick="submitChannelList()">Check Videos</button>
 </div>
-<small id="help" class="form-text text-muted">Enter the channel id or channel name to check their videos for geo-tags. Comma-separated lists are accepted.</small>
+
 <br>
+
 <div id="geotag-header" class="d-flex justify-content-between">
 	<h4>Geotag Entries</h4>
 	<button type="button" class="btn btn-link" id="btnSaveAll" onclick="saveAsCSV('0')" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>

@@ -3,6 +3,22 @@ var map_init = false;
 var markers = [];
 var channelIds = [];
 
+function MyMap() {
+	this.keyVal = {};
+}
+MyMap.prototype = {
+	put : function(key, val) {
+		this.keyVal[key] = val;
+	},
+	get: function(key) {
+		return this.keyVal[key];
+	},
+	containsKey: function(key) {
+		return this.keyVal[key] !== undefined;
+	}
+}
+var channelMap = new MyMap();
+
 // Google Map
 function initMap() {
 	let centerPos = {lat: 40.697, lng: -74.259};
@@ -22,20 +38,74 @@ function refitMapToMarkers() {
 	map.fitBounds(bounds);
 }
 
+function getAdvancedOptions() {
+	let searchOptions = {};
+	if($("#live-only").is(":checked")) {
+		searchOptions["eventType"] = "live";
+	}
+	if($("#creativeCommons").is(":checked")) {
+		searchOptions["videoLiscense"] = "creativeCommon";
+	}
+	if($("#hd-only").is(":checked")) {
+		searchOptions["videoDefinition"] = "high";
+	}
+	if($("#embedded-only").is(":checked")) {
+		searchOptions["videoEmbeddable"] = "true";
+	}
+	if($("#syndicated-only").is(":checked")) {
+		searchOptions["videoSyndicated"] = "true";
+	}
+	let time = $("#time-frame").find(":selected").val();
+	if(time != "any") {
+		let beforeDate = new Date();
+		let afterDate = new Date(beforeDate);
+		if(time == "hour-1") {
+			afterDate.setTime(beforeDate.getTime() - (1*60*60*1000));
+		} else if(time == "hour-3") {
+			afterDate.setTime(beforeDate.getTime() - (3*60*60*1000));
+		} else if(time == "hour-6") {
+			afterDate.setTime(beforeDate.getTime() - (6*60*60*1000));
+		} else if(time == "hour-12") {
+			afterDate.setTime(beforeDate.getTime() - (12*60*60*1000));
+		} else if(time == "hour-24") {
+			afterDate.setTime(beforeDate.getTime() - (24*60*60*1000));
+		} else if(time == "day-7") {
+			afterDate.setTime(beforeDate.getTime() - (7*24*60*60*1000));
+		} else if(time == "day-30") {
+			afterDate.setTime(beforeDate.getTime() - (30*24*60*60*1000));
+		} else if(time == "day-365") {
+			afterDate.setTime(beforeDate.getTime() - (365*24*60*60*1000));
+		}
+		searchOptions["publishedBefore"] = beforeDate.toJSON();
+		searchOptions["publishedAfter"] = afterDate.toJSON();
+	}
+	console.log(searchOptions);
+	return searchOptions;
+}
+
 function slowLoadProfile(marker, channelId) {
-	youtube.ajax("channels", {
-		part: "snippet",
-		id: channelId
-	}).done(function(res) {
-		let channel = res.items[0];
+	function setMarker(marker, thumbUrl) {
 		let icon = {
-			url: channel.snippet.thumbnails.default.url,
+			url: thumbUrl,
 			scaledSize: new google.maps.Size(20, 20),
 			origin: new google.maps.Point(0,0),
 			anchor: new google.maps.Point(0,0)
 		}
 		marker.setIcon(icon);
-	});
+	}
+	if(channelMap.containsKey(channelId)) {
+		setMarker(marker, channelMap.get(channelId));
+	} else {
+		youtube.ajax("channels", {
+			part: "snippet",
+			id: channelId
+		}).done(function(res) {
+			let channel = res.items[0];
+			let thumbUrl = channel.snippet.thumbnails.default.url;
+			channelMap.put(channelId, thumbUrl);
+			setMarker(marker, thumbUrl);
+		});
+	}	
 }
 
 // 

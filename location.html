@@ -4,50 +4,103 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
-<div id="geotag-header">
+<div id="geotag-header" >
 	<h4>By Location</h4>
 </div>
 
-<label for="channelInput">Location</label>
 <div id="topic-form" class="d-flex flex-column">
-	<input type="text" class="form-control" id="address" aria-describedby="help"
-		placeholder="Name, address, or city"
-		value=""></input>
-	<input type="text" class="form-control" id="q" aria-describedby="help"
-		placeholder="search keywords here"
-		value=""></input>
-	<select id="distance" class="custom-select">
-		<option value="1">1km</option>
-		<option value="2">2km</option>
-		<option value="5">5km</option>
-		<option value="10" selected>10km</option>
-		<option value="15">15km</option>
-		<option value="20">20km</option>
-		<option value="50">50km</option>
-		<option value="100">100km</option>
-		<option value="200">200km</option>
-		<option value="500">500km</option>
-		<option value="1000">1000km</option>
-	</select>
-	<select id="order-by" aria-describedby="orderhelp" class="custom-select">
-		<option value="date" selected>By Date</option>
-		<option value="relevance">By Relevance</option>
-		<option value="viewCount">By Views</option>
-		<option value="rating">By Rating</option>
-	</select>
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Location</label>
+		<div class="col-10">
+			<input type="text" class="form-control" id="address" aria-describedby="help"
+				placeholder="name, address, or city"
+				value=""></input>
+			<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Radius</label>
+		<div class="col-10">
+			<select id="distance" class="custom-select">
+				<option value="1">1km</option>
+				<option value="2">2km</option>
+				<option value="5">5km</option>
+				<option value="10" selected>10km</option>
+				<option value="15">15km</option>
+				<option value="20">20km</option>
+				<option value="50">50km</option>
+				<option value="100">100km</option>
+				<option value="200">200km</option>
+				<option value="500">500km</option>
+				<option value="1000">1000km</option>
+			</select>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Keywords</label>
+		<div class="col-10">
+			<input type="text" class="form-control" id="q" aria-describedby="help"
+				placeholder="Search keywords here"
+				value=""></input>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Sort by</label>
+		<div class="col-10">
+			<select id="order-by" aria-describedby="orderhelp" class="custom-select">
+				<option value="date" selected>Date</option>
+				<option value="relevance">Relevance</option>
+				<option value="viewCount">Views</option>
+				<option value="rating">Rating</option>
+			</select>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label">Timeframe</label>
+		<div class="col-10" style="width: 100%">
+			<select id="time-frame" aria-describedby="orderhelp" class="custom-select">
+				<option value="hour-any" selected>Any</option>
+				<option value="hour-1">Past hour</option>
+				<option value="hour-3">Past 3 hours</option>
+				<option value="hour-6">Past 6 hours</option>
+				<option value="hour-12">Past 12 hours</option>
+				<option value="hour-24">Past 24 hours</option>
+				<option value="day-7">Past 7 days</option>
+				<option value="day-30">Past 30 days</option>
+				<option value="day-365">Past year</option>
+				<option value="custom">Custom</option>
+			</select>
+			<div id="custom-range" style="display: hidden;">
+				<label class="col-2 col-form-label" style="min-width: 150px;">Start date</label>
+				<input class="form-control" style="max-width: 200px; display: inline-block;" type="publishedAfter" value="2015-01-01">
+				<br>
+				<label class="col-2 col-form-label" style="min-width: 150px;">End date</label>
+				<input class="form-control" style="max-width: 200px; display: inline-block;" type="publishedBefore" value="2017-10-25">
+			</div>
+		</div>
+	</div>
+	{% include_relative form_advanced.html %}
 	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
 </div>
-<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
-<small id="orderhelp" class="form-text text-muted">
-	* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
-</small>
+<small class="form-text text-muted">* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.</small>
+<small class="form-text text-muted">* YouTube may return results close yet outside the specific search radius.</small>
 <br>
-<div class="progress" height=30>
+<div class="progress" style="height: 35px; ">
 	<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
 <br>
 
 <script>
+$("#time-frame").on("change", function() {
+	let value = this.value;
+	if(value == "custom") {
+		$("#custom-range").show();
+	} else {
+		$("#custom-range").hide();
+	}
+});
+$("#custom-range").hide();
+
 $("#address").keyup(function(event) {
 	if (event.keyCode === 13) {
 		geocodeAddress();
@@ -57,6 +110,12 @@ $("#address").keyup(function(event) {
 var locationMarker;
 var geocoder;
 var circle;
+/*var heatmapData = [];
+var heatmap = new google.maps.visualization.HeatmapLayer({
+	data: heatmapData,
+	map: map
+});*/
+
 whenAvailable("google", function() {
 	console.log("Google Defined");
 	geocoder = new google.maps.Geocoder();
@@ -181,16 +240,19 @@ function doSearch(data, pageToken, page) {
 		page: page
 	});
 	let pos = locationMarker.getPosition();
-	youtube.ajax("search", {
+	youtube.ajax("search", $.extend({
 		q: data.q,
 		maxResults: 50,
 		order: data.orderBy,
 		location: pos.lat()+","+pos.lng(),
 		locationRadius: getDistance()/1000+"km",
+		videoLicense: "any",
+		videoSyndicated: "any",
+		videoType: "any",
 		type: "video",
 		part: "snippet",
 		pageToken: pageToken,
-	}).done(function(res) {
+	},getAdvancedOptions())).done(function(res) {
 		let videoIds = [];
 		for(let i=0; i<res.items.length; i++) {
 			let item = res.items[i];
@@ -239,6 +301,7 @@ function doSearch(data, pageToken, page) {
 									channelTitle: item.snippet.channelTitle,
 									title: item.snippet.title
 								});
+								//heatmapData.push({location: marker.getPosition(), radius: 1000});
 								slowLoadProfile(marker, item.snippet.channelId);
 								marker.addListener('click', function() {
 									infowindow.open(map, marker);
@@ -251,6 +314,7 @@ function doSearch(data, pageToken, page) {
 					}
 				}
 			}
+			//heatmap.setData(heatmapData);
 			page = page + 1;
 			if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
 				doSearch(data, res.nextPageToken, page);
