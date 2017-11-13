@@ -43,8 +43,8 @@ function getAdvancedOptions() {
 	if($("#live-only").is(":checked")) {
 		searchOptions["eventType"] = "live";
 	}
-	if($("#creativeCommons").is(":checked")) {
-		searchOptions["videoLiscense"] = "creativeCommon";
+	if($("#creative-commons").is(":checked")) {
+		searchOptions["videoLicense"] = "creativeCommon";
 	}
 	if($("#hd-only").is(":checked")) {
 		searchOptions["videoDefinition"] = "high";
@@ -56,7 +56,7 @@ function getAdvancedOptions() {
 		searchOptions["videoSyndicated"] = "true";
 	}
 	let time = $("#time-frame").find(":selected").val();
-	if(time != "any") {
+	if(time != "hour-any") {
 		let beforeDate = new Date();
 		let afterDate = new Date(beforeDate);
 		if(time == "hour-1") {
@@ -75,6 +75,9 @@ function getAdvancedOptions() {
 			afterDate.setTime(beforeDate.getTime() - (30*24*60*60*1000));
 		} else if(time == "day-365") {
 			afterDate.setTime(beforeDate.getTime() - (365*24*60*60*1000));
+		} else if(time == "custom") {
+			beforeDate = new Date(document.getElementById("publishedBefore").value);
+			afterDate = new Date(document.getElementById("publishedAfter").value);	
 		}
 		searchOptions["publishedBefore"] = beforeDate.toJSON();
 		searchOptions["publishedAfter"] = afterDate.toJSON();

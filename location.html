@@ -55,30 +55,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 			</select>
 		</div>
 	</div>
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Timeframe</label>
-		<div class="col-10" style="width: 100%">
-			<select id="time-frame" aria-describedby="orderhelp" class="custom-select">
-				<option value="hour-any" selected>Any</option>
-				<option value="hour-1">Past hour</option>
-				<option value="hour-3">Past 3 hours</option>
-				<option value="hour-6">Past 6 hours</option>
-				<option value="hour-12">Past 12 hours</option>
-				<option value="hour-24">Past 24 hours</option>
-				<option value="day-7">Past 7 days</option>
-				<option value="day-30">Past 30 days</option>
-				<option value="day-365">Past year</option>
-				<option value="custom">Custom</option>
-			</select>
-			<div id="custom-range" style="display: hidden;">
-				<label class="col-2 col-form-label" style="min-width: 150px;">Start date</label>
-				<input class="form-control" style="max-width: 200px; display: inline-block;" type="publishedAfter" value="2015-01-01">
-				<br>
-				<label class="col-2 col-form-label" style="min-width: 150px;">End date</label>
-				<input class="form-control" style="max-width: 200px; display: inline-block;" type="publishedBefore" value="2017-10-25">
-			</div>
-		</div>
-	</div>
 	{% include_relative form_advanced.html %}
 	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
 </div>
@@ -139,7 +115,7 @@ whenAvailable("google", function() {
 		zIndex:99999999
 	});
 	locationMarker.addListener("dragend", function() {
-		console.log("Drag end");
+		// console.log("Drag end");
 		updateAll();
 	});
 	document.getElementById("distance").onchange = function() {
@@ -201,7 +177,7 @@ function updateLocationAddress() {
 			if(stat === "OK") {
 				if(res[0]) {
 					$("#address").attr("value", res[0].formatted_address);
-					console.log(res[0].formatted_address);
+					// console.log(res[0].formatted_address);
 				} else {
 					$("#address").attr("value", pos.lat()+","+pos.lng());
 					console.log("No results found");
@@ -246,9 +222,6 @@ function doSearch(data, pageToken, page) {
 		order: data.orderBy,
 		location: pos.lat()+","+pos.lng(),
 		locationRadius: getDistance()/1000+"km",
-		videoLicense: "any",
-		videoSyndicated: "any",
-		videoType: "any",
 		type: "video",
 		part: "snippet",
 		pageToken: pageToken,
@@ -264,7 +237,6 @@ function doSearch(data, pageToken, page) {
 			maxResults: 50, 
 			part: "snippet,recordingDetails"
 		}).done(function(res2) {
-			console.log(res2);
 			let f = 0;
 			for(let i=0; i<res2.items.length; i++) {
 				let item = res2.items[i];

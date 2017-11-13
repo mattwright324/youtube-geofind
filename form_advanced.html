@@ -1,3 +1,28 @@
+<div class="form-group row">
+	<label class="col-2 col-form-label">Timeframe</label>
+	<div class="col-10" style="width: 100%">
+		<select id="time-frame" aria-describedby="orderhelp" class="custom-select">
+			<option value="hour-any" selected>Any</option>
+			<option value="hour-1">Past hour</option>
+			<option value="hour-3">Past 3 hours</option>
+			<option value="hour-6">Past 6 hours</option>
+			<option value="hour-12">Past 12 hours</option>
+			<option value="hour-24">Past 24 hours</option>
+			<option value="day-7">Past 7 days</option>
+			<option value="day-30">Past 30 days</option>
+			<option value="day-365">Past year</option>
+			<option value="custom">Custom</option>
+		</select>
+		<div id="custom-range" style="display: hidden;">
+			<label class="col-2 col-form-label" style="min-width: 150px;">Start date</label>
+			<input class="form-control" style="max-width: 200px; display: inline-block;" id="publishedAfter" type="date" value="2005-02-13">
+			<br>
+			<label class="col-2 col-form-label" style="min-width: 150px;">End date</label>
+			<input class="form-control" style="max-width: 200px; display: inline-block;" id="publishedBefore" type="date" value="2017-12-31">
+		</div>
+	</div>
+</div>
+
 <div class="form-check">
   <label class="form-check-label">
     <input id="advanced" class="form-check-input" type="checkbox" value="">
