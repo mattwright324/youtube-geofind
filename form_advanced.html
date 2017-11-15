@@ -13,12 +13,20 @@
 			<option value="day-365">Past year</option>
 			<option value="custom">Custom</option>
 		</select>
-		<div id="custom-range" style="display: hidden;">
-			<label class="col-2 col-form-label" style="min-width: 150px;">Start date</label>
-			<input class="form-control" style="max-width: 200px; display: inline-block;" id="publishedAfter" type="date" value="2005-02-13">
-			<br>
-			<label class="col-2 col-form-label" style="min-width: 150px;">End date</label>
-			<input class="form-control" style="max-width: 200px; display: inline-block;" id="publishedBefore" type="date" value="2017-12-31">
+	</div>
+</div>
+
+<div id="custom-range" style="display: hidden;">
+	<div class="form-group row">
+		<label class="col-2 col-form-label"><i>Start date</i></label>
+		<div class="col-10">
+			<input class="form-control" style="max-width: 200px;" id="publishedAfter" type="date" value="2005-02-13">
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label" ><i>End date</i></label>
+		<div class="col-10">
+			<input class="form-control" style="max-width: 200px;" id="publishedBefore" type="date" value="2017-12-31">
 		</div>
 	</div>
 </div>

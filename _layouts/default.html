@@ -8,11 +8,13 @@
 	<body>
 		{% include_relative nav.html %}
 		<div id="map"></div>
-		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&libraries=visualization&callback=initMap"></script>
 		<main id="content" role="main" class="container">
 			{{ content }}
 		</main><!-- /.container -->
-
+		<script>
+			disableForm(true);
+		</script>
+		
 		<footer class="footer" align=center>
 			<div class="container">
 				<span class="text-muted">© 2017 Matthew Wright. <br>
@@ -20,6 +22,6 @@
 				</span>
 			</div>
 		</footer>
-		
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&libraries=visualization&callback=initMap"></script>
 	</body>
 </html>

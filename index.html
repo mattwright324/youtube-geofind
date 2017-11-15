@@ -4,50 +4,52 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
-<div id="geotag-header">
-	<h4>By Channel</h4>
-</div>
-
-<div class="d-flex flex-column">
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Channel</label>
-		<div class="col-10">
-			<input type="text" class="form-control" id="channelInput" aria-describedby="help"
-				placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
-				value="oceanexplorergov"></input>
-			<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
-		</div>
+<div class="content-section">
+	<div id="geotag-header">
+		<h4>By Channel</h4>
 	</div>
-	<button type="button" class="btn btn-primary" id="btnFind" onclick="submitChannelList()">Check Videos</button>
+	<div id="search-form" class="d-flex flex-column">
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Channel</label>
+			<div class="col-10">
+				<input type="text" class="form-control" id="channelInput" aria-describedby="help"
+					placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
+					value="oceanexplorergov"></input>
+				<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
+			</div>
+		</div>
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.inspectChannelList('channelInput')">Check Videos</button>
+	</div>
 </div>
-
 <br>
 
-<div id="geotag-header" class="d-flex justify-content-between">
-	<h4>Geotag Entries</h4>
-	<button type="button" class="btn btn-link" id="btnSaveAll" onclick="saveAsCSV('0')" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
-</div>
-
-<div id="channels" class="d-flex flex-column">
-	<div id="channel-list" class="d-flex flex-column-reverse"></div>
-	<div id="channel-example" class="d-flex flex-row align-content-center channel blurry">
-		<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
-		<div id="example-content" class="d-flex justify-content-between" style="width: 100%">
-			<div id="ec1" class="d-flex flex-column">
-				<label id="channel-name">Channel Name</label>
-				<label id="tag-count">0 videos geo-tagged</label>
-			</div>
-			<div id="ec2" class="d-flex flex-column" style="width: 25%">
-				<div class="progress">
-					<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+<div class="content-section">
+	<div id="geotag-header" class="d-flex justify-content-between">
+		<h4>Geotag Entries</h4>
+		<button type="button" class="btn btn-link" id="btnSaveAll" onclick="geodata.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+	</div>
+	<div id="channels" class="d-flex flex-column">
+		<div id="channel-list" class="d-flex flex-column-reverse"></div>
+		<div id="channel-example" class="d-flex flex-row align-content-center channel blurry">
+			<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
+			<div id="example-content" class="d-flex justify-content-between" style="width: 100%">
+				<div id="ec1" class="d-flex flex-column">
+					<label id="channel-name">Channel Name</label>
+					<label id="tag-count">0 videos geo-tagged</label>
 				</div>
-				<button type="button" class="btn btn-link" id="btnSave" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>
+				<div id="ec2" class="d-flex flex-column" style="width: 25%">
+					<div class="progress">
+						<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+					</div>
+					<button type="button" class="btn btn-link" id="btnSave" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
 <br>
-<div id="examples">
+
+<div class="content-section" id="examples">
 	<div id="geotag-header">
 		<h4>Example Channels</h4>
 	</div>
@@ -65,12 +67,9 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		<li>UCtFNKt_IKBpalOWXuIreW7Q (Exploring Abandoned Mines)</li>
 	</ol>
 	<small class="form-text text-muted">All of the listed channels above will have geotagged videos.</small>
-	<br>
 </div>
+<br>
+
 <script>
-	$("#channelInput").keyup(function(event) {
-		if (event.keyCode === 13) {
-			$("#btnFind").click();
-		}
-	});
+setupAsPage("channel");
 </script>

@@ -4,305 +4,86 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
-<div id="geotag-header" >
-	<h4>By Location</h4>
+	<div class="content-section">
+	<div id="geotag-header" class="d-flex justify-content-between">
+		<h4>By Location</h4>
+		<div class="progress" style="height: 35px; width: 60%;">
+			<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	</div>
+	<div id="search-form" class="d-flex flex-column">
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Location</label>
+			<div class="col-10">
+				<input type="text" class="form-control" id="address" aria-describedby="help"
+					placeholder="name, address, or city"
+					value=""></input>
+				<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Radius</label>
+			<div class="col-10">
+				<select id="distance" class="custom-select">
+					<option value="1">1km</option>
+					<option value="2">2km</option>
+					<option value="5">5km</option>
+					<option value="10" selected>10km</option>
+					<option value="15">15km</option>
+					<option value="20">20km</option>
+					<option value="50">50km</option>
+					<option value="100">100km</option>
+					<option value="200">200km</option>
+					<option value="500">500km</option>
+					<option value="1000">1000km</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Keywords</label>
+			<div class="col-10">
+				<input type="text" class="form-control" id="q" aria-describedby="help"
+					placeholder="Search keywords here"
+					value=""></input>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Sort by</label>
+			<div class="col-10">
+				<select id="order-by" aria-describedby="orderhelp" class="custom-select">
+					<option value="date" selected>Date</option>
+					<option value="relevance">Relevance</option>
+					<option value="viewCount">Views</option>
+					<option value="rating">Rating</option>
+				</select>
+			</div>
+		</div>
+		{% include_relative form_advanced.html %}
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
+	</div>
+	<small class="form-text text-muted">* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.</small>
+	<small class="form-text text-muted">* YouTube may return results close yet outside the specific search radius.</small>
 </div>
-
-<div id="topic-form" class="d-flex flex-column">
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Location</label>
-		<div class="col-10">
-			<input type="text" class="form-control" id="address" aria-describedby="help"
-				placeholder="name, address, or city"
-				value=""></input>
-			<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
-		</div>
-	</div>
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Radius</label>
-		<div class="col-10">
-			<select id="distance" class="custom-select">
-				<option value="1">1km</option>
-				<option value="2">2km</option>
-				<option value="5">5km</option>
-				<option value="10" selected>10km</option>
-				<option value="15">15km</option>
-				<option value="20">20km</option>
-				<option value="50">50km</option>
-				<option value="100">100km</option>
-				<option value="200">200km</option>
-				<option value="500">500km</option>
-				<option value="1000">1000km</option>
-			</select>
-		</div>
-	</div>
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Keywords</label>
-		<div class="col-10">
-			<input type="text" class="form-control" id="q" aria-describedby="help"
-				placeholder="Search keywords here"
-				value=""></input>
-		</div>
-	</div>
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Sort by</label>
-		<div class="col-10">
-			<select id="order-by" aria-describedby="orderhelp" class="custom-select">
-				<option value="date" selected>Date</option>
-				<option value="relevance">Relevance</option>
-				<option value="viewCount">Views</option>
-				<option value="rating">Rating</option>
-			</select>
-		</div>
-	</div>
-	{% include_relative form_advanced.html %}
-	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
-</div>
-<small class="form-text text-muted">* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.</small>
-<small class="form-text text-muted">* YouTube may return results close yet outside the specific search radius.</small>
 <br>
-<div class="progress" style="height: 35px; ">
-	<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+<br>
+
+<div class="content-section">
+	<div id="geotag-header" class="d-flex justify-content-between">
+		<h4>Videos</h4>
+		<button type="button" class="btn btn-link" id="btnSaveAll" onclick="geodata.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+	</div>
+	<div class="table-responsive">
+		<table id="dataTable" class="table table-striped table-bordered" width="100%" cellspacing="0">
+			<thead><tr><th>Column</th></tr></thead>
+			<tbody id="dataBody"></tbody>
+		</table>
+	</div>
 </div>
 <br>
 
 <script>
-$("#time-frame").on("change", function() {
-	let value = this.value;
-	if(value == "custom") {
-		$("#custom-range").show();
-	} else {
-		$("#custom-range").hide();
-	}
+setupAsPage("location");
+$(document).ready(function() {
+    $("#dataTable").DataTable();
 });
-$("#custom-range").hide();
-
-$("#address").keyup(function(event) {
-	if (event.keyCode === 13) {
-		geocodeAddress();
-		updateAll();
-	}
-});
-var locationMarker;
-var geocoder;
-var circle;
-/*var heatmapData = [];
-var heatmap = new google.maps.visualization.HeatmapLayer({
-	data: heatmapData,
-	map: map
-});*/
-
-whenAvailable("google", function() {
-	console.log("Google Defined");
-	geocoder = new google.maps.Geocoder();
-	circle = new google.maps.Circle({
-		strokeColor: "#00fff0",
-		strokeOpacity: 0.5,
-		strokeWeight: 2,
-		fillColor: "#00fff0",
-		fillOpacity: 0.15,
-		map: map,
-		radius: 5000,
-		center: map.center
-	});
-	locationMarker = new google.maps.Marker({
-		position: map.center,
-		map: map,
-		draggable: true,
-		icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-		title: "Drag me!",
-		optimized: false,
-		zIndex:99999999
-	});
-	locationMarker.addListener("dragend", function() {
-		// console.log("Drag end");
-		updateAll();
-	});
-	document.getElementById("distance").onchange = function() {
-		updateCircle();
-	}
-	markers.push(locationMarker);
-	updateLocationAddress();
-	updateCircle();
-});
-function refitMapToLocation() {
-	let bounds = new google.maps.LatLngBounds();
-	bounds.extend(locationMarker.getPosition());
-	bounds.union(circle.getBounds());
-	map.fitBounds(bounds);
-}
-function updateAll() {
-	updateLocationAddress();
-	updateCircle();
-	refitMapToLocation();
-}
-function geocodeAddress() {
-	geocoder.geocode({address: document.getElementById("address").value}, function(res, stat) {
-		if(stat === "OK") {
-			if(res[0]) {
-				let results = res[0];
-				let latlng = results.geometry.location;
-				locationMarker.setPosition(latlng);
-				updateAll();
-			} else {
-				console.log("No results");
-			}
-		} else {
-			console.log(stat);
-		}
-	});
-}
-function getDistance() {
-	let dist_list = document.getElementById("distance");
-	let distance = dist_list.options[dist_list.selectedIndex].value * 1000;
-	return distance;
-}
-function clearMarkers() {
-	for(let i=1; i<markers.length; i++) {
-		if(markers[i].type != "main") {
-			markers[i].map = null;
-		}
-	}
-}
-function updateCircle() {
-	circle.setRadius(getDistance());
-	circle.center = locationMarker.getPosition();
-}
-function updateLocationAddress() {
-	if(locationMarker != null) {
-		let pos = locationMarker.getPosition();
-		geocoder.geocode({"location": pos}, function(res, stat) {
-			console.log(res);
-			console.log(stat);
-			if(stat === "OK") {
-				if(res[0]) {
-					$("#address").attr("value", res[0].formatted_address);
-					// console.log(res[0].formatted_address);
-				} else {
-					$("#address").attr("value", pos.lat()+","+pos.lng());
-					console.log("No results found");
-				}
-			} else {
-				console.log("Geocoder failed due to "+status);
-			}
-		});
-	}
-}
-function dangerError(err) {
-	console.error(err);
-	$("#videoProg").removeClass("bg-warning").addClass("bg-danger").removeClass("progress-bar-animated");
-}
-function search() {
-	$("#topic-form *").attr("disabled",true);
-	let addr = document.getElementById("address").value;
-	let q = document.getElementById("q").value;
-	let e = document.getElementById("order-by");
-	let orderBy = e.options[e.selectedIndex].value;
-	let data = {
-		addr: addr,
-		q: q,
-		orderBy: orderBy,
-		distance: getDistance()
-	};
-	$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
-	locationMarker.draggable = false;
-	doSearch(data, "", 0);
-}
-function doSearch(data, pageToken, page) {
-	$("#videoProg").text("Page "+page+" . . .");
-	console.log({
-		data: data,
-		pageToken: pageToken,
-		page: page
-	});
-	let pos = locationMarker.getPosition();
-	youtube.ajax("search", $.extend({
-		q: data.q,
-		maxResults: 50,
-		order: data.orderBy,
-		location: pos.lat()+","+pos.lng(),
-		locationRadius: getDistance()/1000+"km",
-		type: "video",
-		part: "snippet",
-		pageToken: pageToken,
-	},getAdvancedOptions())).done(function(res) {
-		let videoIds = [];
-		for(let i=0; i<res.items.length; i++) {
-			let item = res.items[i];
-			videoIds.push(item.id.videoId);
-		}
-		$("#videoProg").text("Page "+page+": "+videoIds.length+" videos . . .");
-		youtube.ajax("videos", {
-			id: videoIds.join(","), 
-			maxResults: 50, 
-			part: "snippet,recordingDetails"
-		}).done(function(res2) {
-			let f = 0;
-			for(let i=0; i<res2.items.length; i++) {
-				let item = res2.items[i];
-				if(item.hasOwnProperty('recordingDetails')) {
-					if(item.recordingDetails.hasOwnProperty('location')) {
-						let location = item.recordingDetails.location;
-						if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
-							let displayed = false;
-							for(let i=0; i<markers.length; i++) {
-								if(markers[i].videoId == item.id) {
-									displayed = true;
-								}
-							}
-							if(!displayed) {
-								let displayTitle = item.snippet.title.substring(0,65);
-								if(item.snippet.title.length > 65) displayTitle += "...";
-								let latitude = location.latitude;
-								let longitude = location.longitude;
-								let infowindow = new google.maps.InfoWindow({
-									content: '<div id="geotag">' +
-														'<table class="table table-sm">'+
-															'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
-															'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
-															'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
-															'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
-														'</table>'+
-													'</div>'
-								});
-								let marker = new google.maps.Marker({
-									position:{lat: latitude, lng: longitude},
-									map: map,
-									videoId: item.id,
-									publishedAt: item.snippet.publishedAt,
-									channelTitle: item.snippet.channelTitle,
-									title: item.snippet.title
-								});
-								//heatmapData.push({location: marker.getPosition(), radius: 1000});
-								slowLoadProfile(marker, item.snippet.channelId);
-								marker.addListener('click', function() {
-									infowindow.open(map, marker);
-								});
-								markers.push(marker);
-								refitMapToMarkers();
-							}
-							f = f + 1;
-						}
-					}
-				}
-			}
-			//heatmap.setData(heatmapData);
-			page = page + 1;
-			if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
-				doSearch(data, res.nextPageToken, page);
-			} else {
-				console.log("DONE -- "+res.items.length);
-				$("#videoProg").addClass("bg-success");
-				$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
-				$("#topic-form *").attr("disabled",false);
-			}	
-		}).fail(function(err2) {
-			console.log(err2);
-			dangerError(err2);
-		});
-	}).fail(function(err) {
-		console.log(err);
-		dangerError(err);
-	});
-}
 </script>

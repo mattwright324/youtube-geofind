@@ -39,15 +39,31 @@ body, html {
 #channel-name {
 	font-size: 1.3em;
 }
+#example-list li {
+	font-size: 1.2em;
+}
+.content-section {
+	padding: 10px;
+}
+.special-border {
+	border-width: 3px;
+	border-style: dotted;
+	border-color: rgba(127,127,127,0.1);
+}
 #geotag-header {
 	border-style: none none solid none;
 	border-color: rgb(153, 192, 255);
 	border-width: 6px;
 	padding-bottom: 10px;
 	margin-bottom: 15px;
+	background: linear-gradient(to top, rgba(153, 192, 255, 0.2), transparent, transparent);
+	padding-right: 10px;
+	padding-left: 10px;
 }
-#example-list li {
-	font-size: 1.2em;
+@media (max-width: 640px) {
+	.col-form-label {
+		display: none;
+	}
 }
 .btn-link {
 	cursor: pointer;
@@ -58,6 +74,7 @@ body, html {
 	padding-bottom: 20px;
 	font-size: 0.9em;
 	line-height: 200%;
+	text-align: center;
 }
 .blurry {
 	-webkit-filter: blur(5px); /* Safari */

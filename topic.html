@@ -4,166 +4,61 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
-<div id="geotag-header">
-	<h4>By Topic</h4>
+<div class="content-section">
+	<div id="geotag-header" class="d-flex justify-content-between">
+		<h4>By Topic</h4>
+		<div class="progress" style="height: 35px; width: 60%;">
+			<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	</div>
+	<div id="search-form" class="d-flex flex-column">
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Keywords</label>
+			<div class="col-10">
+				<input type="text" class="form-control" id="q" aria-describedby="help"
+					placeholder="Search"
+					value="exploring &quot;abandonded&quot;"></input>
+				<small id="help" class="form-text text-muted">Keywords as if actually searching YouTube.</small>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-2 col-form-label">Sort by</label>
+			<div class="col-10">
+				<select id="order-by" aria-describedby="orderhelp" class="custom-select">
+					<option value="date" selected>Date</option>
+					<option value="relevance">Relevance</option>
+					<option value="viewCount">Views</option>
+					<option value="rating">Rating</option>
+				</select>
+			</div>
+		</div>
+		{% include_relative form_advanced.html %}
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
+	</div>
+	<small id="orderhelp" class="form-text text-muted">
+		* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
+	</small>
 </div>
+<br>
+<br>
 
-<div id="topic-form" class="d-flex flex-column">
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Keywords</label>
-		<div class="col-10">
-			<input type="text" class="form-control" id="q" aria-describedby="help"
-				placeholder="Search"
-				value="exploring &quot;abandonded&quot;"></input>
-			<small id="help" class="form-text text-muted">Keywords as if actually searching YouTube.</small>
-		</div>
+<div class="content-section">
+	<div id="geotag-header" class="d-flex justify-content-between">
+		<h4>Videos</h4>
+		<button type="button" class="btn btn-link" id="btnSaveAll" onclick="geodata.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
 	</div>
-	<div class="form-group row">
-		<label class="col-2 col-form-label">Sort by</label>
-		<div class="col-10">
-			<select id="order-by" aria-describedby="orderhelp" class="custom-select">
-				<option value="date" selected>Date</option>
-				<option value="relevance">Relevance</option>
-				<option value="viewCount">Views</option>
-				<option value="rating">Rating</option>
-			</select>
-		</div>
+	<div class="table-responsive">
+		<table id="dataTable" class="table table-striped table-bordered" width="100%" cellspacing="0">
+			<thead><tr><th>Column</th></tr></thead>
+			<tbody id="dataBody"></tbody>
+		</table>
 	</div>
-	{% include_relative form_advanced.html %}
-	<button type="button" class="btn btn-primary" id="btnFind" onclick="search()">Search</button>
-</div>
-<small id="orderhelp" class="form-text text-muted">
-	* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
-</small>
-<br>
-<div class="progress" style="height: 35px; ">
-	<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 </div>
 <br>
+
 <script>
-$("#time-frame").on("change", function() {
-	let value = this.value;
-	if(value == "custom") {
-		$("#custom-range").show();
-	} else {
-		$("#custom-range").hide();
-	}
+setupAsPage("topic");
+$(document).ready(function() {
+    $("#dataTable").DataTable();
 });
-$("#custom-range").hide();
-$("#q").keyup(function(event) {
-	if (event.keyCode === 13) {
-		$("#btnFind").click();
-	}
-});
-// Logs error and changes progressbar.
-function dangerError(err) {
-	console.error(err);
-	$("#videoProg").removeClass("bg-warning").addClass("bg-danger").removeClass("progress-bar-animated");
-}
-function search() {
-	$("#topic-form *").attr("disabled",true);
-	let q = document.getElementById("q").value;
-	let e = document.getElementById("order-by");
-	let orderBy = e.options[e.selectedIndex].value;
-	let data = {
-		q: q,
-		orderBy: orderBy
-	};
-	$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").addClass("progress-bar-animated");
-	doSearch(data, "", 0);
-}
-function doSearch(data, pageToken, page) {
-	$("#videoProg").text("Page "+page+" . . .");
-	console.log({
-		q: data.q,
-		orderBy: data.orderBy,
-		pageToken: pageToken,
-		page: page
-	});
-	youtube.ajax("search", $.extend({
-		q: data.q,
-		maxResults: 50,
-		order: data.orderBy,
-		type: "video",
-		part: "snippet",
-		pageToken: pageToken,
-	},getAdvancedOptions())).done(function(res) {
-		let videoIds = [];
-		for(let i=0; i<res.items.length; i++) {
-			let item = res.items[i];
-			videoIds.push(item.id.videoId);
-		}
-		$("#videoProg").text("Page "+page+": "+videoIds.length+" videos . . .");
-		youtube.ajax("videos", {
-			id: videoIds.join(","), 
-			maxResults: 50, 
-			part: "snippet,recordingDetails"
-		}).done(function(res2) {
-			console.log(res2);
-			let f = 0;
-			for(let i=0; i<res2.items.length; i++) {
-				let item = res2.items[i];
-				if(item.hasOwnProperty('recordingDetails')) {
-					if(item.recordingDetails.hasOwnProperty('location')) {
-						let location = item.recordingDetails.location;
-						if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
-							let displayed = false;
-							for(let i=0; i<markers.length; i++) {
-								if(markers[i].videoId == item.id) {
-									displayed = true;
-								}
-							}
-							if(!displayed) {
-								let displayTitle = item.snippet.title.substring(0,65);
-								if(item.snippet.title.length > 65) displayTitle += "...";
-								let latitude = location.latitude;
-								let longitude = location.longitude;
-								let infowindow = new google.maps.InfoWindow({
-									content: '<div id="geotag">' +
-														'<table class="table table-sm">'+
-															'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
-															'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
-															'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
-															'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
-														'</table>'+
-													'</div>'
-								});
-								let marker = new google.maps.Marker({
-									position:{lat: latitude, lng: longitude},
-									map: map,
-									videoId: item.id,
-									publishedAt: item.snippet.publishedAt,
-									channelTitle: item.snippet.channelTitle,
-									title: item.snippet.title
-								});
-								slowLoadProfile(marker, item.snippet.channelId);
-								marker.addListener('click', function() {
-									infowindow.open(map, marker);
-								});
-								markers.push(marker);
-								refitMapToMarkers();
-							}
-							f = f + 1;
-						}
-					}
-				}
-			}
-			page = page + 1;
-			if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
-				doSearch(data, res.nextPageToken, page);
-			} else {
-				console.log("DONE -- "+res.items.length);
-				$("#videoProg").addClass("bg-success");
-				$("#videoProg").css("width", "100%").attr("aria-valuenow", "100").removeClass("progress-bar-animated");
-				$("#topic-form *").attr("disabled",false);
-			}	
-		}).fail(function(err2) {
-			console.log(err2);
-			dangerError(err2);
-		});
-	}).fail(function(err) {
-		console.log(err);
-		dangerError(err);
-	});
-}
 </script>
