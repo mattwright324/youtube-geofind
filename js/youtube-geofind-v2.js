@@ -397,7 +397,7 @@ GeoData.prototype = {
 							}
 						}
 					}
-					this.reloadHeatData();
+					if(this.showingHeatmap) { this.reloadHeatData(); }
 					if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
 						data["pageToken"] = res.nextPageToken;
 						extra.page += 1;
@@ -546,6 +546,9 @@ function setupAsPage(searchType) {
 			});
 		} else if(searchType == "topic" || searchType == "location") {
 			disableForm(false);
+			$(document).ready(function() {
+				$("#dataTable").DataTable();
+			});
 			$("#time-frame").on("change", function() {
 				let value = this.value;
 				if(value == "custom") {

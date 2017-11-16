@@ -54,9 +54,8 @@ body, html {
 	border-style: none none solid none;
 	border-color: rgb(153, 192, 255);
 	border-width: 6px;
-	padding-bottom: 10px;
+	padding-bottom: 4px;
 	margin-bottom: 15px;
-	background: linear-gradient(to top, rgba(153, 192, 255, 0.2), transparent, transparent);
 	padding-right: 10px;
 	padding-left: 10px;
 }
