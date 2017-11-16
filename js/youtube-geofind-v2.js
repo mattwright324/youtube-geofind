@@ -386,8 +386,8 @@ GeoData.prototype = {
 																						"<div class=\"d-flex flex-row justify-content-start\">"+
 																							"<img width=120px height=90px style=\"margin: auto 0;\" src=\""+thumb.url+"\"/> "+
 																							"<div class=\"d-flex flex-column\" style=\"margin-left: 15px; margin-top: auto; margin-bottom: auto;\">"+
-																								"<p style=\"white-space: nowrap;\"><a target=\"_blank\" href=\"https://www.youtube.com/channel/"+item.snippet.channelId+"\">"+displayTitle+"</a></p>"+
-																								"<p><b>Author:</b> "+item.snippet.channelTitle+"</p>"+
+																								"<p style=\"white-space: nowrap;\"><a target=\"_blank\" href=\"https://youtu.be/"+item.id+"\">"+displayTitle+"</a></p>"+
+																								"<p><b>Author: </b><a target=\"_blank\" href=\"https://www.youtube.com/channel/"+item.snippet.channelId+"\">"+item.snippet.channelTitle+"</a></p>"+
 																								"<p><b>Published on</b> "+item.snippet.publishedAt+"</p>"+
 																							"</div>"+
 																						"</div>"+
