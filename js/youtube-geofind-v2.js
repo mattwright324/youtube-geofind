@@ -96,7 +96,7 @@ function GeoData(map) {
 	this.locationMarker = new google.maps.Marker({
 		position: map.center,
 		draggable: true,
-		icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+		icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
 		title: "Drag me!",
 		optimized: false,
 		zIndex:99999999,
