@@ -1,6 +1,7 @@
 // YouTube API v3
 // Reference documentation:
 // https://developers.google.com/youtube/v3/docs/
+var DEFAULT_KEY = "AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI";
 var GOOGLE_API_KEY = 'AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI';
 class YouTubeV3 {
 	// string type: "search"
