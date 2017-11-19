@@ -16,9 +16,14 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		<div class="form-group row">
 			<label class="col-2 col-form-label"><b>Location</b></label>
 			<div class="col-10">
-				<input type="text" class="form-control" id="address" aria-describedby="help"
-					placeholder="name, address, or city"
-					value=""></input>
+				<div class="input-group">
+					<input type="text" class="form-control" id="address" aria-describedby="help"
+						placeholder="name, address, or city"
+						value=""></input>
+					<span class="input-group-btn">
+						<button id="geolocate" class="btn btn-secondary" title="Find me!" type="geolocate" style="background-color: #77dd77; cursor: pointer;" onclick="geodata.geolocate()"><i class="fa fa-map-marker" aria-hidden="true"></i></button>
+					</span>
+				</div>
 				<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
 			</div>
 		</div>

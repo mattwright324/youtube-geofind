@@ -532,6 +532,19 @@ GeoData.prototype = {
 			});
 		}
 	},
+	geolocate: function() {
+		$("#geolocate").attr("disabled", true);
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition((pos) =>{
+				let latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+				this.locationMarker.setPosition(latlng);
+				this.circle.setCenter(this.locationMarker.getPosition());
+				this.refitMapToLocation();
+				this.updateLocationAddress(true);
+				$("#geolocate").attr("disabled", false);
+			});
+		}
+	},
 }
 function disableForm(disable) {
 	$("#search-form *").attr("disabled", disable);
