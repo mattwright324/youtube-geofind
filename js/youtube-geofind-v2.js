@@ -427,8 +427,9 @@ GeoData.prototype = {
 		});
 	},
 	danger: function(progressBar, err) {
-		console.log(err);
-		progressBar.setAnimated(false).setStatus("bg-danger").setText(err.responseText);
+		let response = JSON.parse(err.responseText);
+		console.log(response);
+		progressBar.setAnimated(false).setStatus("bg-danger").setText("HTTP "+response.error.code+": "+response.error.errors[0].reason+", "+response.error.errors[0].message);
 		disableForm(false);
 	},
 	asyncLoadProfile: function(marker, channelId) {
