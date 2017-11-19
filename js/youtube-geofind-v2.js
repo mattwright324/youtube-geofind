@@ -135,8 +135,7 @@ GeoData.prototype = {
 	getRequestData: function() {
 		// Used for both Topic and Location
 		let data = {};
-		let q = $("#q").val();
-		data["q"] = q;
+		data["q"] = $("#q").val();
 		data["order"] = $("#order-by").find(":selected").val();
 		if(this.locationMarker.showing) {
 			let pos = this.locationMarker.getPosition();
@@ -215,20 +214,20 @@ GeoData.prototype = {
 			if(!this.channelMap.containsKey(channelId)) {
 				this.channelMap.put(channelId, thumbUrl);
 				let html = '<div id="' + channelId + '" class="d-flex flex-row align-content-center channel " tagcount="0">' +
-										'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
-										'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
-											'<div id="cc1" class="d-flex flex-column">' +
-												'<label id="channel-name">' + channelName + '</label>' +
-												'<label id="tag-count">0 videos geo-tagged</label>' +
-											'</div>' +
-											'<div id="cc2" class="d-flex flex-column" style="width: 25%">' +
-												'<div class="progress">' +
-													'<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>' +
-												'</div>' +
-												'<button type="button" class="btn btn-link" id="btnSave" onclick="geodata.exportToCSV(\''+channelId+'\')" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>' +
-											'</div>' +
-										'</div>' +
-									'</div>';
+					'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
+					'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
+						'<div id="cc1" class="d-flex flex-column">' +
+							'<label id="channel-name">' + channelName + '</label>' +
+							'<label id="tag-count">0 videos geo-tagged</label>' +
+						'</div>' +
+						'<div id="cc2" class="d-flex flex-column" style="width: 25%">' +
+							'<div class="progress">' +
+								'<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>' +
+							'</div>' +
+							'<button type="button" class="btn btn-link" id="btnSave" onclick="geodata.exportToCSV(\''+channelId+'\')" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>' +
+						'</div>' +
+					'</div>' +
+				'</div>';
 				$("#channel-example *").css("display", "inline-block").hide();
 				$("#channel-list").append(html);
 			}
@@ -262,13 +261,13 @@ GeoData.prototype = {
 											let longitude = location.longitude;
 											let infowindow = new google.maps.InfoWindow({
 												content: '<div id="geotag">' +
-																	'<table class="table table-sm">'+
-																		'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
-																		'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
-																		'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
-																		'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
-																	'</table>'+
-																'</div>'
+													'<table class="table table-sm">'+
+														'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
+														'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+														'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
+														'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
+													'</table>'+
+												'</div>'
 											});
 											let marker = new google.maps.Marker({
 												position:{lat: latitude, lng: longitude},
@@ -330,7 +329,7 @@ GeoData.prototype = {
 		requestData["pageToken"] = "";
 		requestData["maxResults"] = 50;
 		requestData["type"] = "video";
-		requestData["part"] = "snippet";
+		requestData["part"] = "id";
 		this.progress.setAnimated(true).setValue(100);
 		let search = (data, extra) => {
 			console.log(data);
@@ -356,13 +355,13 @@ GeoData.prototype = {
 										let longitude = location.longitude;
 										let infowindow = new google.maps.InfoWindow({
 											content: '<div id="geotag">' +
-																'<table class="table table-sm">'+
-																	'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
-																	'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
-																	'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
-																	'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
-																'</table>'+
-															'</div>'
+												'<table class="table table-sm">'+
+													'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
+													'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+													'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
+													'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
+												'</table>'+
+											'</div>'
 										});
 										let marker = new google.maps.Marker({
 											position:{lat: latitude, lng: longitude},
@@ -382,15 +381,16 @@ GeoData.prototype = {
 										this.refitMapToMarkers();
 										let thumb = item.snippet.thumbnails.default;
 										let dataTable = $("#dataTable").DataTable();
-										dataTable.row.add(["<tr><td>"+
-																						"<div class=\"d-flex flex-row justify-content-start\">"+
-																							"<img width=120px height=90px style=\"margin: auto 0;\" src=\""+thumb.url+"\"/> "+
-																							"<div class=\"d-flex flex-column\" style=\"margin-left: 15px; margin-top: auto; margin-bottom: auto;\">"+
-																								"<p style=\"white-space: nowrap;\"><a target=\"_blank\" href=\"https://youtu.be/"+item.id+"\">"+displayTitle+"</a></p>"+
-																								"<p><b>Author: </b><a target=\"_blank\" href=\"https://www.youtube.com/channel/"+item.snippet.channelId+"\">"+item.snippet.channelTitle+"</a></p>"+
-																								"<p><b>Published on</b> "+item.snippet.publishedAt+"</p>"+
-																							"</div>"+
-																						"</div>"+
+										dataTable.row.add(
+										["<tr><td>"+
+											"<div class=\"d-flex flex-row justify-content-start\">"+
+												"<img width=120px height=90px style=\"margin: auto 0;\" src=\""+thumb.url+"\"/> "+
+												"<div class=\"d-flex flex-column\" style=\"margin-left: 15px; margin-top: auto; margin-bottom: auto;\">"+
+													"<p style=\"white-space: nowrap;\"><a target=\"_blank\" href=\"https://youtu.be/"+item.id+"\">"+displayTitle+"</a></p>"+
+													"<p><b>Author: </b><a target=\"_blank\" href=\"https://www.youtube.com/channel/"+item.snippet.channelId+"\">"+item.snippet.channelTitle+"</a></p>"+
+													"<p><b>Published on</b> "+item.snippet.publishedAt+"</p>"+
+												"</div>"+
+											"</div>"+
 										"</td></tr>"]).draw();
 									}
 								}
@@ -398,7 +398,7 @@ GeoData.prototype = {
 						}
 					}
 					if(this.showingHeatmap) { this.reloadHeatData(); }
-					if(res.hasOwnProperty("nextPageToken") && res.items.length > 0) {
+					if(res.hasOwnProperty("nextPageToken") && res.items.length > 0 && extra.page < extra.pageLimit) {
 						data["pageToken"] = res.nextPageToken;
 						extra.page += 1;
 						search(data, extra);
@@ -411,7 +411,7 @@ GeoData.prototype = {
 				this.danger(this.progress, err);
 			});
 		};
-		search(requestData, {page: 1});
+		search(requestData, {page: 1, pageLimit: $("#page-limit").find(":selected").val()});
 	},
 	checkVideos: function(idList, progressBar, callback) {
 		// Max of 50 ids accepted.
@@ -441,19 +441,21 @@ GeoData.prototype = {
 			}
 			marker.setIcon(icon);
 		}
-		if(this.channelMap.containsKey(channelId)) {
-			setMarker(marker, this.channelMap.get(channelId));
-		} else {
-			youtube.ajax("channels", {
-				part: "snippet",
-				id: channelId
-			}).done((res) => {
-				let channel = res.items[0];
-				let thumbUrl = channel.snippet.thumbnails.default.url;
-				this.channelMap.put(channelId, thumbUrl);
-				setMarker(marker, thumbUrl);
-			});
-		}
+		setTimeout(() => {
+			if(this.channelMap.containsKey(channelId)) {
+				setMarker(marker, this.channelMap.get(channelId));
+			} else {
+				youtube.ajax("channels", {
+					part: "snippet",
+					id: channelId
+				}).done((res) => {
+					let channel = res.items[0];
+					let thumbUrl = channel.snippet.thumbnails.default.url;
+					this.channelMap.put(channelId, thumbUrl);
+					setMarker(marker, thumbUrl);
+				});
+			}
+		}, 0);
 	},
 	setLocationMode: function(set) {
 		this.locationMarker.setMap(this.map);

@@ -15,7 +15,6 @@
 		</select>
 	</div>
 </div>
-
 <div id="custom-range" style="display: hidden;">
 	<div class="form-group row">
 		<label class="col-2 col-form-label"><i>Start date</i></label>
@@ -28,6 +27,21 @@
 		<div class="col-10">
 			<input class="form-control" style="max-width: 200px;" id="publishedBefore" type="date" value="2017-12-31">
 		</div>
+	</div>
+</div>
+
+<div class="form-group row">
+	<label class="col-2 col-form-label"><b>Page limit</b></label>
+	<div class="col-10" style="width: 100%">
+		<select id="page-limit" aria-describedby="orderhelp" class="custom-select">
+			<option value="1">1 page</option>
+			<option value="2">2 pages</option>
+			<option value="3" selected>3 pages</option>
+			<option value="5">5 pages</option>
+			<option value="7">7 pages</option>
+			<option value="15">All pages (10-13)</option>
+		</select>
+		<small id="page-msg" class="form-text text-muted" style="display: none">* API limits stop returning results around pages 10 to 13.</small>
 	</div>
 </div>
 
@@ -99,12 +113,22 @@
 	</div>
 </div>
 <script>
-$("#advanced").change(function() {
-	if($(this).is(":checked")) {
+let updateAdvFormShowing = function() {
+	if($("#advanced").is(":checked")) {
 		$("#advanced-form").show();
 	} else {
 		$("#advanced-form").hide();
 	}
+}
+$("#advanced").change(function() {
+	updateAdvFormShowing();
 });
-$("#advanced-form").hide();
+updateAdvFormShowing();
+$("#page-limit").on("change", function() {
+	if($(this).val() == 15) {
+		$("#page-msg").show();
+	} else {
+		$("#page-msg").hide();
+	}
+});
 </script>

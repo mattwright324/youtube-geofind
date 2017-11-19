@@ -14,7 +14,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 	<div id="search-form" class="d-flex flex-column">
 		{% include_relative announcement.html %}
 		<div class="form-group row">
-			<label class="col-2 col-form-label">Location</label>
+			<label class="col-2 col-form-label"><b>Location</b></label>
 			<div class="col-10">
 				<input type="text" class="form-control" id="address" aria-describedby="help"
 					placeholder="name, address, or city"
@@ -23,7 +23,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 			</div>
 		</div>
 		<div class="form-group row">
-			<label class="col-2 col-form-label">Radius</label>
+			<label class="col-2 col-form-label"><b>Radius</b></label>
 			<div class="col-10">
 				<select id="distance" class="custom-select">
 					<option value="1">1km</option>
@@ -62,7 +62,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		{% include_relative form_advanced.html %}
 		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
 	</div>
-	<small class="form-text text-muted">* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.</small>
 	<small class="form-text text-muted">* YouTube may return results close yet outside the specific search radius.</small>
 </div>
 <br>

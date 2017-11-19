@@ -14,7 +14,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 	<div id="search-form" class="d-flex flex-column">
 		{% include_relative announcement.html %}
 		<div class="form-group row">
-			<label class="col-2 col-form-label">Keywords</label>
+			<label class="col-2 col-form-label"><b>Keywords</b></label>
 			<div class="col-10">
 				<input type="text" class="form-control" id="q" aria-describedby="help"
 					placeholder="Search"
@@ -36,9 +36,6 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		{% include_relative form_advanced.html %}
 		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
 	</div>
-	<small id="orderhelp" class="form-text text-muted">
-		* Reads as many pages as possible. API limits stop returing results around page 11 to 13 for most searches.
-	</small>
 </div>
 <br>
 <br>
