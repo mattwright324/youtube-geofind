@@ -328,7 +328,7 @@ GeoData.prototype = {
 				this.announce("alert-warning", "Bad channel!", "The channel \""+channel+"\" entered does not exist.", true, "c_"+channel);
 			}
 		}).fail((err) => {
-			console.log(err);
+			this.danger(undefined, err);
 		});
 	},
 	normalSearch: function() { // Topic and Location Search
@@ -437,7 +437,9 @@ GeoData.prototype = {
 	danger: function(progressBar, err) {
 		let response = JSON.parse(err.responseText);
 		console.log(response);
-		progressBar.setAnimated(false).setStatus("bg-danger");
+		if(progressBar != undefined) {
+			progressBar.setAnimated(false).setStatus("bg-danger");
+		}
 		this.announce("alert-danger", "Problem!", "Error "+response.error.code+": "+response.error.message);
 		disableForm(false);
 	},
