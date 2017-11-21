@@ -434,13 +434,30 @@ GeoData.prototype = {
 			this.danger(progressBar, err);
 		});
 	},
+	timeUntilQuotaReset: function() {
+		let now = new Date(new Date().toLocaleString([],{timeZone: "America/Los_Angeles"}));
+		let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+		let diff = midnight - now;
+		let s = diff / 1000;
+		let m = s / 60;
+		let h = m / 60;
+		s = Math.floor(s % 60);
+		m = Math.floor(m % 60);
+		h = Math.floor(h);
+		return {h: h, m: m};
+	},
 	danger: function(progressBar, err) {
 		let response = JSON.parse(err.responseText);
 		console.log(response);
 		if(progressBar != undefined) {
 			progressBar.setAnimated(false).setStatus("bg-danger");
 		}
-		this.announce("alert-danger", "Problem!", "Error "+response.error.code+": "+response.error.message);
+		let message = response.error.message;
+		if(response.error.code == 403 && message.indexOf("quota") !== -1) {
+			let timeLeft = this.timeUntilQuotaReset();
+			message = "Daily Limit Exceeded. The quota will reset by midnight Pacific Time (PT) or "+timeLeft.h+" hours and "+timeLeft.m+" minutes from now.";
+		}
+		this.announce("alert-danger", "Problem!", "Error "+response.error.code+": "+message);
 		disableForm(false);
 	},
 	announce: function(level, title, message) {
