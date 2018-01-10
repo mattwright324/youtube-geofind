@@ -17,9 +17,20 @@ function initMap() {
 	map_init = true;
 	geodata = new GeoData(map);
 	disableForm(false);
- }
- // Similar to java.util.Map
- function MyMap() {
+}
+let CheckBox = function(id) {
+	this.element = $(id+" *");
+}
+CheckBox.prototype = {
+	setSelected: function(select) {
+		this.element.prop("checked",select);
+	},
+	isSelected: function() {
+		return this.element.is(":checked");
+	}
+}
+// Similar to java.util.Map
+function MyMap() {
 	this.keyVal = {};
 }
 MyMap.prototype = {
@@ -134,6 +145,11 @@ GeoData.prototype = {
 	},
 	getRequestData: function() {
 		// Used for both Topic and Location
+		let live = new CheckBox("#live-only");
+		let cc = new CheckBox("#creative-commons");
+		let hd = new CheckBox("#hd-only");
+		let embedded = new CheckBox("#embedded-only");
+		let syndicated = new CheckBox("#syndicated-only");
 		let data = {};
 		data["q"] = $("#q").val();
 		data["order"] = $("#order-by").find(":selected").val();
@@ -142,19 +158,19 @@ GeoData.prototype = {
 			data["location"] = pos.lat()+","+pos.lng();
 			data["locationRadius"] = this.circle.getRadius()+"m";
 		}
-		if($("#live-only").is(":checked")) {
+		if(live.isSelected()) {
 			data["eventType"] = "live";
 		}
-		if($("#creative-commons").is(":checked")) {
+		if(cc.isSelected()) {
 			data["videoLicense"] = "creativeCommon";
 		}
-		if($("#hd-only").is(":checked")) {
+		if(hd.isSelected()) {
 			data["videoDefinition"] = "high";
 		}
-		if($("#embedded-only").is(":checked")) {
+		if(embedded.isSelected()) {
 			data["videoEmbeddable"] = "true";
 		}
-		if($("#syndicated-only").is(":checked")) {
+		if(syndicated.isSelected()) {
 			data["videoSyndicated"] = "true";
 		}
 		let time = $("#time-frame").find(":selected").val();

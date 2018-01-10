@@ -12,8 +12,17 @@ body, html {
 	height: 25px;
 	margin-bottom: 10px;
 }
+.control {
+	margin-top: 10px;
+}
 #btnFind {
 	cursor: pointer;
+}
+#btnSaveAll {
+	margin-bottom: 8px;
+}
+#advanced-form {
+	margin-bottom: 5px;
 }
 #geotags {
 	width: 100%;

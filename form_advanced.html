@@ -45,76 +45,71 @@
 	</div>
 </div>
 
-<div class="form-check">
-  <label class="form-check-label">
-    <input id="advanced" class="form-check-input" type="checkbox" value="">
-    Advanced Search
-  </label>
-</div>
+<label id="advanced" class="control status-box custom-control custom-checkbox">
+  <input type="checkbox" class="custom-control-input">
+  <span class="custom-control-indicator"></span>
+  <span class="custom-control-description">Advanced Search</span>
+</label>
 <div id="advanced-form" style="display: hidden;">
 	<div class="form-group row">
 		<label class="col-2 col-form-label">Options</label>
 		<div class="col-10">
-			<div class="form-check">
-			  <label class="form-check-label">
-				<input id="live-only" class="form-check-input" type="checkbox" value="">
-				Live events only
-			  </label>
-			</div>
+			<label id="live-only" class="control status-box custom-control custom-checkbox">
+			  <input type="checkbox" class="custom-control-input">
+			  <span class="custom-control-indicator"></span>
+			  <span class="custom-control-description">Live events only</span>
+			</label>
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label class="col-2 col-form-label"></label>
 		<div class="col-10">
-			<div class="form-check">
-			  <label class="form-check-label">
-				<input id="creative-commons" class="form-check-input" type="checkbox" value="">
-				Liscensed with Creative Commons
-			  </label>
-			</div>
+			<label id="creative-commons" class="control status-box custom-control custom-checkbox">
+			  <input type="checkbox" class="custom-control-input">
+			  <span class="custom-control-indicator"></span>
+			  <span class="custom-control-description">Liscensed with Creative Commons</span>
+			</label>
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label class="col-2 col-form-label"></label>
 		<div class="col-10">
-			<div class="form-check">
-			  <label class="form-check-label">
-				<input id="hd-only" class="form-check-input" type="checkbox" value="">
-				High Quality only
-			  </label>
-			</div>
+			<label id="hd-only" class="control status-box custom-control custom-checkbox">
+			  <input type="checkbox" class="custom-control-input">
+			  <span class="custom-control-indicator"></span>
+			  <span class="custom-control-description">High Quality only</span>
+			</label>
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label class="col-2 col-form-label"></label>
 		<div class="col-10">
-			<div class="form-check">
-			  <label class="form-check-label">
-				<input id="embedded-only" class="form-check-input" type="checkbox" value="">
-				Can be embedded on other sites.
-			  </label>
-			</div>
+			<label id="embedded-only" class="control status-box custom-control custom-checkbox">
+			  <input type="checkbox" class="custom-control-input">
+			  <span class="custom-control-indicator"></span>
+			  <span class="custom-control-description">Can be embedded on other sites.</span>
+			</label>
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label class="col-2 col-form-label"></label>
 		<div class="col-10">
-			<div class="form-check">
-			  <label class="form-check-label">
-				<input id="syndicated-only" class="form-check-input" type="checkbox" value="">
-				Syndicated (Can be played outside youtube.com)
-			  </label>
-			</div>
+			<label id="syndicated-only" class="control status-box custom-control custom-checkbox">
+			  <input type="checkbox" class="custom-control-input">
+			  <span class="custom-control-indicator"></span>
+			  <span class="custom-control-description">Syndicated (Can be played outside youtube.com)</span>
+			</label>
 		</div>
 	</div>
 </div>
 <script>
+let advanced = new CheckBox("#advanced");
 let updateAdvFormShowing = function() {
-	if($("#advanced").is(":checked")) {
+	if(advanced.isSelected()) {
 		$("#advanced-form").show();
 	} else {
 		$("#advanced-form").hide();
