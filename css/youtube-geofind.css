@@ -4,6 +4,9 @@
 body, html {
 	height: 100%;
 }
+#content {
+	box-shadow: 0px -5px 100px 10px rgba(127,127,127,0.01);
+}
 #map {
 	height: 400px;
 	width: 100%;
@@ -33,6 +36,9 @@ body, html {
 #geotag {}
 #geotag a {
 	font-weight: bold;
+}
+#table-entry {
+	background: transparent;
 }
 #channelInput {
 	margin-right: 15px;

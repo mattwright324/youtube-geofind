@@ -8,7 +8,10 @@ function whenAvailable(objName, callback) {
 		}
 	}, interval);
 }
-function initMap() { 
+function removeArray(array, element) {
+	return array.filter(e => e !== element);
+}
+function initMap() {
 	let centerPos = {lat: 40.697, lng: -74.259};
 	map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 7,
@@ -114,6 +117,44 @@ function GeoData(map) {
 		showing: false
 	});
 	this.progress = new ProgressBar(document.getElementById("videoProg"));
+	
+	this.profileQueue = [];
+	this.profileMap = new MyMap(); // <channel_id, profile_url>
+	setInterval(() => {
+		if(this.profileQueue && this.profileQueue.length) {
+			this.checkQueue = {};
+			console.log("Channels Check: "+this.profileQueue.length)
+			while(this.profileQueue.length && (this.checkQueue.length == undefined || this.checkQueue.length < 50)) {
+				this.channelId = this.profileQueue.pop();
+				removeArray(this.profileQueue, this.channelId);
+				if(this.checkQueue[this.channelId] == undefined) {
+					this.checkQueue[this.channelId] = '';
+				}
+			}
+			this.arr = []; 
+			for(key in this.checkQueue) { this.arr.push(key) }
+			this.ids = this.arr.join(",");
+			if(this.arr.length) {
+				console.log("Ajax-Channels: "+this.ids);
+				youtube.ajax("channels", {
+					part: "snippet",
+					id: this.ids
+				}).done((res) => {
+					for(let i=0; i<res.items.length; i++) {
+						let channel = res.items[i];
+						let channelId = channel.id;
+						let thumbUrl = channel.snippet.thumbnails.default.url;
+						this.profileMap.put(channelId, thumbUrl);
+					}
+					for(let i=0; i<this.markers.length; i++) {
+						if(!this.markers[i].thumbLoaded && this.profileMap.containsKey(this.markers[i].channelId)) {
+							this.setMarker(this.markers[i],this.profileMap.get(this.markers[i].channelId));
+						}
+					}
+				});
+			}
+		}
+	}, 100);
 }
 GeoData.prototype = {
 	getMap: function() { return this.map },
@@ -228,8 +269,8 @@ GeoData.prototype = {
 				let thumbUrl = channel.snippet.thumbnails.default.url;
 				let channelName = channel.snippet.title;
 				let uploadPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-				if(!this.channelMap.containsKey(channelId)) {
-					this.channelMap.put(channelId, thumbUrl);
+				if(!this.profileMap.containsKey(channelId)) {
+					this.profileMap.put(channelId, thumbUrl);
 					let html = '<div id="' + channelId + '" class="d-flex flex-row align-content-center channel " tagcount="0">' +
 						'<a target="_blank" href="' + channelUrl + '"><img src="' + thumbUrl + '" width=64px height=64px id="channel-thumb" /></a>' +
 						'<div id="channel-content" class="d-flex justify-content-between" style="width: 100%">' +
@@ -272,15 +313,19 @@ GeoData.prototype = {
 										let location = item.recordingDetails.location;
 										if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
 											if(!this.videoHasMarker(item.id)) {
+												let thumb = item.snippet.thumbnails.default;
+												let desc = item.snippet.description.substr(0,50) + (item.snippet.description.length > 50 ? "...":"");
 												let displayTitle = item.snippet.title.substring(0,65);
 												if(item.snippet.title.length > 65) displayTitle += "...";
 												let latitude = location.latitude;
 												let longitude = location.longitude;
 												let infowindow = new google.maps.InfoWindow({
-													content: '<div id="geotag">' +
+													content: '<div id="geotag" align=center>' +
+														'<img width=120px height=90px style="margin: auto 0;" src="'+thumb.url+'"/> '+
 														'<table class="table table-sm">'+
 															'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
 															'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+															'<tr><td>Description</td><td>'+desc+'</tr>'+
 															'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
 															'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
 														'</table>'+
@@ -293,7 +338,8 @@ GeoData.prototype = {
 													publishedAt: item.snippet.publishedAt,
 													channelTitle: item.snippet.channelTitle,
 													title: item.snippet.title,
-													channelId: item.snippet.channelId
+													channelId: item.snippet.channelId,
+													thumbLoaded: false
 												});
 												this.asyncLoadProfile(marker, item.snippet.channelId);
 												marker.addListener('click', () => {
@@ -373,15 +419,19 @@ GeoData.prototype = {
 								let location = item.recordingDetails.location;
 								if(location.hasOwnProperty('latitude') && location.hasOwnProperty('longitude')) {
 									if(!this.videoHasMarker(item.id)) {
+										let thumb = item.snippet.thumbnails.default;
+										let desc = item.snippet.description.substr(0,50) + (item.snippet.description.length > 50 ? "...":"");
 										let displayTitle = item.snippet.title.substring(0,65);
 										if(item.snippet.title.length > 65) displayTitle += "...";
 										let latitude = location.latitude;
 										let longitude = location.longitude;
 										let infowindow = new google.maps.InfoWindow({
-											content: '<div id="geotag">' +
+											content: '<div id="geotag" align=center>' +
+												'<img width=120px height=90px style="margin: auto 0;" src="'+thumb.url+'"/> '+
 												'<table class="table table-sm">'+
 													'<tr><td colspan="2"><a target="_blank" href="https://youtu.be/'+item.id+'">'+displayTitle+'</a></td></tr>'+
 													'<tr><td>Author</td><td>'+item.snippet.channelTitle+'</tr>'+
+													'<tr><td>Description</td><td>'+desc+'</tr>'+
 													'<tr><td>Published</td><td>'+item.snippet.publishedAt+'</tr>'+
 													'<tr><td>Lat,Long</td><td>'+latitude+','+longitude+'</tr>'+
 												'</table>'+
@@ -394,7 +444,8 @@ GeoData.prototype = {
 											publishedAt: item.snippet.publishedAt,
 											channelTitle: item.snippet.channelTitle,
 											title: item.snippet.title,
-											channelId: item.snippet.channelId
+											channelId: item.snippet.channelId,
+											thumbLoaded: false
 										});
 										this.asyncLoadProfile(marker, item.snippet.channelId);
 										marker.addListener('click', () => {
@@ -403,19 +454,19 @@ GeoData.prototype = {
 										this.markers.push(marker);
 										$("#btnSaveAll").attr("disabled", false);
 										this.refitMapToMarkers();
-										let thumb = item.snippet.thumbnails.default;
 										let dataTable = $("#dataTable").DataTable();
 										dataTable.row.add(
-										["<tr><td>"+
-											"<div class=\"d-flex flex-row justify-content-start\">"+
+										['<tr><td>'+
+											'<div class="d-flex flex-row justify-content-start">'+
 												"<img width=120px height=90px style=\"margin: auto 0;\" src=\""+thumb.url+"\"/> "+
 												"<div class=\"d-flex flex-column\" style=\"margin-left: 15px; margin-top: auto; margin-bottom: auto;\">"+
 													"<p style=\"white-space: nowrap;\"><a target=\"_blank\" href=\"https://youtu.be/"+item.id+"\">"+displayTitle+"</a></p>"+
 													"<p><b>Author: </b><a target=\"_blank\" href=\"https://www.youtube.com/channel/"+item.snippet.channelId+"\">"+item.snippet.channelTitle+"</a></p>"+
 													"<p><b>Published on</b> "+item.snippet.publishedAt+"</p>"+
+													"<p><b>Description: </b> "+desc+"</p>"+
 												"</div>"+
-											"</div>"+
-										"</td></tr>"]).draw();
+											'</div>'+
+										'</td></tr>']).draw();
 									}
 								}
 							}
@@ -463,7 +514,12 @@ GeoData.prototype = {
 		return {h: h, m: m};
 	},
 	danger: function(progressBar, err) {
-		let response = JSON.parse(err.responseText);
+		let response = "";
+		try {
+			response = JSON.parse(err.responseText);
+		} catch(parseError) {
+			response = parseError;
+		}
 		console.log(response);
 		if(progressBar != undefined) {
 			progressBar.setAnimated(false).setStatus("bg-danger");
@@ -484,31 +540,22 @@ GeoData.prototype = {
 			"<strong>"+title+"</strong> "+message+
 		"</div>");
 	},
-	asyncLoadProfile: function(marker, channelId) {
-		function setMarker(marker, thumbUrl) {
-			let icon = {
-				url: thumbUrl,
-				scaledSize: new google.maps.Size(20, 20),
-				origin: new google.maps.Point(0,0),
-				anchor: new google.maps.Point(0,0)
-			}
-			marker.setIcon(icon);
+	setMarker(marker, thumbUrl) {
+		let icon = {
+			url: thumbUrl,
+			scaledSize: new google.maps.Size(20, 20),
+			origin: new google.maps.Point(0,0),
+			anchor: new google.maps.Point(0,0)
 		}
-		setTimeout(() => {
-			if(this.channelMap.containsKey(channelId)) {
-				setMarker(marker, this.channelMap.get(channelId));
-			} else {
-				youtube.ajax("channels", {
-					part: "snippet",
-					id: channelId
-				}).done((res) => {
-					let channel = res.items[0];
-					let thumbUrl = channel.snippet.thumbnails.default.url;
-					this.channelMap.put(channelId, thumbUrl);
-					setMarker(marker, thumbUrl);
-				});
-			}
-		}, 0);
+		marker.setIcon(icon);
+		marker.thumbLoaded = true;
+	},
+	asyncLoadProfile: function(marker, channelId) {
+		if(this.profileMap.containsKey(channelId)) {
+			this.setMarker(marker, this.profileMap.get(channelId));
+		} else {
+			this.profileQueue.push(channelId);
+		}
 	},
 	setLocationMode: function(set) {
 		this.locationMarker.setMap(this.map);
