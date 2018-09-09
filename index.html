@@ -1,6 +1,5 @@
 ---
 layout: default
-title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
@@ -9,13 +8,13 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		<h4>By Channel</h4>
 	</div>
 	<div id="search-form" class="d-flex flex-column">
-		{% include_relative announcement.html %}
+		{% include announcement.html %}
 		<div class="form-group row">
 			<label class="col-2 col-form-label"><b>Channel</b></label>
 			<div class="col-10">
 				<input type="text" class="form-control" id="channelInput" aria-describedby="help"
-					placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
-					value="oceanexplorergov"></input>
+					   placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
+					   value="oceanexplorergov"/>
 				<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
 			</div>
 		</div>
@@ -76,5 +75,5 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <br>
 
 <script>
-setupAsPage("channel");
+geofind.setPageToChannel();
 </script>

@@ -1,10 +1,9 @@
 ---
 layout: default
-title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
-	<div class="content-section">
+<div class="content-section">
 	<div id="geotag-header" class="d-flex justify-content-between">
 		<h4>By Location</h4>
 		<div class="progress" style="height: 26px; width: 45%;">
@@ -12,17 +11,20 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		</div>
 	</div>
 	<div id="search-form" class="d-flex flex-column">
-		{% include_relative announcement.html %}
+		{% include announcement.html %}
 		<div class="form-group row">
 			<label class="col-2 col-form-label"><b>Location</b></label>
 			<div class="col-10">
-				<div class="input-group">
-					<input type="text" class="form-control" id="address" aria-describedby="help"
-						placeholder="name, address, or city"
-						value=""></input>
-					<span class="input-group-btn">
-						<button id="geolocate" class="btn btn-secondary" title="Find me!" type="geolocate" style="background-color: #77dd77; cursor: pointer;" onclick="geodata.geolocate()"><i class="fa fa-map-marker" aria-hidden="true"></i></button>
-					</span>
+				<div class="input-group mb-3">
+					<input type="text" class="form-control" id="address"
+						   aria-describedby="help"
+						   placeholder="name, address, or city" />
+					<div class="input-group-append">
+						<button id="geolocate" class="btn btn-secondary" title="Find me!" type="geolocate"
+								style="background-color: #77dd77; cursor: pointer;" onclick="geodata.geolocate()">
+							<i class="fa fa-map-marker" aria-hidden="true"></i>
+						</button>
+					</div>
 				</div>
 				<small id="help" class="form-text text-muted">Drag and drop the green point or type desired location and hit enter.</small>
 			</div>
@@ -44,13 +46,16 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 					<option value="1000">1000km</option>
 				</select>
 			</div>
+			<small for="distance" class="form-text text-muted">
+				* YouTube may return results close yet outside the specific search radius.
+			</small>
 		</div>
 		<div class="form-group row">
 			<label class="col-2 col-form-label">Keywords</label>
 			<div class="col-10">
 				<input type="text" class="form-control" id="q" aria-describedby="help"
-					placeholder="Search keywords here"
-					value=""></input>
+					   placeholder="Search keywords here"
+					   value=""/>
 			</div>
 		</div>
 		<div class="form-group row">
@@ -64,10 +69,9 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				</select>
 			</div>
 		</div>
-		{% include_relative form_advanced.html %}
-		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
+		{% include form_controls.html %}
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geofind.search()">Search</button>
 	</div>
-	<small class="form-text text-muted">* YouTube may return results close yet outside the specific search radius.</small>
 </div>
 <br>
 <br>
@@ -75,7 +79,7 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <div class="content-section">
 	<div id="geotag-header" class="d-flex justify-content-between">
 		<h4>Geotags</h4>
-		<button type="button" class="btn btn-link" id="btnSaveAll" onclick="geodata.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+		<button type="button" class="btn btn-outline-secondary">Export to CSV</button>
 	</div>
 	<div class="table-responsive">
 		<table id="dataTable" class="table table-striped table-bordered" width="100%" cellspacing="0">
@@ -87,5 +91,5 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <br>
 
 <script>
-setupAsPage("location");
+geofind.setPageToLocation();
 </script>

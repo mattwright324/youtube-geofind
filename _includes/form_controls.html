@@ -1,0 +1,84 @@
+<!-- Shared form controls for location and topic search -->
+<div class="form-group row">
+	<label class="col-2 col-form-label">Timeframe</label>
+	<div class="col-10" style="width: 100%">
+		<select id="time-frame" aria-describedby="orderhelp" class="custom-select">
+			<option value="hour-any" selected>Any</option>
+			<option value="hour-1">Past hour</option>
+			<option value="hour-3">Past 3 hours</option>
+			<option value="hour-6">Past 6 hours</option>
+			<option value="hour-12">Past 12 hours</option>
+			<option value="hour-24">Past 24 hours</option>
+			<option value="day-7">Past 7 days</option>
+			<option value="day-30">Past 30 days</option>
+			<option value="day-365">Past year</option>
+			<option value="custom">Custom</option>
+		</select>
+	</div>
+</div>
+<div id="custom-range" hidden>
+	<div class="form-group row">
+		<label class="col-2 col-form-label"><i>Start date</i></label>
+		<div class="col-10">
+			<input class="form-control" style="max-width: 200px;" id="publishedAfter" type="date" value="2005-02-13">
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-2 col-form-label" ><i>End date</i></label>
+		<div class="col-10">
+			<input class="form-control" style="max-width: 200px;" id="publishedBefore" type="date" value="2018-12-31">
+		</div>
+	</div>
+</div>
+
+<div class="form-group row">
+	<label class="col-2 col-form-label"><b>Page limit</b></label>
+	<div class="col-10" style="width: 100%">
+		<select id="page-limit" aria-describedby="orderhelp" class="custom-select">
+			<option value="1">1 page</option>
+			<option value="2">2 pages</option>
+			<option value="3" selected>3 pages</option>
+			<option value="5">5 pages</option>
+			<option value="7">7 pages</option>
+			<option value="15">All pages (10-13)</option>
+		</select>
+		<small id="page-msg" class="form-text text-muted" style="display: none">* API limits stop returning results around pages 10 to 13.</small>
+	</div>
+</div>
+
+<div id="advanced" class="custom-control custom-checkbox">
+	<input type="checkbox" class="custom-control-input" id="openAdvanced">
+	<label class="custom-control-label" for="openAdvanced">Advanced Search</label>
+</div>
+<div id="advanced-form" style="display: hidden;">
+	<div class="row">
+		<legend class="col-2 col-form-label">Options</legend>
+
+		<div class="col-sm-10">
+			<div id="live-only" class="custom-control custom-checkbox">
+				<input type="checkbox" class="custom-control-input" id="liveOnly">
+				<label class="custom-control-label" for="liveOnly">Live events only</label>
+			</div>
+
+			<div id="creative-commons" class="custom-control custom-checkbox">
+				<input type="checkbox" class="custom-control-input" id="creativeCommons">
+				<label class="custom-control-label" for="creativeCommons">Licensed with Creative Commons</label>
+			</div>
+
+			<div id="hd-only" class="custom-control custom-checkbox">
+				<input type="checkbox" class="custom-control-input" id="highQuality">
+				<label class="custom-control-label" for="highQuality">High Quality only</label>
+			</div>
+
+			<div id="embedded-only" class="custom-control custom-checkbox">
+				<input type="checkbox" class="custom-control-input" id="embeddedOnly">
+				<label class="custom-control-label" for="embeddedOnly">Can be embedded on other sites.</label>
+			</div>
+
+			<div id="syndicated-only" class="custom-control custom-checkbox">
+				<input type="checkbox" class="custom-control-input" id="syndicatedOnly">
+				<label class="custom-control-label" for="syndicatedOnly">Syndicated (Can be played outside youtube.com)</label>
+			</div>
+		</div>
+	</div>
+</div>

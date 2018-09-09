@@ -23,67 +23,63 @@ function initMap() {
 }
 let CheckBox = function(id) {
 	this.element = $(id+" *");
-}
-CheckBox.prototype = {
-	setSelected: function(select) {
-		this.element.prop("checked",select);
-	},
-	isSelected: function() {
-		return this.element.is(":checked");
+	this.prototype = {
+        setSelected: function(select) {this.element.prop("checked",select);},
+        isSelected: function() {return this.element.is(":checked");}
 	}
-}
+};
 // Similar to java.util.Map
 function MyMap() {
 	this.keyVal = {};
-}
-MyMap.prototype = {
-	put : function(key, val) { this.keyVal[key] = val; },
-	get: function(key) { return this.keyVal[key]; },
-	containsKey: function(key) { return this.keyVal[key] !== undefined; },
-	size: function() { return this.keyVal.length; },
-	clear: function() { this.keyVal = {}; },
-	remove: function(key) { delete this.keyVal[key]; },
-	isEmpty: function() { $.isEmptyObject(this.keyVal); },
-	getOrDefault: function(key, defaultValue) { if(this.containsKey(key)) { return key; } else { return defaultValue; } },
+	this.prototype = {
+        put : function(key, val) { this.keyVal[key] = val; },
+        get: function(key) { return this.keyVal[key]; },
+        containsKey: function(key) { return this.keyVal[key] !== undefined; },
+        size: function() { return this.keyVal.length; },
+        clear: function() { this.keyVal = {}; },
+        remove: function(key) { delete this.keyVal[key]; },
+        isEmpty: function() { $.isEmptyObject(this.keyVal); },
+        getOrDefault: function(key, defaultValue) { if(this.containsKey(key)) { return key; } else { return defaultValue; } },
+    }
 }
 // JQuery quick modification of Bootstrap progress bar.
 function ProgressBar(document_element) {
 	this.el = $(document_element);
 	this.el.addClass("progress-bar-striped");
-}
-ProgressBar.prototype = {
-	getValue: function() { return this.el.attr("aria-valuenow"); },
-	getMaxValue: function() { return this.el.attr("aria-valuemax"); },
-	getProgress: function() { return this.getValue() / this.getMaxValue(); },
-	getText: function() { return this.el.text(); },
-	setValue: function(value) {
-		this.el.attr("aria-valuenow", value).css("width", 100*this.getProgress()+"%");
-		return this;
-	},
-	addToValue: function(add) {
-		this.setValue(Number(this.getValue()) + add);
-		return this;
-	},
-	setMaxValue: function(value) {
-		this.el.attr("aria-valuemax", value);
-		this.setValue(this.getValue());
-	},
-	setAnimated: function(animated) {
-		if(animated) {
-			this.el.addClass("progress-bar-animated");
-		} else {
-			this.el.removeClass("progress-bar-animated");
-		}
-		return this;
-	},
-	setStatus: function(statusClass) {
-		this.el.removeClass("bg-success").removeClass("bg-warning").removeClass("bg-danger").removeClass("bg-info").addClass(statusClass);
-		return this;
-	},
-	setText: function(message) {
-		this.el.text(message);
-		return this;
-	}
+	this.prototype = {
+        getValue: function() { return this.el.attr("aria-valuenow"); },
+        getMaxValue: function() { return this.el.attr("aria-valuemax"); },
+        getProgress: function() { return this.getValue() / this.getMaxValue(); },
+        getText: function() { return this.el.text(); },
+        setValue: function(value) {
+            this.el.attr("aria-valuenow", value).css("width", 100*this.getProgress()+"%");
+            return this;
+        },
+        addToValue: function(add) {
+            this.setValue(Number(this.getValue()) + add);
+            return this;
+        },
+        setMaxValue: function(value) {
+            this.el.attr("aria-valuemax", value);
+            this.setValue(this.getValue());
+        },
+        setAnimated: function(animated) {
+            if(animated) {
+                this.el.addClass("progress-bar-animated");
+            } else {
+                this.el.removeClass("progress-bar-animated");
+            }
+            return this;
+        },
+        setStatus: function(statusClass) {
+            this.el.removeClass("bg-success").removeClass("bg-warning").removeClass("bg-danger").removeClass("bg-info").addClass(statusClass);
+            return this;
+        },
+        setText: function(message) {
+            this.el.text(message);
+            return this;
+        }
+    }
 }
 // Geofinder. Modifies map and conducts search.
 function GeoData(map) {

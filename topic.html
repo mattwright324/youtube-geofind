@@ -1,6 +1,5 @@
 ---
 layout: default
-title: Discover Geo-tagged Videos - YouTube Geofind
 ---
 
 <br>
@@ -12,13 +11,13 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 		</div>
 	</div>
 	<div id="search-form" class="d-flex flex-column">
-		{% include_relative announcement.html %}
+		{% include announcement.html %}
 		<div class="form-group row">
 			<label class="col-2 col-form-label"><b>Keywords</b></label>
 			<div class="col-10">
 				<input type="text" class="form-control" id="q" aria-describedby="help"
-					placeholder="Search"
-					value="exploring &quot;abandonded&quot;"></input>
+					   placeholder="Search"
+					   value="exploring &quot;abandonded&quot;"/>
 				<small id="help" class="form-text text-muted">Keywords as if actually searching YouTube.</small>
 			</div>
 		</div>
@@ -33,8 +32,8 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 				</select>
 			</div>
 		</div>
-		{% include_relative form_advanced.html %}
-		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.normalSearch()">Search</button>
+		{% include form_controls.html %}
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geofind.search()">Search</button>
 	</div>
 </div>
 <br>
@@ -55,5 +54,5 @@ title: Discover Geo-tagged Videos - YouTube Geofind
 <br>
 
 <script>
-setupAsPage("topic");
+geofind.setPageToTopic();
 </script>
