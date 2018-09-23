@@ -3,7 +3,7 @@
 	<label class="col-2 col-form-label">Timeframe</label>
 	<div class="col-10" style="width: 100%">
 		<select id="time-frame" aria-describedby="orderhelp" class="custom-select">
-			<option value="hour-any" selected>Any</option>
+			<option value="any" selected>Any</option>
 			<option value="hour-1">Past hour</option>
 			<option value="hour-3">Past 3 hours</option>
 			<option value="hour-6">Past 6 hours</option>
@@ -16,7 +16,7 @@
 		</select>
 	</div>
 </div>
-<div id="custom-range" hidden>
+<div id="custom-range" style="display:none;">
 	<div class="form-group row">
 		<label class="col-2 col-form-label"><i>Start date</i></label>
 		<div class="col-10">
@@ -40,17 +40,16 @@
 			<option value="3" selected>3 pages</option>
 			<option value="5">5 pages</option>
 			<option value="7">7 pages</option>
-			<option value="15">All pages (10-13)</option>
+			<option value="15">All pages (up to 15)</option>
 		</select>
 		<small id="page-msg" class="form-text text-muted" style="display: none">* API limits stop returning results around pages 10 to 13.</small>
 	</div>
 </div>
 
-<div id="advanced" class="custom-control custom-checkbox">
-	<input type="checkbox" class="custom-control-input" id="openAdvanced">
-	<label class="custom-control-label" for="openAdvanced">Advanced Search</label>
-</div>
-<div id="advanced-form" style="display: hidden;">
+<button class="btn btn-outline-secondary" id="toggle" onclick="geofind.toggleAdvancedOptions()">
+	Toggle Advanced Options
+</button>
+<div id="advanced-form">
 	<div class="row">
 		<legend class="col-2 col-form-label">Options</legend>
 

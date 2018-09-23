@@ -1,21 +1,18 @@
 /* Source: http://tobiasahlin.com/spinkit/ */
 .spinner {
     margin: 0 auto;
-    padding-top: 100px;
-    padding-bottom: 50px;
-    width: 40px;
-    height: 40px;
+    width: 75px;
+    height: 75px;
     position: relative;
 }
 
 .cube1, .cube2 {
-    background-color: #fff;
+    background-color: white;
     width: 15px;
     height: 15px;
     position: absolute;
     top: 30%;
     left: 0;
-
     -webkit-animation: sk-cubemove 1.8s infinite ease-in-out;
     animation: sk-cubemove 1.8s infinite ease-in-out;
 }

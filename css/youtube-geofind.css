@@ -63,7 +63,7 @@ body, html {
 .special-border {
     border: 3px dotted rgba(127, 127, 127, 0.1);
 }
-#geotag-header {
+.section-header {
     border: 6px none rgb(153, 192, 255);
     border-bottom-style: solid;
     padding-bottom: 4px;
@@ -96,4 +96,53 @@ body, html {
 	-moz-user-select: none; /* Firefox all */
 	-ms-user-select: none; /* IE 10+ */
 	user-select: none; /* Likely future */
+}
+#loading {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 999999;
+	position: absolute;
+	background-color: rgba(127,127,127,0.5);
+	white-space: nowrap;
+}
+.spinner {
+	top: 35%;
+}
+#btnFind {
+	margin-top: 1rem;
+}
+#advanced-form {
+	padding: 10px;
+	background-color: rgba(200, 200, 255, 0.1);
+	border: 0px solid gray;
+	border-left-width: 5px;
+}
+#toggle {
+	width: 100%;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	border-left-width: 5px;
+}
+#loading-page {
+	color: #fffffc;
+	font-size: 4em;
+	margin-left: 75px;
+}
+.marker img, .table-item img {
+	width: 120px;
+	height: 90px;
+}
+.progress {
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	color: white;
+}
+.example {
+	align-items: center;
+	justify-content: center;
+	color: lightgray;
+	font-size: 1.25em;
 }

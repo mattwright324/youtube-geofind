@@ -1,10 +1,10 @@
 ---
 layout: default
+title : Channel Search
 ---
 
-<br>
 <div class="content-section">
-	<div id="geotag-header">
+	<div class="section-header">
 		<h4>By Channel</h4>
 	</div>
 	<div id="search-form" class="d-flex flex-column">
@@ -12,45 +12,34 @@ layout: default
 		<div class="form-group row">
 			<label class="col-2 col-form-label"><b>Channel</b></label>
 			<div class="col-10">
-				<input type="text" class="form-control" id="channelInput" aria-describedby="help"
+				<input type="text" class="form-control" id="channelList" aria-describedby="help"
 					   placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
 					   value="oceanexplorergov"/>
 				<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
 			</div>
 		</div>
-		<button type="button" class="btn btn-primary" id="btnFind" onclick="geodata.inspectChannelList('channelInput')">Check Videos</button>
+		<button type="button" class="btn btn-primary" id="btnFind" onclick="geofind.channelSearch()">Check Videos</button>
 	</div>
 </div>
 <br>
 
 <div class="content-section">
-	<div id="geotag-header" class="d-flex justify-content-between">
+	<div class="d-flex justify-content-between section-header">
 		<h4>Geotags</h4>
-		<button type="button" class="btn btn-link" id="btnSaveAll" onclick="geodata.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+		<button type="button" class="btn btn-secondary" id="btnSaveAll" onclick="geofind.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
 	</div>
-	<div id="channels" class="d-flex flex-column">
-		<div id="channel-list" class="d-flex flex-column-reverse"></div>
-		<div id="channel-example" class="d-flex flex-row align-content-center channel blurry">
-			<img src="img/blankProfile.png" width=64px height=64px id="channel-thumb" />
-			<div id="example-content" class="d-flex justify-content-between" style="width: 100%">
-				<div id="ec1" class="d-flex flex-column">
-					<label id="channel-name">Channel Name</label>
-					<label id="tag-count">0 videos geo-tagged</label>
-				</div>
-				<div id="ec2" class="d-flex flex-column" style="width: 25%">
-					<div class="progress">
-						<div id="videoProg" class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-					</div>
-					<button type="button" class="btn btn-link" id="btnSave" disabled>Export CSV <i class="fa fa-download" aria-hidden="true"></i></button>
-				</div>
-			</div>
-		</div>
+	<div class="card">
+		<ul id="channel-list" class="list-group list-group-flush">
+			<li class="example list-group-item d-flex align-content-center">
+				<span>No channels searched.</span>
+			</li>
+		</ul>
 	</div>
 </div>
 <br>
 
 <div class="content-section" id="examples">
-	<div id="geotag-header">
+	<div class="section-header">
 		<h4>Example Channels</h4>
 	</div>
 	<ol id="example-list">
@@ -75,5 +64,5 @@ layout: default
 <br>
 
 <script>
-geofind.setPageToChannel();
+	geofind.setPageToChannel();
 </script>

@@ -5,6 +5,7 @@
  *
  * youtube.ajax("youtube", data)
  *
+ * @requires jquery.js
  * @author mattwright324
  */
 let youtube = (function () {
@@ -15,25 +16,27 @@ let youtube = (function () {
         defaultKey = key;
         this.setKey(key);
     };
+    module.getDefaultKey = function() { return defaultKey; };
+    module.setKey = function (key) {
+        if (defaultKey === "") {
+            this.setDefaultKey(key);
+        }
+        currentKey = key;
+    };
+    module.getKey = function() { return currentKey; };
     module.ajax = function (type, data) {
-        if (defaultKey === "" || currentKey === "") {
+        if(!defaultKey && defaultKey === "" && !currentKey && currentKey === "") {
             console.error("YouTube API Key Missing");
         } else {
             return $.ajax({
                 cache: !1,
-                data: $.extend({key: GOOGLE_API_KEY}, data),
+                data: $.extend({key: currentKey}, data),
                 dataType: "json",
                 type: "GET",
                 timeout: 5e3,
                 url: "https://www.googleapis.com/youtube/v3/" + type
             });
         }
-    };
-    module.setKey = function (key) {
-        if (defaultKey === "") {
-            this.setDefaultKey(key);
-        }
-        currentKey = key;
     };
     return module;
 }());
