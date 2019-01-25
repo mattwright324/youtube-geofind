@@ -533,7 +533,7 @@ let geofind = (function (listener){
     }
 
     /* Obtains address from coordinates of locationMarker, set's to address field value */
-    function reverseGeocode() {
+    function reverseGeocode(callback) {
         let pos = locationMarker.getPosition();
         geocoder.geocode({"location": pos}, (res, stat) => {
             if(stat === "OK") {
@@ -542,12 +542,16 @@ let geofind = (function (listener){
                 } else {
                     address.attr("value", pos.lat()+","+pos.lng());
                 }
+
+                if(callback) {
+                    callback.call();
+                }
             }
         });
     }
 
     /* Converts from given address to coordinates, set's locationMarker to position */
-    function geocode(address) {
+    function geocode(address, callback) {
         geocoder.geocode({address: address}, (res, stat) => {
             if(stat === "OK") {
                 if(res[0]) {
@@ -558,9 +562,124 @@ let geofind = (function (listener){
                     circle.setCenter(locationMarker.getPosition());
 
                     module.adjustMapToCenter();
+
+                    if(callback) {
+                        callback.call();
+                    }
                 }
             }
         });
+    }
+
+    // Source: https://stackoverflow.com/a/13419367/2650847
+    function parseQuery(queryString) {
+        let query = {};
+        let pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+        for (let i = 0; i < pairs.length; i++) {
+            let pair = pairs[i].split('=');
+            query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+        }
+        return query;
+    }
+
+    function loadFromURL() {
+        let query = window.location.search;
+        let queryParams = parseQuery(query);
+        let regexIsTrue = new RegExp("t(rue)?", "i");
+
+        let doSearch = regexIsTrue.test(queryParams["doSearch"]);
+
+        if(regexIsTrue.test(queryParams["live"])) {
+            isLive.setSelected(true);
+
+            if(!showAdvForm) advancedToggle.click();
+        }
+        if(regexIsTrue.test(queryParams["creativeCommons"])) {
+            isCC.setSelected(true);
+
+            if(!showAdvForm) advancedToggle.click();
+        }
+        if(regexIsTrue.test(queryParams["hd"])) {
+            isHD.setSelected(true);
+
+            if(!showAdvForm) advancedToggle.click();
+        }
+        if(regexIsTrue.test(queryParams["embeddable"])) {
+            isEmbedded.setSelected(true);
+
+            if(!showAdvForm) advancedToggle.click();
+        }
+        if(regexIsTrue.test(queryParams["syndicated"])) {
+            isSyndicated.setSelected(true);
+
+            if(!showAdvForm) advancedToggle.click();
+        }
+        if(queryParams["timeframe"]) {
+            let value = queryParams["timeframe"];
+
+            timeframe.val(value);
+            timeframe.trigger("change");
+
+            if(value === 'custom') {
+                if(queryParams["start"]) {
+                    startDate.val(queryParams["start"]);
+                }
+                if(queryParams["end"]) {
+                    endDate.val(queryParams["end"]);
+                }
+            }
+        }
+        if(queryParams["radius"]) {
+            let value = queryParams["radius"];
+
+            radius.val(value);
+            radius.trigger("change");
+        }
+        if(queryParams["keywords"]) {
+            keywords.val(queryParams["keywords"])
+        }
+        if(queryParams["sort"]) {
+            let value = queryParams["sort"];
+
+            sortBy.val(value);
+            sortBy.trigger("change");
+        }
+        if(queryParams["pages"]) {
+            let value = queryParams["pages"];
+
+            pageLimit.val(value);
+            pageLimit.trigger("change");
+        }
+
+        if(queryParams["locationAddress"]) {
+            let value = queryParams["locationAddress"];
+
+            geocode(value, () => {
+                if(doSearch) {
+                    btnSearch.click();
+                }
+            });
+        } else if(queryParams["location"]) {
+            let value = queryParams["location"];
+
+            console.log(value);
+
+            if(value.includes(",")) {
+                let parts = value.split(",");
+
+                let latlng = new google.maps.LatLng(parts[0], parts[1]);
+
+                module.setMapCenter(latlng.lat(), latlng.lng());
+
+                reverseGeocode(() => {
+                    if(doSearch) {
+                        btnSearch.click();
+                    }
+                });
+            }
+        } else if(doSearch) {
+            setTimeout(() => {btnSearch.click();}, 500);
+        }
     }
 
     /* Loads existing icons to markers and fetches new icons */
@@ -712,6 +831,8 @@ let geofind = (function (listener){
         setupPageControls();
 
         loading.fadeOut(1000);
+
+        loadFromURL();
     };
 
     /* Set pageType used in setupPageControls() and called before init() */
