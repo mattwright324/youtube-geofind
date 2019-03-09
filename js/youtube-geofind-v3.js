@@ -129,6 +129,8 @@ let geofind = (function (listener){
     let btnSearch;
     let exportData;
     let dataTable;
+    let rowOrderNo = 0;
+    let clearOnSearch;
 
     /* Data management for searching */
     let pageType = "channel";
@@ -188,7 +190,16 @@ let geofind = (function (listener){
     function setupPageControls() {
         console.log("Setting up page controls for: "+pageType);
         if(pageType === "location" || pageType === "topic") {
-            dataTable = $("#dataTable").DataTable();
+            dataTable = $("#dataTable").DataTable({
+                "order": [[0, "asc"]],
+                "columnDefs": [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false
+                    }
+                ]
+            });
 
             if(isCC.isSelected() || isLive.isSelected() || isEmbedded.isSelected() || isSyndicated.isSelected() || isHD.isSelected()) {
                 advancedToggle.click();
@@ -280,6 +291,8 @@ let geofind = (function (listener){
                             let lat       = location.latitude;
                             let long      = location.longitude;
 
+                            rowOrderNo++;
+
                             let markerContent =
 `<div class="marker" align="center">
     <img src="${thumbUrl}" />
@@ -292,19 +305,16 @@ let geofind = (function (listener){
     </table>
 </div>`;
                             let tableContent =
-`<tr>
-    <td>
-        <div class="table-item d-flex flex-row justify-content-start">
-            <img src="${thumbUrl}" />
-            <table class="table" style="margin-left:15px">
-                <tr><td colspan="2"><a target="_blank" href="https://youtu.be/${id}">${title}</a></td></tr>
-                <tr><td style="width:25%">Author</td>       <td>${author}</td></tr>
-                <tr><td>Description</td>  <td>${desc}</td></tr>
-                <tr><td>Published</td>    <td>${published}</td></tr>
-            </table>
-        </div>
-    </td>
-</tr>`;
+`<div class="table-item d-flex flex-row justify-content-start">
+    <img src="${thumbUrl}" />
+    <table class="table" style="margin-left:15px">
+        <tr><td colspan="2"><a target="_blank" href="https://youtu.be/${id}">${title}</a></td></tr>
+        <tr><td style="width:25%">Author</td>       <td>${author}</td></tr>
+        <tr><td>Description</td>  <td>${desc}</td></tr>
+        <tr><td>Published</td>    <td>${published}</td></tr>
+        <tr><td align=RIGHT colspan="2"><a href="javascript:geofind.openInMap('${id}')">Open in map</td></tr>
+    </table>
+</div>`;
 
                             let markerPopup = new google.maps.InfoWindow({content: markerContent});
                             let marker = new google.maps.Marker({
@@ -316,7 +326,8 @@ let geofind = (function (listener){
                                 videoTitle: title,
                                 videoDesc: item.snippet.description,
                                 channelId: channelId,
-                                thumbLoaded: false
+                                thumbLoaded: false,
+                                markerPopup: markerPopup
                             });
                             markersList.push(marker);
                             marker.addListener("click", () => {
@@ -324,7 +335,7 @@ let geofind = (function (listener){
                             });
                             module.adjustMapToResults();
 
-                            dataTable.row.add([tableContent]).draw();
+                            dataTable.row.add([rowOrderNo, tableContent]).draw();
 
                             exportData.prop("disabled", false);
                             exportData.removeClass("btn-secondary").addClass("btn-warning");
@@ -332,7 +343,7 @@ let geofind = (function (listener){
                     }
                 });
 
-                loadProfileIcons();
+                //loadProfileIcons();
 
                 if(res.hasOwnProperty("nextPageToken") && status.page < status.pageLimit) {
                     status.page++;
@@ -468,7 +479,8 @@ let geofind = (function (listener){
                                 videoTitle: item.snippet.title,
                                 videoDesc: item.snippet.description,
                                 channelId: channelId,
-                                thumbLoaded: false
+                                thumbLoaded: false,
+                                markerPopup: markerPopup
                             });
                             markersList.push(marker);
                             marker.addListener("click", () => {
@@ -489,7 +501,7 @@ let geofind = (function (listener){
                     }
                 });
 
-                loadProfileIcons();
+                //loadProfileIcons();
 
                 if(res.hasOwnProperty("nextPageToken")) {
                     data.pageToken = res.nextPageToken;
@@ -702,12 +714,15 @@ let geofind = (function (listener){
         }
 
         let fetch = unloaded.filter(marker => !profileIconMap.containsKey(marker.channelId));
-        let fetchIds = fetch.map(marker => marker.channelId).unique();
+        let fetchIds = fetch.map(marker => marker.channelId)
+            .unique()
+            .slice(0,50);
 
         if(fetchIds.length > 0) {
             console.log("Fetching " + fetchIds.length + " new profile icons ["+fetchIds.join(",")+"]");
             youtube.ajax("channels", {
                 part: "snippet",
+                maxResults: 50,
                 id: fetchIds.join(",")
             }).done((res) => {
                 res.items.forEach(item => {
@@ -717,6 +732,7 @@ let geofind = (function (listener){
             });
         }
     }
+    setInterval(loadProfileIcons, 500);
 
     function displayAlert(level, title, message) {
         let errorContent = `
@@ -825,8 +841,10 @@ let geofind = (function (listener){
         isSyndicated = new CheckBox("#syndicated-only");
         progressBar  = new ProgressBar("#videoProg");
 
-        btnSearch  = $("#btnFind");
-        exportData = $("#btnSaveAll");
+        btnSearch     = $("#btnFind");
+        clearOnSearch = new CheckBox("#clear-results");
+        clearOnSearch.setSelected(true);
+        exportData    = $("#btnSaveAll");
 
         setupPageControls();
 
@@ -851,6 +869,10 @@ let geofind = (function (listener){
     /* Initiates search */
     module.search = function() {
         loading.show();
+
+        if(clearOnSearch.isSelected()) {
+            module.clear();
+        }
 
         let request = getRequestData();
         request.part       = "id";
@@ -911,6 +933,22 @@ let geofind = (function (listener){
         a.setAttribute("download", filename+".txt");
         document.body.appendChild(a);
         a.click();
+    };
+    module.openInMap = function(video_id) {
+        markersList.forEach(marker => {
+            if(marker.videoId === video_id) {
+                console.log(marker);
+                marker.markerPopup.open(map, marker);
+            }
+        });
+    };
+    module.clear = function() {
+        // Clears the map of all results from the previous search.
+        markersList.forEach(marker => {
+            marker.setMap(null);
+        });
+        markersList = [locationMarker];
+        dataTable.clear().draw();
     };
 
     return module;

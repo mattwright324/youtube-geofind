@@ -34,7 +34,7 @@
 <div class="form-group row">
 	<label class="col-2 col-form-label"><b>Page limit</b></label>
 	<div class="col-10" style="width: 100%">
-		<select id="page-limit" aria-describedby="orderhelp" class="custom-select">
+		<select id="page-limit" aria-describedby="page-msg" class="custom-select">
 			<option value="1">1 page</option>
 			<option value="2">2 pages</option>
 			<option value="3" selected>3 pages</option>
@@ -42,7 +42,11 @@
 			<option value="7">7 pages</option>
 			<option value="15">All pages (up to 15)</option>
 		</select>
-		<small id="page-msg" class="form-text text-muted" style="display: none">* API limits stop returning results around pages 10 to 13.</small>
+		<small id="page-msg" class="form-text text-muted">
+			* API limits stop returning results around pages 10 to 13.
+			<br>
+			* Pages are set to return maximum of 50 results per page.
+		</small>
 	</div>
 </div>
 
