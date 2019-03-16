@@ -20,6 +20,20 @@ let geofind = (function (listener){
       return this.length > length ? this.substring(0, length) + "..." : this;
     };
 
+    /* Source: https://stackoverflow.com/a/7244288/2650847 */
+    Date.prototype.rfc3339 = function() {
+        function pad(n) {
+            return n < 10 ? '0' + n : n
+        }
+
+        return this.getUTCFullYear() + '-'
+            + pad(this.getUTCMonth()+1) + '-'
+            + pad(this.getUTCDate()) + 'T'
+            + pad(this.getUTCHours()) + ':'
+            + pad(this.getUTCMinutes()) + ':'
+            + pad(this.getUTCSeconds()) + 'Z';
+    };
+
     /* Object with similar functionality to java.util.Map */
     let Map = function() {
         this.keyVal = {};
@@ -180,8 +194,8 @@ let geofind = (function (listener){
                 afterDate.setTime(beforeDate.getTime() - timeRangeMap.get(time));
             }
 
-            request.publishedBefore = beforeDate.toJSON();
-            request.publishedAfter  = afterDate.toJSON();
+            request.publishedBefore = beforeDate.rfc3339();
+            request.publishedAfter  = afterDate.rfc3339();
         }
 
         return request;
@@ -269,6 +283,7 @@ let geofind = (function (listener){
 
     /* Recursive search for topic and location */
     function search(data, status) {
+        console.log(data);
         youtube.ajax("search", data).done(function(res) {
             loadingPage.text("Pg " + status.page);
 
@@ -343,8 +358,6 @@ let geofind = (function (listener){
                     }
                 });
 
-                //loadProfileIcons();
-
                 if(res.hasOwnProperty("nextPageToken") && status.page < status.pageLimit) {
                     status.page++;
                     data.pageToken = res.nextPageToken;
@@ -394,8 +407,6 @@ let geofind = (function (listener){
                 }
 
                 exampleChannel.remove();
-
-
 
                 let request = {
                     part:       "snippet",
@@ -500,8 +511,6 @@ let geofind = (function (listener){
                         }
                     }
                 });
-
-                //loadProfileIcons();
 
                 if(res.hasOwnProperty("nextPageToken")) {
                     data.pageToken = res.nextPageToken;
@@ -945,7 +954,9 @@ let geofind = (function (listener){
     module.clear = function() {
         // Clears the map of all results from the previous search.
         markersList.forEach(marker => {
-            marker.setMap(null);
+            if(marker !== locationMarker) {
+                marker.setMap(null);
+            }
         });
         markersList = [locationMarker];
         dataTable.clear().draw();
