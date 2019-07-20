@@ -999,6 +999,10 @@ const geofind = (function() {
          * To be called as a callback when the map finishes loading and we can get the map element.
          */
         onMapInit: function() {
+            if (location.protocol !== "https:" && location.hostname !== "localhost") {
+                location.protocol = "https:";
+            }
+
             if(!this.onMapInitCalled) {
                 console.log("Initializing app");
 
