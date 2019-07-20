@@ -165,6 +165,8 @@ const geofind = (function() {
             elements.loadingDiv     = $("#loading");
             elements.loadingText    = $("#loading-page");
 
+            elements.alerts         = $("#alerts");
+
             controls.inputChannels  = $("#channels");
             elements.channelsDiv    = $("#channel-list");
             elements.channelPlaceholder = $(".example");
@@ -249,9 +251,9 @@ const geofind = (function() {
                     let payload;
 
                     for(let i=0; i<channels.length; i++) {
-                        const channelStr = channels[i];
+                        const channelStr = channels[i].trim();
 
-                        if(channelStr.trim()) {
+                        if(channelStr) {
                             if(channelStr.length === 24) {
                                 payload = {id: channelStr};
                             } else if(channelStr.length <= 20) {
@@ -265,85 +267,100 @@ const geofind = (function() {
                             if(payload) {
                                 query.channels(payload, function(res) {
                                     const channel = res.items[0];
-                                    const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
 
-                                    const channelListHtml = format.channelToListItemHtml(channel);
+                                    if(channel) {
+                                        // Does not exist in page yet
+                                        if(!$("#"+channel.id).length) {
+                                            const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
 
-                                    elements.channelPlaceholder.remove();
-                                    elements.channelsDiv.append(channelListHtml);
+                                            const channelListHtml = format.channelToListItemHtml(channel);
 
-                                    elements[channel.id] = {};
-                                    elements[channel.id].progress = new ProgressBar("#"+channel.id+" .progress-bar");
-                                    elements[channel.id].tagCount = $("#"+channel.id+" .tag-count");
+                                            elements.channelPlaceholder.remove();
+                                            elements.channelsDiv.append(channelListHtml);
 
-                                    controls[channel.id] = {};
-                                    controls[channel.id].btnExport = $("#"+channel.id+" .btn-save");
+                                            elements[channel.id] = {};
+                                            elements[channel.id].progress = new ProgressBar("#"+channel.id+" .progress-bar");
+                                            elements[channel.id].tagCount = $("#"+channel.id+" .tag-count");
 
-                                    let videoTotal = 0;
+                                            controls[channel.id] = {};
+                                            controls[channel.id].btnExport = $("#"+channel.id+" .btn-save");
 
-                                    function searchPlaylist(pageToken) {
-                                        youtube.ajax("playlistItems", {
-                                            part: "snippet",
-                                            maxResults: 50,
-                                            playlistId: uploadsPlaylistId,
-                                            pageToken: pageToken
-                                        }).done(function(res) {
-                                            console.log("Searching [playlistId="+uploadsPlaylistId+", pageToken="+pageToken+", totalVideos="+videoTotal+"]");
+                                            let videoTotal = 0;
 
-                                            if(pageToken === "") {
-                                                elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
+                                            function searchPlaylist(pageToken) {
+                                                youtube.ajax("playlistItems", {
+                                                    part: "snippet",
+                                                    maxResults: 50,
+                                                    playlistId: uploadsPlaylistId,
+                                                    pageToken: pageToken
+                                                }).done(function(res) {
+                                                    console.log("Searching [playlistId="+uploadsPlaylistId+", pageToken="+pageToken+", totalVideos="+videoTotal+"]");
+
+                                                    if(pageToken === "") {
+                                                        elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
+                                                    }
+
+                                                    videoTotal += res.items.length;
+
+                                                    elements[channel.id].progress.setValue(videoTotal);
+
+                                                    const videoIds = [];
+                                                    for(let i=0; i<res.items.length; i++) {
+                                                        const playlistVideo = res.items[i];
+
+                                                        videoIds.push(playlistVideo.snippet.resourceId.videoId);
+                                                    }
+
+                                                    console.log(videoIds);
+
+                                                    query.videos(videoIds, function(res) {
+                                                        console.log(res);
+
+                                                        for(let i=0; i<res.items.length; i++) {
+                                                            const video = res.items[i];
+
+                                                            internal.pushVideo(video, true, true);
+                                                        }
+                                                    });
+
+                                                    if(internal.markersList.length > 0) {
+                                                        internal.adjustMapToResults();
+                                                    }
+
+                                                    if(res.hasOwnProperty("nextPageToken")) {
+                                                        searchPlaylist(res.nextPageToken);
+                                                    } else {
+                                                        elements.loadingDiv.fadeOut(defaults.animationMs);
+                                                        elements[channel.id].progress.animated(false);
+                                                    }
+                                                }).fail(function(err) {
+                                                    elements[channel.id].progress.setBg("bg-danger");
+
+                                                    internal.displayMessage("alert-warning", JSON.stringify(err));
+
+                                                    console.error(err);
+                                                })
                                             }
 
-                                            videoTotal += res.items.length;
-
-                                            elements[channel.id].progress.setValue(videoTotal);
-
-                                            const videoIds = [];
-                                            for(let i=0; i<res.items.length; i++) {
-                                                const playlistVideo = res.items[i];
-
-                                                videoIds.push(playlistVideo.snippet.resourceId.videoId);
-                                            }
-
-                                            console.log(videoIds);
-
-                                            query.videos(videoIds, function(res) {
-                                                console.log(res);
-
-                                                for(let i=0; i<res.items.length; i++) {
-                                                    const video = res.items[i];
-
-                                                    internal.pushVideo(video, true, true);
-                                                }
-                                            });
-
-                                            if(internal.markersList.length > 0) {
-                                                internal.adjustMapToResults();
-                                            }
-
-                                            if(res.hasOwnProperty("nextPageToken")) {
-                                                searchPlaylist(res.nextPageToken);
-                                            } else {
-                                                elements[channel.id].progress.animated(false);
-                                            }
-                                        }).fail(function(err) {
-                                            elements[channel.id].progress.setBg("bg-danger");
-
-                                            elements.loadingDiv.fadeOut(defaults.animationMs);
-
-                                            console.error(err);
-                                        })
+                                            searchPlaylist("");
+                                        } else {
+                                            console.warn("Channel was already in the list '"+channel.id+"'");
+                                        }
+                                    } else {
+                                        internal.displayMessage("alert-warning", "Channel does not exist '"+channelStr+"'");
                                     }
-
-                                    searchPlaylist("");
                                 });
                             } else {
-                                console.error("Channel value didn't match expected lengths.")
+                                internal.displayMessage("alert-warning", "Did not recognize value as id or username '"+channelStr+"'");
+
+                                console.error("Channel value didn't match expected lengths.");
                             }
                         } else {
-                            console.error("Channel value was empty.")
+                            console.error("Channel value was empty.");
                         }
                     }
+
+                    elements.loadingDiv.fadeOut(defaults.animationMs);
                 })
             } else {
                 if(this.pageType === pageTypes.LOCATION) {
@@ -467,6 +484,8 @@ const geofind = (function() {
 
                             elements.loadingDiv.fadeOut(defaults.animationMs);
 
+                            internal.displayMessage("alert-warning", JSON.stringify(err));
+
                             console.error(err);
                         });
                     }
@@ -543,6 +562,16 @@ const geofind = (function() {
             }
 
             return request;
+        },
+
+        displayMessage: function(type, message) {
+            const html =
+                "<div class='alert alert-dismissable fade show "+type+"' role='alert'>" +
+                    "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>×</span></button>" +
+                    message +
+                "</div>";
+
+            elements.alerts.append(html);
         },
 
         doesVideoHaveLocation: function(video) {
@@ -939,7 +968,9 @@ const geofind = (function() {
                 callback(res);
             }).fail(function(err) {
                 console.error(err);
-                //displayAlert("warning", "An error occured:", err.responseText);
+
+                internal.displayMessage("alert-warning", JSON.stringify(err));
+
                 elements.loadingDiv.fadeOut(1000);
             });
         },
@@ -956,6 +987,8 @@ const geofind = (function() {
             ).done(function(res) {
                 callback(res);
             }).fail(function(err) {
+                internal.displayMessage("alert-warning", JSON.stringify(err));
+
                 console.error(err);
             });
         },
