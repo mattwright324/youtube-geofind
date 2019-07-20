@@ -28,7 +28,7 @@ Detailed below are the different parameters, their constraints, and what they do
     sort= {date,relevance,viewCount,rating}
         // Value must be one of these and no others. 
         // Using a value not listed will make the sort select box blank.
-    timeframe= {any,hour-1,hour-3,hour-6,hour-12,hour-24,day-7,day-30,day-365,custom}
+    timeframe= {any,hour-1,hour-3,hour-6,hour-12,hour-24,day-7,day-30,day-90,day-365,custom}
         // Value must be one of these and no others. 
         // Using a value not listed will make the timeframe select box blank.
     start= {date yyyy-MM-dd}

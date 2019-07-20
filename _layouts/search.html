@@ -3,8 +3,10 @@ layout: default
 ---
 
 <div class="content-section">
-    <div class="section-header">
-        <h4>{{ page.title_text }}</h4>
+    <div class="row section-header">
+        <div class="col-auto">
+            <h4>{{ page.title_text }}</h4>
+        </div>
     </div>
     <div id="search-form" class="d-flex flex-column">
         {% include announcement.html %}
@@ -18,7 +20,7 @@ layout: default
                 {% endif %}
             </label>
             <div class="col-10">
-                <input type="text" class="form-control" id="q" aria-describedby="help"
+                <input type="text" class="form-control" id="keywords" aria-describedby="help"
                        placeholder="Search" {% if page.is_topic %}value="news"{% endif %}/>
                 <small id="help" class="form-text text-muted">Keywords as if actually searching YouTube.</small>
             </div>
@@ -26,7 +28,7 @@ layout: default
         <div class="form-group row">
             <label class="col-2 col-form-label">Sort by</label>
             <div class="col-10">
-                <select id="order-by" aria-describedby="orderhelp" class="custom-select">
+                <select id="sortBy" aria-describedby="orderhelp" class="custom-select">
                     <option value="date" selected>Date</option>
                     <option value="relevance">Relevance</option>
                     <option value="viewCount">Views</option>
@@ -36,12 +38,12 @@ layout: default
         </div>
         {% include form_controls.html %}
         <div class="form-group" style="width:100%;">
-            <button type="button" class="btn btn-primary" id="btnFind" style="width:100%;" onclick="geofind.search()">
+            <button type="button" class="btn btn-primary" id="btnSubmit" style="width:100%;">
                 Search
             </button>
         </div>
         <div class="form-group">
-            <div id="clear-results" class="custom-control custom-checkbox">
+            <div class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input" id="clearOnSearch">
                 <label class="custom-control-label" for="clearOnSearch">Clear results on every search</label>
             </div>
@@ -52,9 +54,13 @@ layout: default
 <br>
 
 <div class="content-section">
-    <div class="d-flex justify-content-between section-header">
-        <h4>Geotags</h4>
-        <button type="button" class="btn btn-secondary" id="btnSaveAll" onclick="geofind.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+    <div class="row section-header justify-content-between">
+        <div class="col-auto">
+            <h4>Geotags</h4>
+        </div>
+        <div class="col-auto">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnExportAll" onclick="geofind.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+        </div>
     </div>
     <div class="table-responsive">
         <table id="dataTable" class="table table-striped table-bordered" width="100%" cellspacing="0">

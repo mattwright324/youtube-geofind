@@ -4,29 +4,35 @@ title : Channel Search
 ---
 
 <div class="content-section">
-	<div class="section-header">
-		<h4>By Channel</h4>
+	<div class="row section-header">
+		<div class="col-auto">
+			<h4>By Channel</h4>
+		</div>
 	</div>
 	<div id="search-form" class="d-flex flex-column">
 		{% include announcement.html %}
 		<div class="form-group row">
-			<label class="col-2 col-form-label"><b>Channel</b></label>
+			<label class="col-2 col-form-label"><b>Channel(s)</b></label>
 			<div class="col-10">
-				<input type="text" class="form-control" id="channelList" aria-describedby="help"
+				<input type="text" class="form-control" id="channels" aria-describedby="help"
 					   placeholder="e.g. UCe_3CoEeinvPMze2u_aENBg or oceanexplorergov"
 					   value="oceanexplorergov"/>
 				<small id="help" class="form-text text-muted">Full channel_id or shortcut username. Comma-separated lists accepted.</small>
 			</div>
 		</div>
-		<button type="button" class="btn btn-primary" id="btnFind" onclick="geofind.channelSearch()">Check Videos</button>
+		<button type="button" class="btn btn-primary" id="btnSubmit">Check Uploads</button>
 	</div>
 </div>
 <br>
 
 <div class="content-section">
-	<div class="d-flex justify-content-between section-header">
-		<h4>Geotags</h4>
-		<button type="button" class="btn btn-secondary" id="btnSaveAll" onclick="geofind.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+	<div class="row section-header justify-content-between">
+		<div class="col-auto">
+			<h4>Geotags</h4>
+		</div>
+		<div class="col-auto">
+			<button type="button" class="btn btn-secondary btn-sm" id="btnExportAll" onclick="geofind.exportToCSV()" disabled>Export CSV (All) <i class="fa fa-download" aria-hidden="true"></i></button>
+		</div>
 	</div>
 	<div class="card">
 		<ul id="channel-list" class="list-group list-group-flush">
@@ -39,30 +45,15 @@ title : Channel Search
 <br>
 
 <div class="content-section" id="examples">
-	<div class="section-header">
-		<h4>Example Channels</h4>
+	<div class="row section-header">
+		<div class="col-auto">
+			<h4>Example Channels</h4>
+		</div>
 	</div>
 	<ol id="example-list">
-		<li>oceanexplorergov</li>
-		<li>DODvClips</li>
-		<li>USCGImagery</li>
-		<li>noaa</li>
-		<li>usgs</li>
-		<li>NOAAVisualizations</li>
-		<li>pennlive</li>
-		<li>jackfrags</li>
-		<li>NASAgovVideo</li>
-		<li>brainiac75</li>
+		<li>vicenews</li>
+		<li>TheGuardian</li>
+		<li>BostonDynamics</li>
 	</ol>
-	<strong class="form-text text-warning">
-	<i class="fa fa-exclamation-triangle" style="color:orange" aria-hidden="true"></i>
-	The example channels listed above no longer return geotag results; it is likely that the tags on these channels have been removed. 
-	However, this search tool still works perfectly with channels that appear from location searching.
-	I believe that geotags on channels above some size or qualification have had their geotags removed.
-	</strong>
 </div>
 <br>
-
-<script>
-	geofind.setPageToChannel();
-</script>

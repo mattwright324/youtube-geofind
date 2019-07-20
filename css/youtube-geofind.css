@@ -11,10 +11,6 @@ body, html {
 	height: 400px;
 	width: 100%;
 }
-.progress {
-	height: 25px;
-	margin-bottom: 10px;
-}
 .control {
 	margin-top: 10px;
 }
@@ -110,7 +106,7 @@ body, html {
 .spinner {
 	top: 35%;
 }
-#btnFind {
+#btnSubmit {
 	margin-top: 1rem;
 }
 #advanced-form {
@@ -134,15 +130,48 @@ body, html {
 	width: 120px;
 	height: 90px;
 }
-.progress {
+/*.progress {
 	align-items: center;
 	justify-content: center;
 	font-weight: 700;
 	color: white;
+	height: 25px;
+	margin-bottom: 10px;
+}*/
+.progress {
+	margin-bottom: 0.75em;
+}
+.channel-title {
+	font-size: 1.25em;
 }
 .example {
 	align-items: center;
 	justify-content: center;
 	color: lightgray;
 	font-size: 1.25em;
+}
+
+.video a:hover {
+	text-decoration: none;
+}
+.video .authorLink {
+	color: gray;
+}
+.video .authorLink:hover {
+	color: darkgray;
+}
+.video .authorLink div {
+	margin-top: 2px;
+}
+
+.openInMap {
+	color: gray;
+}
+.openInMap:hover {
+	color: darkgray;
+}
+
+#geolocate {
+	padding-top: 0;
+	padding-bottom: 0;
 }
