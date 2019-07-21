@@ -1123,6 +1123,10 @@ const geofind = (function() {
 
                 if(controls.inputAddress.length && paramValue) {
                     controls.inputAddress.val(paramValue);
+
+                    if(paramValue.length) {
+                        internal.geocode(paramValue);
+                    }
                 }
             }
         },
