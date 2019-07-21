@@ -1116,20 +1116,6 @@ const geofind = (function() {
                 }
             }
         },
-        paramLocationAddress: {
-            param: 'locationAddress',
-            updatePage: function(parsedQuery) {
-                const paramValue = parsedQuery[this.param];
-
-                if(controls.inputAddress.length && paramValue) {
-                    controls.inputAddress.val(paramValue);
-
-                    if(paramValue.length) {
-                        internal.geocode(paramValue);
-                    }
-                }
-            }
-        },
         paramRadius: {
             param: 'radius',
             updatePage: function(parsedQuery) {
@@ -1282,8 +1268,24 @@ const geofind = (function() {
             updatePage: function(parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(paramValue === "true") {
+                if(paramValue === "true" && !parsedQuery[module.params.paramLocationAddress.param]) {
                     controls.btnSubmit.click();
+                }
+            }
+        },
+        paramLocationAddress: {
+            param: 'locationAddress',
+            updatePage: function(parsedQuery) {
+                const paramValue = parsedQuery[this.param];
+
+                if(controls.inputAddress.length && paramValue) {
+                    controls.inputAddress.val(paramValue);
+
+                    if(paramValue.length) {
+                        internal.geocode(paramValue, function() {
+                            controls.btnSubmit.click();
+                        });
+                    }
                 }
             }
         },
