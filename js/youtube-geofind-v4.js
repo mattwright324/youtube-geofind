@@ -121,7 +121,6 @@ const geofind = (function() {
                 this.element.text(value + " / " + max)
             }
         }
-
     };
 
     const internal = {
@@ -493,7 +492,7 @@ const geofind = (function() {
                     search("");
                 });
 
-                controls.checkClearResults.click();
+                controls.checkClearResults.prop("checked", true);
             }
         },
 
@@ -1208,7 +1207,7 @@ const geofind = (function() {
                 const paramValue = parsedQuery[this.param];
 
                 if(controls.checkLive.length && paramValue === "true") {
-                    controls.checkLive.click();
+                    controls.checkLive.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
@@ -1220,7 +1219,7 @@ const geofind = (function() {
                 const paramValue = parsedQuery[this.param];
 
                 if(controls.checkCC.length && paramValue === "true") {
-                    controls.checkCC.click();
+                    controls.checkCC.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
@@ -1232,7 +1231,7 @@ const geofind = (function() {
                 const paramValue = parsedQuery[this.param];
 
                 if(controls.checkHQ.length && paramValue === "true") {
-                    controls.checkHQ.click();
+                    controls.checkHQ.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
@@ -1244,7 +1243,7 @@ const geofind = (function() {
                 const paramValue = parsedQuery[this.param];
 
                 if(controls.checkEmbedded.length && paramValue === "true") {
-                    controls.checkEmbedded.click();
+                    controls.checkEmbedded.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
@@ -1256,7 +1255,7 @@ const geofind = (function() {
                 const paramValue = parsedQuery[this.param];
 
                 if(controls.checkSyndicated.length && paramValue === "true") {
-                    controls.checkSyndicated.click();
+                    controls.checkSyndicated.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
