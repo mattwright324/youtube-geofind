@@ -467,10 +467,6 @@ const geofind = (function() {
                                 }
                             });
 
-                            if(internal.markersList.length > 0) {
-                                internal.adjustMapToResults();
-                            }
-
                             pageValue++;
 
                             if(res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
@@ -629,6 +625,8 @@ const geofind = (function() {
                             published: video.snippet.publishedAt
                         }
                     });
+
+                    internal.adjustMapToResults();
 
                     marker.addListener("click", () => {
                         marker.openPopup();
