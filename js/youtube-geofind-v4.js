@@ -1265,10 +1265,13 @@ const geofind = (function() {
         // All Pages
         paramDoSearch: {
             param: 'doSearch',
-            updatePage: function(parsedQuery) {
+            shouldSearch: function(parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(paramValue === "true" && !parsedQuery[module.params.paramLocationAddress.param]) {
+                return paramValue === "true";
+            },
+            updatePage: function(parsedQuery) {
+                if(this.shouldSearch(parsedQuery) && !parsedQuery[module.params.paramLocationAddress.param]) {
                     controls.btnSubmit.click();
                 }
             }
@@ -1283,7 +1286,9 @@ const geofind = (function() {
 
                     if(paramValue.length) {
                         internal.geocode(paramValue, function() {
-                            controls.btnSubmit.click();
+                            if(module.params.paramDoSearch.shouldSearch(parsedQuery)) {
+                                controls.btnSubmit.click();
+                            }
                         });
                     }
                 }
