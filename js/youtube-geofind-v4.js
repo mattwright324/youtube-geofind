@@ -937,7 +937,7 @@ const geofind = (function() {
                                         "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/"+video.id+"'>" +
                                             "<div>" +
                                                 "<span style='vertical-align:middle'>View metadata</span>" +
-                                                "<img src='../img/metadata.png' width='14' style='margin-left:4px'>" +
+                                                "<img src='./img/metadata.png' width='14' style='margin-left:4px'>" +
                                             "</div>" +
                                         "</a>" +
                                     "</div>" +
