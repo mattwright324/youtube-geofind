@@ -20,7 +20,7 @@ What's unique about this tool? How can you use it?
 The tool provides a pseudo-api with query parameters that allow manipulation of the page elements so that you can share a search you made or implement a linked custom search from your own site/tool.
 
 ### Channel page
-The follow parameter(s) will work with just the channel page `/youtube-geofind/`
+The following parameter(s) will work with just the channel page `/youtube-geofind/`
 
 | Parameter | Accepted values |
 | :---: | :--- |
@@ -50,7 +50,7 @@ Example(s)
 - https://mattw.io/youtube-geofind/topic?keywords=hurricane&doSearch=true
 
 ### Location page
-The follow parameter(s) will work with just the location page `/youtube-geofind/location`
+The following parameter(s) will work with just the location page `/youtube-geofind/location`
 
 | Parameter | Accepted values |
 | :---: | :--- |
