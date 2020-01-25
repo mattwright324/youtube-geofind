@@ -1,57 +1,76 @@
-# youtube-geofind
-Search YouTube channels for geo-tagged videos. View in map and export to CSV.
+# YouTube Geofind
+Search by channel, topic, and location for geotagged videos. View in map and export results.
 
 * https://mattw.io/youtube-geofind/
 
-## Donate
+What's unique about this tool? How can you use it?
 
-If you'd like to support future development or just thank me, you can send donations @ [paypal.me/mattwright324](https://www.paypal.me/mattwright324)
+1. Find cool videos where you live or anywhere in the world!
+    - What videos were posted by you in the last week? (find me, past 7 days)
+    - What livestreams are running now in my state/country? (find me, radius 500 or 1000, live events only)
+2. Use it for investigative purposes, OSINT.
+    - Channel searching allows you to check all the uploads on a channel for geotags and displays them in a map.
+    - Topic searching allows you to check if any uploads found by regular searching or keywords have geotags (though, not many do).
+    - Location searching allows you to find videos with geotags within your chosen radius and timeframe.
+    - Export results to save your findings and use elsewhere.
+    - Results can be directly opened in my new YouTube Metadata tool to give all details about that video and its author.
+3. Query API as noted below
 
-## Query parameters
+## Query API
+The tool provides a pseudo-api with query parameters that allow manipulation of the page elements so that you can share a search you made or implement a linked custom search from your own site/tool.
 
-Also available are query parameters which allow you to manipulate the Location search page.
-Detailed below are the different parameters, their constraints, and what they do.
+### Channel page
+The follow parameter(s) will work with just the channel page `/youtube-geofind/`
 
-    // Main query parameters
-    location= {latitude,longitude}
-        // Location takes a value of latitude and longitude. It will set the map to that location.
-    locationAddress= {any location by name, as if searching Google Maps}
-        // Any address in any format. 
-        // Geocodes to coordinates and sets the map to that location.
-        // Value should be URLEncoded.
-    radius= {1,2,5,10,15,20,50,100,200,500,1000}
-        // Value is in kilometers. Value must be one of these and no others. 
-        // Using a value not listed will make the radius select box blank.
-    keywords= {keywords as if searching YouTube, URLEncoded}
-        // Keywords as if actually searching YouTube. 
-        // Value should be URLEncoded.
-    sort= {date,relevance,viewCount,rating}
-        // Value must be one of these and no others. 
-        // Using a value not listed will make the sort select box blank.
-    timeframe= {any,hour-1,hour-3,hour-6,hour-12,hour-24,day-7,day-30,day-90,day-365,custom}
-        // Value must be one of these and no others. 
-        // Using a value not listed will make the timeframe select box blank.
-    start= {date yyyy-MM-dd}
-        // Start date requires timeframe=custom.
-    end= {date yyyy-MM-dd}
-        // End date requires timeframe=custom.
-    pages= {1,2,3,5,7,15}
-        // Value must be one of these and no others. 
-        // Using a value not listed will make the page limit select box blank.
-    doSearch= {true/false}
-        // Setting this to true will trigger the search to fire.
-    
-    // Setting any of these to true will check their checkboxes and cause the Advanced Options section to expand.
-    live= {true/false}
-    creativeCommons= {true/false}
-    hd= {true/false}
-    embeddable= {true/false}
-    syndicated= {true/false}
-    
-Now for some examples using these query parameters:
+| Parameter | Accepted values |
+| :---: | :--- |
+| channels | string, comma separated list of channel names or ids <br> e.g. <br>`UChirEOpgFCupRAk5etXqPaA` <br>`vicenews,UChirEOpgFCupRAk5etXqPaA,thesamlivecast` |
 
-* https://mattw.io/youtube-geofind/location?location=43.054098,-79.2281175&radius=2&doSearch=true
-* https://mattw.io/youtube-geofind/location?locationAddress=ohio&radius=1000&live=true&doSearch=true
-* https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
-* https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
-* https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=custom&start=2018-05-01&end=2018-05-14&doSearch=true
+Example(s)
+- https://mattw.io/youtube-geofind/?channels=GP4YOU&doSearch=true
+
+### Location & Topic pages
+The following parameter(s) are shared by both the location `/youtube-geofind/location` and topic `/youtube-geofind/topic` pages.
+
+| Parameter | Accepted values |
+| :---: | :--- |
+| keywords | string, keywords exactly like you could put into YouTube search |
+| sort | string, may only be one of the specified values that show in the select box in the page. otherwise the select box will become blank <br> One of these only: `date, relevance, viewCount, rating` |
+| timeframe | string, may only be one of the specified values that show in the select box in the page. otherwise the select box will become blank <br> One of these only: `any, hour-1, hour-3, hour-6, hour-12, hour-24, day-7, day-30, day-90, day-365, custom` |
+| start | date-string of format yyyy-MM-dd. may only be used with timeframe=custom. must be before end date. <br> e.g. `2018-12-24` |
+| end | date-string of format yyyy-MM-dd. may only be used with timeframe=custom. must be after start date. <br> e.g. `2018-12-26` |
+| pages | integer, may only be one of the specified values that show in the select box in the page. otherwise the select box will become blank <br> One of these only: `1, 2, 3, 5, 7, 15` |
+| live | boolean `true` or `false` |
+| creativeCommons | boolean `true` or `false` |
+| hd | boolean `true` or `false` |
+| embeddable | boolean `true` or `false` |
+| syndicated | boolean `true` or `false` |
+
+Example(s)
+- https://mattw.io/youtube-geofind/topic?keywords=hurricane&doSearch=true
+
+### Location page
+The follow parameter(s) will work with just the location page `/youtube-geofind/location`
+
+| Parameter | Accepted values |
+| :---: | :--- |
+| location | string, comma separated latitude & longitude <br> e.g. `43.054098,-79.2281175` |
+| locationAddress | string, exactly like anything you could put into Google Maps <br> e.g. `the white house` |
+| radius | integer, may only be one of the specified values that show in the select box in the page. otherwise, the select box will become blank <br> One of these only:  `1, 2, 5, 10, 15, 20, 50, 100, 200, 500, 1000` |
+
+Example(s)
+- https://mattw.io/youtube-geofind/location?location=43.054098,-79.2281175&radius=2&doSearch=true
+- https://mattw.io/youtube-geofind/location?locationAddress=ohio&radius=1000&live=true&doSearch=true
+- https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
+- https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
+- https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=custom&start=2018-05-01&end=2018-05-14&doSearch=true
+
+
+### All pages
+This parameter is shared by all page types.
+
+| Parameter | Accepted values |
+| :---: | :--- |
+| doSearch | boolean <br> `true` to click the page's submit button <br> `false` don't click submit, might as well just omit the parameter |
+
+All of the examples above use this single parameter.
