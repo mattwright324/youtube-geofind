@@ -3,6 +3,8 @@ Search by channel, topic, and location for geotagged videos. View in map and exp
 
 * https://mattw.io/youtube-geofind/
 
+![Example](https://i.imgur.com/nZErA91.png)
+
 What's unique about this tool? How can you use it?
 
 1. Find cool videos where you live or anywhere in the world!
