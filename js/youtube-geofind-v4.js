@@ -199,8 +199,29 @@ const geofind = (function() {
                         "visible": false,
                         "searchable": false
                     }
-                ]
+                ],
+                "dom": 'lf<"#langFilterContainer">rtip'
             });
+
+            $("div#langFilterContainer").html(`Filter by language: 
+                <select id = "langFilter">
+                  <!--<option>All</option>
+                  <option>Unspecified</option>-->
+                </select>`);
+
+            $("select")
+              .change(function() {
+                const lang = $("#langFilter").val();
+                const resultRows = $(".video");
+                console.log("Showing results with language code", lang);
+                if(lang) {
+                    resultRows.each(function() { $(this).hasClass(lang) ? $(this).parent().parent().show() : $(this).parent().parent().hide() });
+                }
+                else {
+                    // All selected: show all
+                    resultRows.each(function() { $(this).parent().parent().show() });
+                }
+              });
 
             controls.btnExport = $("#btnExportAll");
             controls.btnSubmit = $("#btnSubmit");
@@ -226,6 +247,7 @@ const geofind = (function() {
         pageType: 'undefined',
         markersList: [],
         channelThumbs: {},
+        languageResults: {},
 
 
         setupPageControls: function() {
@@ -597,6 +619,37 @@ const geofind = (function() {
             return false;
         },
 
+        getLanguageFromCode: function(lang) {
+            if(!lang || lang === "undefined") {
+                return "Unspecified";
+            } else {
+                return lang;
+            }
+        },
+
+        // update filter language dropdown items/count;
+        // "undefined" is used as language code for "Unspecified"
+        updateLanguageCount: function(video) {
+            const lang = video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
+
+            if(internal.languageResults[lang]) {
+                internal.languageResults[lang]++;
+            } else {
+                internal.languageResults[lang] = 1;
+            }
+        },
+
+        updateLanguageDropdown: function() {
+            const totalResults = Object.values(internal.languageResults)
+              .reduce((acc, langNum) => acc + langNum);
+            // resetting HTML each time is inefficient
+            $("#langFilter").html(`<OPTION SELECTED VALUE = "">All (${totalResults})</OPTION>`); 
+            Object.keys(internal.languageResults).forEach(lang => {
+                $("#langFilter")
+                  .append(`<option value="${lang}">${internal.getLanguageFromCode(lang)} (${internal.languageResults[lang]})</option>`);
+            });
+        },
+
         pushVideo: function(video, boolToMap, boolToList) {
             if(internal.doesVideoHaveLocation(video)) {
                 if(boolToMap) {
@@ -665,6 +718,10 @@ const geofind = (function() {
                     elements.videoDataTable.row.add([0, listItemHtml]).draw();
                 }
             }
+
+            // update language items/count for dropdown filter
+            internal.updateLanguageCount(video);
+            internal.updateLanguageDropdown();
         },
 
         /**
@@ -892,7 +949,7 @@ const geofind = (function() {
                     : ""
             );
 
-            return  "<div class='row video' style='margin:0'>" +
+            return  "<div class='row video " + (snippet.defaultLanguage || snippet.defaultAudioLanguage) + "' style='margin:0'>" +
                         "<div class='col-auto'>" +
                             "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' />" +
                         "</div>" +
@@ -926,6 +983,12 @@ const geofind = (function() {
                                 "<div class='row'>" +
                                     "<div class='col'>" +
                                         snippet.publishedAt +
+                                    "</div>" +
+                                "</div>" +
+
+                                "<div class='row'>" +
+                                    "<div class='col'>Language: " +
+                                        internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
                                     "</div>" +
                                 "</div>" +
 
