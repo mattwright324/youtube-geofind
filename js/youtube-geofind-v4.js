@@ -123,6 +123,28 @@ const geofind = (function() {
         }
     };
 
+    function sortObject(unordered, sortArrays = false) {
+        if (!unordered || typeof unordered !== 'object') {
+            return unordered;
+        }
+
+        if (Array.isArray(unordered)) {
+            const newArr = unordered.map((item) => sortObject(item, sortArrays));
+            if (sortArrays) {
+                newArr.sort();
+            }
+            return newArr;
+        }
+
+        const ordered = {};
+        Object.keys(unordered)
+            .sort()
+            .forEach((key) => {
+                ordered[key] = sortObject(unordered[key], sortArrays);
+            });
+        return ordered;
+    }
+
     const internal = {
         /**
          * This should only be called once.
@@ -191,37 +213,40 @@ const geofind = (function() {
 
             controls.checkClearResults = $("#clearOnSearch");
 
-            elements.videoDataTable    = $("#dataTable").DataTable({
+            elements.videoDataTable = $("#dataTable").DataTable({
                 "order": [[0, "asc"]],
                 "columnDefs": [
                     {
                         "targets": [0],
                         "visible": false,
                         "searchable": false
+                    },
+                    {
+                        "targets": [2],
+                        "visible": false,
+                        "searchable": true
                     }
                 ],
                 "dom": 'lf<"#langFilterContainer">rtip'
             });
 
-            $("div#langFilterContainer").html(`Filter by language: 
-                <select id = "langFilter">
-                  <!--<option>All</option>
-                  <option>Unspecified</option>-->
-                </select>`);
+            $("div#langFilterContainer").html(
+                "Language: " +
+                "<select id='langFilter'>" +
+                "</select>");
 
-            $("select")
-              .change(function() {
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
                 const lang = $("#langFilter").val();
-                const resultRows = $(".video");
-                console.log("Showing results with language code", lang);
-                if(lang) {
-                    resultRows.each(function() { $(this).hasClass(lang) ? $(this).parent().parent().show() : $(this).parent().parent().hide() });
+                if (!lang) {
+                    return true;
                 }
-                else {
-                    // All selected: show all
-                    resultRows.each(function() { $(this).parent().parent().show() });
-                }
-              });
+
+                return lang === data[2];
+            });
+
+            $("#langFilter").change(function () {
+                elements.videoDataTable.draw();
+            });
 
             controls.btnExport = $("#btnExportAll");
             controls.btnSubmit = $("#btnSubmit");
@@ -620,34 +645,35 @@ const geofind = (function() {
         },
 
         getLanguageFromCode: function(lang) {
-            if(!lang || lang === "undefined") {
-                return "Unspecified";
-            } else {
-                return lang;
-            }
+            return String(lang);
         },
 
-        // update filter language dropdown items/count;
-        // "undefined" is used as language code for "Unspecified"
-        updateLanguageCount: function(video) {
+        updateLanguageDropdown: function (video) {
+            // Add lang to map, update counts
+            const beforeLanguageCount = Object.keys(internal.languageResults).length;
             const lang = video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
+            internal.languageResults[lang] = ++internal.languageResults[lang] || 1;
+            const afterLanguageCount = Object.keys(internal.languageResults).length;
+            const totalResults = Object.values(internal.languageResults).reduce((total, langNum) => total + langNum);
 
-            if(internal.languageResults[lang]) {
-                internal.languageResults[lang]++;
-            } else {
-                internal.languageResults[lang] = 1;
-            }
-        },
+            if (beforeLanguageCount !== afterLanguageCount) {
+                // Rebuild html if new languages present, sort languages
+                internal.languageResults = sortObject(internal.languageResults);
 
-        updateLanguageDropdown: function() {
-            const totalResults = Object.values(internal.languageResults)
-              .reduce((acc, langNum) => acc + langNum);
-            // resetting HTML each time is inefficient
-            $("#langFilter").html(`<OPTION SELECTED VALUE = "">All (${totalResults})</OPTION>`); 
-            Object.keys(internal.languageResults).forEach(lang => {
                 $("#langFilter")
-                  .append(`<option value="${lang}">${internal.getLanguageFromCode(lang)} (${internal.languageResults[lang]})</option>`);
-            });
+                    .html("<option selected value='' data-lang='all'>All (" + totalResults + ")</option>");
+
+                Object.keys(internal.languageResults).forEach(lang => {
+                    $("#langFilter").append(
+                        "<option value='" + lang + "' data-lang='" + lang + "'>" +
+                        internal.getLanguageFromCode(lang) + " (" + internal.languageResults[lang] + ")" +
+                        "</option>");
+                });
+            } else {
+                // Otherwise just update count of existing language for this video
+                $("option[data-lang='all']").text("All (" + totalResults + ")");
+                $("option[data-lang='" + lang + "']").text(lang + " (" + internal.languageResults[lang] + ")")
+            }
         },
 
         pushVideo: function(video, boolToMap, boolToList) {
@@ -715,13 +741,11 @@ const geofind = (function() {
                 if(boolToList) {
                     const listItemHtml = format.videoToListItemHtml(video);
 
-                    elements.videoDataTable.row.add([0, listItemHtml]).draw();
+                    elements.videoDataTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
                 }
             }
 
-            // update language items/count for dropdown filter
-            internal.updateLanguageCount(video);
-            internal.updateLanguageDropdown();
+            internal.updateLanguageDropdown(video);
         },
 
         /**
@@ -866,12 +890,12 @@ const geofind = (function() {
                                 }
                             });
 
-                            setTimeout(loadProfileIcons, 100);
+                            setTimeout(loadProfileIcons, 500);
                         }).fail((err) => {
                             console.log(err);
                         });
                     } else {
-                        setTimeout(loadProfileIcons, 300);
+                        setTimeout(loadProfileIcons, 500);
                     }
                 }
 
@@ -949,7 +973,7 @@ const geofind = (function() {
                     : ""
             );
 
-            return  "<div class='row video " + (snippet.defaultLanguage || snippet.defaultAudioLanguage) + "' style='margin:0'>" +
+            return  "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
                         "<div class='col-auto'>" +
                             "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' />" +
                         "</div>" +
@@ -1114,6 +1138,7 @@ const geofind = (function() {
             }
 
             internal.markersList.length = 0;
+            internal.languageResults = {}
 
             elements.videoDataTable.clear().draw();
         },
