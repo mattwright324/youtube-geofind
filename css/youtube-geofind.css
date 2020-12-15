@@ -175,3 +175,7 @@ body, html {
 	padding-top: 0;
 	padding-bottom: 0;
 }
+
+#langFilterContainer {
+	text-align: center;
+}
