@@ -382,7 +382,7 @@ const geofind = (function() {
                                                 }).fail(function(err) {
                                                     elements[channel.id].progress.setBg("bg-danger");
 
-                                                    internal.displayMessage("alert-warning", JSON.stringify(err));
+                                                    internal.displayError("alert-warning", err);
 
                                                     console.error(err);
                                                 })
@@ -526,7 +526,7 @@ const geofind = (function() {
 
                             elements.loadingDiv.fadeOut(defaults.animationMs);
 
-                            internal.displayMessage("alert-warning", JSON.stringify(err));
+                            internal.displayError("alert-warning", err);
 
                             console.error(err);
                         });
@@ -604,6 +604,25 @@ const geofind = (function() {
             }
 
             return request;
+        },
+
+        displayError: function (type, err) {
+            if (err.responseJSON
+                && err.responseJSON.error
+                && err.responseJSON.error.errors
+                && err.responseJSON.error.errors[0]) {
+                const error = err.responseJSON.error.errors[0];
+                if (error.reason === "quotaExceeded") {
+                    const html = "<strong>Quota Exceeded</strong> " +
+                        "The daily API quota of 1,000,000 units has been reached for this application. " +
+                        "This quota resets at midnight Pacific Time (PT) as per the Google Developers Console. " +
+                        "See more detail here with <a target='_blank' href='https://github.com/mattwright324/youtube-geofind/issues/11'>issue #5</a>.";
+
+                    this.displayMessage('alert-warning', html);
+                } else {
+                    this.displayMessage('alert-warning', JSON.stringify(err));
+                }
+            }
         },
 
         displayMessage: function(type, message) {
@@ -1062,7 +1081,7 @@ const geofind = (function() {
             }).fail(function(err) {
                 console.error(err);
 
-                internal.displayMessage("alert-warning", JSON.stringify(err));
+                internal.displayError("alert-warning", err);
 
                 elements.loadingDiv.fadeOut(1000);
             });
@@ -1080,7 +1099,7 @@ const geofind = (function() {
             ).done(function(res) {
                 callback(res);
             }).fail(function(err) {
-                internal.displayMessage("alert-warning", JSON.stringify(err));
+                internal.displayError("alert-warning", err);
 
                 console.error(err);
             });
