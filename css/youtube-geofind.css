@@ -1,181 +1,221 @@
 * {
-	font-family: 'Open Sans', sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
+
 body, html {
-	height: 100%;
+    height: 100%;
 }
+
 #content {
-	box-shadow: 0 -5px 100px 10px rgba(127,127,127,0.01);
+    box-shadow: 0 -5px 100px 10px rgba(127, 127, 127, 0.01);
 }
+
 #map {
-	height: 400px;
-	width: 100%;
+    height: 400px;
+    width: 100%;
 }
+
 .control {
-	margin-top: 10px;
+    margin-top: 10px;
 }
+
 #btnFind {
-	cursor: pointer;
+    cursor: pointer;
 }
+
 #btnSaveAll {
-	margin-bottom: 8px;
+    margin-bottom: 8px;
 }
+
 #advanced-form {
-	margin-bottom: 5px;
+    margin-bottom: 5px;
 }
+
 #geotags {
-	width: 100%;
-	display: block;
-	overflow: auto;
-	margin-bottom: 50px;
+    width: 100%;
+    display: block;
+    overflow: auto;
+    margin-bottom: 50px;
 }
-#geotag {}
+
+#geotag {
+}
+
 #geotag a {
-	font-weight: bold;
+    font-weight: bold;
 }
+
 #table-entry {
-	background: transparent;
+    background: transparent;
 }
+
 #channelInput {
-	margin-right: 15px;
+    margin-right: 15px;
 }
+
 #channel {
-	background-color: rgba(127,127,127,0.05);
-	padding: 10px;
-	margin-bottom: 10px;
+    background-color: rgba(127, 127, 127, 0.05);
+    padding: 10px;
+    margin-bottom: 10px;
 }
+
 #channel-thumb {
-	margin-right: 25px;
+    margin-right: 25px;
 }
+
 #channel-name {
-	font-size: 1.3em;
+    font-size: 1.3em;
 }
+
 #example-list li {
-	font-size: 1.2em;
+    font-size: 1.2em;
 }
+
 .content-section {
-	padding: 10px;
+    padding: 10px;
 }
+
 .special-border {
     border: 3px dotted rgba(127, 127, 127, 0.1);
 }
+
 .section-header {
     border: 6px none rgb(153, 192, 255);
     border-bottom-style: solid;
     padding-bottom: 4px;
-	margin-bottom: 15px;
-	padding-right: 10px;
-	padding-left: 10px;
+    margin-bottom: 15px;
+    padding-right: 10px;
+    padding-left: 10px;
 }
+
 @media (max-width: 640px) {
-	.col-form-label {
-		display: none;
-	}
+    .col-form-label {
+        display: none;
+    }
 }
+
 .btn-link {
-	cursor: pointer;
+    cursor: pointer;
 }
+
 .footer {
-	background-color: rgba(127,127,127,0.1);
-	padding-top: 15px;
-	padding-bottom: 20px;
-	font-size: 0.9em;
-	line-height: 200%;
-	text-align: center;
+    /*background-color: rgba(127, 127, 127, 0.1);*/
+    padding-top: 15px;
+    padding-bottom: 20px;
+    font-size: 0.9em;
+    line-height: 200%;
+    text-align: center;
 }
+
 .blurry {
-	-webkit-filter: blur(5px); /* Safari */
+    -webkit-filter: blur(5px); /* Safari */
     filter: blur(5px);
 }
+
 .custom-checkbox {
-	-webkit-user-select: none; /* Chrome all / Safari all */
-	-moz-user-select: none; /* Firefox all */
-	-ms-user-select: none; /* IE 10+ */
-	user-select: none; /* Likely future */
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none; /* Likely future */
 }
+
 #loading {
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 999999;
-	position: absolute;
-	background-color: rgba(127,127,127,0.5);
-	white-space: nowrap;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    position: absolute;
+    background-color: rgba(127, 127, 127, 0.5);
+    white-space: nowrap;
 }
+
 .spinner {
-	top: 35%;
+    top: 35%;
 }
+
 #btnSubmit {
-	margin-top: 1rem;
+    margin-top: 1rem;
 }
+
 #advanced-form {
-	padding: 10px;
-	background-color: rgba(200, 200, 255, 0.1);
-	border: 0px solid gray;
-	border-left-width: 5px;
+    padding: 10px;
+    background-color: rgba(200, 200, 255, 0.1);
+    border: 0px solid gray;
+    border-left-width: 5px;
 }
+
 #toggle {
-	width: 100%;
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-	border-left-width: 5px;
+    width: 100%;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 5px;
 }
+
 #loading-page {
-	color: #fffffc;
-	font-size: 4em;
-	margin-left: 75px;
+    color: #fffffc;
+    font-size: 4em;
+    margin-left: 75px;
 }
+
 .marker img, .table-item img {
-	width: 120px;
-	height: 90px;
+    width: 120px;
+    height: 90px;
 }
+
 /*.progress {
-	align-items: center;
-	justify-content: center;
-	font-weight: 700;
-	color: white;
-	height: 25px;
-	margin-bottom: 10px;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    height: 25px;
+    margin-bottom: 10px;
 }*/
+
 .progress {
-	margin-bottom: 0.75em;
+    margin-bottom: 0.75em;
 }
+
 .channel-title {
-	font-size: 1.25em;
+    font-size: 1.25em;
 }
+
 .example {
-	align-items: center;
-	justify-content: center;
-	color: lightgray;
-	font-size: 1.25em;
+    align-items: center;
+    justify-content: center;
+    color: lightgray;
+    font-size: 1.25em;
 }
 
 .video a:hover {
-	text-decoration: none;
+    text-decoration: none;
 }
+
 .video .authorLink {
-	color: gray;
+    color: gray;
 }
+
 .video .authorLink:hover {
-	color: darkgray;
+    color: darkgray;
 }
+
 .video .authorLink div {
-	margin-top: 2px;
+    margin-top: 2px;
 }
 
 .openInMap {
-	color: gray;
+    color: gray;
 }
+
 .openInMap:hover {
-	color: darkgray;
+    color: darkgray;
 }
 
 #geolocate {
-	padding-top: 0;
-	padding-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 #langFilterContainer {
-	text-align: center;
+    text-align: center;
 }

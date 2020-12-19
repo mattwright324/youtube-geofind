@@ -1,4 +1,5 @@
 # YouTube Geofind
+
 Search by channel, topic, and location for geotagged videos. View in map and export results.
 
 * https://mattw.io/youtube-geofind/
@@ -12,16 +13,21 @@ What's unique about this tool? How can you use it?
     - What livestreams are running now in my state/country? (find me, radius 500 or 1000, live events only)
 2. Use it for investigative purposes, OSINT.
     - Channel searching allows you to check all the uploads on a channel for geotags and displays them in a map.
-    - Topic searching allows you to check if any uploads found by regular searching or keywords have geotags (though, not many do).
+    - Topic searching allows you to check if any uploads found by regular searching or keywords have geotags (though,
+      not many do).
     - Location searching allows you to find videos with geotags within your chosen radius and timeframe.
     - Export results to save your findings and use elsewhere.
-    - Results can be directly opened in my new YouTube Metadata tool to give all details about that video and its author.
+    - Results can be directly opened in my new YouTube Metadata tool to give all details about that video and its
+      author.
 3. Query API as noted below
 
 ## Query API
-The tool provides a pseudo-api with query parameters that allow manipulation of the page elements so that you can share a search you made or implement a linked custom search from your own site/tool.
+
+The tool provides a pseudo-api with query parameters that allow manipulation of the page elements so that you can share
+a search you made or implement a linked custom search from your own site/tool.
 
 ### Channel page
+
 The following parameter(s) will work with just the channel page `/youtube-geofind/`
 
 | Parameter | Accepted values |
@@ -29,10 +35,13 @@ The following parameter(s) will work with just the channel page `/youtube-geofin
 | channels | string, comma separated list of channel names or ids <br> e.g. <br>`UChirEOpgFCupRAk5etXqPaA` <br>`vicenews,UChirEOpgFCupRAk5etXqPaA,thesamlivecast` |
 
 Example(s)
+
 - https://mattw.io/youtube-geofind/?channels=GP4YOU&doSearch=true
 
 ### Location & Topic pages
-The following parameter(s) are shared by both the location `/youtube-geofind/location` and topic `/youtube-geofind/topic` pages.
+
+The following parameter(s) are shared by both the location `/youtube-geofind/location` and
+topic `/youtube-geofind/topic` pages.
 
 | Parameter | Accepted values |
 | :---: | :--- |
@@ -49,9 +58,11 @@ The following parameter(s) are shared by both the location `/youtube-geofind/loc
 | syndicated | boolean `true` or `false` |
 
 Example(s)
+
 - https://mattw.io/youtube-geofind/topic?keywords=hurricane&doSearch=true
 
 ### Location page
+
 The following parameter(s) will work with just the location page `/youtube-geofind/location`
 
 | Parameter | Accepted values |
@@ -61,14 +72,15 @@ The following parameter(s) will work with just the location page `/youtube-geofi
 | radius | integer, may only be one of the specified values that show in the select box in the page. otherwise, the select box will become blank <br> One of these only:  `1, 2, 5, 10, 15, 20, 50, 100, 200, 500, 1000` |
 
 Example(s)
+
 - https://mattw.io/youtube-geofind/location?location=43.054098,-79.2281175&radius=2&doSearch=true
 - https://mattw.io/youtube-geofind/location?locationAddress=ohio&radius=1000&live=true&doSearch=true
 - https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
 - https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=day-30&doSearch=true
 - https://mattw.io/youtube-geofind/location?locationAddress=the%20white%20house&radius=15&timeframe=custom&start=2018-05-01&end=2018-05-14&doSearch=true
 
-
 ### All pages
+
 This parameter is shared by all page types.
 
 | Parameter | Accepted values |

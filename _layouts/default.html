@@ -1,40 +1,39 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <title>{{ page.title }} - {{ site.subtitle }} - {{ site.title }}</title>
-        {% include head.html %}
-    </head>
-    <body>
-        {% include nav.html %}
+<head>
+    <title>{{ page.title }} - {{ site.subtitle }} - {{ site.title }}</title>
+    {% include head.html %}
+</head>
+<body>
+{% include nav.html %}
 
-        <div style="position: relative">
-            <div id="map"></div>
-            <div id="loading" align="center">
-                <div class="spinner">
-                    <div class="cube1"></div>
-                    <div class="cube2"></div>
-                    <label id="loading-page"></label>
-                </div>
-            </div>
+<div style="position: relative">
+    <div id="map"></div>
+    <div id="loading" align="center">
+        <div class="spinner">
+            <div class="cube1"></div>
+            <div class="cube2"></div>
+            <label id="loading-page"></label>
         </div>
+    </div>
+</div>
 
-        <main id="content" role="main" class="container">
-            <br>
-            {{ content }}
-        </main>
+<main id="content" role="main" class="container">
+    <br>
+    {{ content }}
+</main>
 
-        <footer class="footer">
-            <div class="container">
-                <span class="text-muted">
-                    {{ site.copyright }}
-                    <br>
-                    <a target="_blank" href="{{ site.github }}">
-                        <img src="https://github.com/favicon.ico" width=16px height=16px/>
-                        {{ site.author }}
-                    </a>
-                </span>
-            </div>
-        </footer>
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=onMapInit"></script>
-    </body>
+<footer class="footer">
+    <div class="container">
+        <span class="text-muted">
+            mattwright324 | {{ site.copyright }} |
+            <a target="_blank" href="{{ site.home }}">home</a> |
+            <a target="_blank" href="{{ site.github }}">github</a> |
+            <a target="_blank" href="{{ site.github_repo }}">youtube-geofind</a>
+        </span>
+    </div>
+</footer>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGWanOEMEgdHqsxNDaa_ZXTZ6hoYQrnAI&callback=onMapInit"></script>
+</body>
 </html>

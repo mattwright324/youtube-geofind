@@ -4,7 +4,8 @@ exclude     : [.idea]
 title       : YouTube Geofind
 subtitle    : Discover Geo-tagged Videos
 author      : mattwright324
-copyright   : © 2021 Matthew Wright
+copyright   : 2021
+home        : https://mattw.io/
 github      : https://github.com/mattwright324/
 github_repo : https://github.com/mattwright324/youtube-geofind/
 gh_pages    : https://mattw.io/youtube-geofind/
