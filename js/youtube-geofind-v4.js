@@ -6,9 +6,9 @@
  * @requires datatables
  * @author mattwright324
  */
-const geofind = (function() {
+const geofind = (function () {
 
-    String.prototype.trunc = function(length) {
+    String.prototype.trunc = function (length) {
         return this.length > length ? this.substring(0, length) + "..." : this;
     };
 
@@ -27,18 +27,18 @@ const geofind = (function() {
         mapMarkerWidth: 20,
 
         time: {
-            "hour-1":  hour,
-            "hour-3":  hour * 3,
-            "hour-6":  hour * 6,
+            "hour-1": hour,
+            "hour-3": hour * 3,
+            "hour-6": hour * 6,
             "hour-12": hour * 12,
             "hour-24": day,
-            "day-7":   day * 7,
-            "day-30":  day * 30,
-            "day-90":  day * 90,
+            "day-7": day * 7,
+            "day-30": day * 30,
+            "day-90": day * 90,
             "day-365": day * 365
         }
     };
-    const pageTypes  = {
+    const pageTypes = {
         UNDEFINED: "undefined",
         CHANNEL: "channel",
         TOPIC: "topic",
@@ -47,7 +47,7 @@ const geofind = (function() {
     const controls = {};
     const elements = {};
 
-    const ProgressBar = function(element) {
+    const ProgressBar = function (element) {
         this.element = $(element);
         this.textDisplay = true;
     };
@@ -87,14 +87,14 @@ const geofind = (function() {
             this.setValue(this.getValue() + incrValue);
         },
         animated(bool) {
-            if(bool) {
+            if (bool) {
                 this.element.addClass("progress-bar-animated");
             } else {
                 this.element.removeClass("progress-bar-animated");
             }
         },
         striped(bool) {
-            if(bool) {
+            if (bool) {
                 this.element.addClass("progress-bar-striped");
             } else {
                 this.element.removeClass("progress-bar-striped");
@@ -113,11 +113,11 @@ const geofind = (function() {
             const min = this.getMin();
             const max = this.getMax();
             const value = this.getValue();
-            const percentage = 100 * ((value-min) / (max-min));
+            const percentage = 100 * ((value - min) / (max - min));
 
             this.element.css("width", percentage + "%");
 
-            if(this.textDisplay) {
+            if (this.textDisplay) {
                 this.element.text(value + " / " + max)
             }
         }
@@ -149,14 +149,14 @@ const geofind = (function() {
         /**
          * This should only be called once.
          */
-        init: function(mapElement) {
+        init: function (mapElement) {
             internal.map = new google.maps.Map(mapElement, {
                 zoom: 7,
                 center: defaults.mapCenterCoords
             });
             internal.geocoder = new google.maps.Geocoder();
 
-            setTimeout(function() {
+            setTimeout(function () {
                 var event = document.createEvent('UIEvents');
                 event.initUIEvent('zoom_changed',
                     true, false,
@@ -176,40 +176,43 @@ const geofind = (function() {
             controls.mapLocationMarker = new google.maps.Marker({
                 position: internal.map.center,
                 draggable: true,
-                icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                icon: {
+                    url: "./img/green-dot.png",
+                    scaledSize: new google.maps.Size(32, 32)
+                },
                 title: "Drag me!",
                 optimized: false,
                 zIndex: 99999999,
                 showing: false
             });
 
-            elements.loadingDiv     = $("#loading");
-            elements.loadingText    = $("#loading-page");
+            elements.loadingDiv = $("#loading");
+            elements.loadingText = $("#loading-page");
 
-            elements.alerts         = $("#alerts");
+            elements.alerts = $("#alerts");
 
-            controls.inputChannels  = $("#channels");
-            elements.channelsDiv    = $("#channel-list");
+            controls.inputChannels = $("#channels");
+            elements.channelsDiv = $("#channel-list");
             elements.channelPlaceholder = $(".example");
 
-            controls.inputAddress   = $("#address");
-            controls.btnGeolocate   = $("#geolocate");
-            controls.comboRadius    = $("#radius");
-            controls.inputKeywords  = $("#keywords");
-            controls.comboSortBy    = $("#sortBy");
+            controls.inputAddress = $("#address");
+            controls.btnGeolocate = $("#geolocate");
+            controls.comboRadius = $("#radius");
+            controls.inputKeywords = $("#keywords");
+            controls.comboSortBy = $("#sortBy");
             controls.comboTimeframe = $("#timeframe");
             elements.customRangeDiv = $("#customRange");
-            controls.inputDateFrom  = $("#dateFrom");
-            controls.inputDateTo    = $("#dateTo");
+            controls.inputDateFrom = $("#dateFrom");
+            controls.inputDateTo = $("#dateTo");
             controls.comboPageLimit = $("#pageLimit");
 
             controls.btnToggleAdvanced = $("#btnToggleAdvanced");
-            elements.advancedDiv       = $("#advanced-form");
-            controls.checkLive         = $("#liveOnly");
-            controls.checkCC           = $("#creativeCommons");
-            controls.checkHQ           = $("#highQuality");
-            controls.checkEmbedded     = $("#embeddedOnly");
-            controls.checkSyndicated   = $("#syndicatedOnly");
+            elements.advancedDiv = $("#advanced-form");
+            controls.checkLive = $("#liveOnly");
+            controls.checkCC = $("#creativeCommons");
+            controls.checkHQ = $("#highQuality");
+            controls.checkEmbedded = $("#embeddedOnly");
+            controls.checkSyndicated = $("#syndicatedOnly");
 
             controls.checkClearResults = $("#clearOnSearch");
 
@@ -227,12 +230,15 @@ const geofind = (function() {
                         "searchable": true
                     }
                 ],
-                "dom": 'lf<"#langFilterContainer">rtip'
+                "dom": "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'<'#langFilterContainer'>><'col-sm-12 col-md-4'f>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+                //'lf<"#langFilterContainer">rtip'
             });
 
             $("div#langFilterContainer").html(
                 "Language: " +
-                "<select id='langFilter'>" +
+                "<select id='langFilter' class='form-control form-control-sm' style='display:inline; width:auto;'>" +
                 "</select>");
 
             $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -251,17 +257,17 @@ const geofind = (function() {
             controls.btnExport = $("#btnExportAll");
             controls.btnSubmit = $("#btnSubmit");
 
-            if(controls.inputChannels.length) {
+            if (controls.inputChannels.length) {
                 this.pageType = pageTypes.CHANNEL;
-            } else if(controls.inputAddress.length) {
+            } else if (controls.inputAddress.length) {
                 this.pageType = pageTypes.LOCATION;
-            } else if(controls.inputKeywords.length) {
+            } else if (controls.inputKeywords.length) {
                 this.pageType = pageTypes.TOPIC;
             } else {
                 console.error("Could not determine the page type, expected page elements do not exist.");
             }
 
-            console.log("Determined page type was [type="+this.pageType+"]");
+            console.log("Determined page type was [type=" + this.pageType + "]");
 
             this.setupPageControls();
 
@@ -275,19 +281,19 @@ const geofind = (function() {
         languageResults: {},
 
 
-        setupPageControls: function() {
+        setupPageControls: function () {
             const KEY_ENTER = 13;
 
             internal.startChannelConsumer();
 
-            if(this.pageType === pageTypes.CHANNEL) {
-                controls.inputChannels.keyup(function(event) {
+            if (this.pageType === pageTypes.CHANNEL) {
+                controls.inputChannels.keyup(function (event) {
                     if (event.keyCode === KEY_ENTER) {
                         $("#btnFind").click();
                     }
                 });
 
-                controls.btnSubmit.on('click', function() {
+                controls.btnSubmit.on('click', function () {
                     const channels = controls.inputChannels.val()
                         .replace(/\s/g, "")
                         .split(",");
@@ -296,13 +302,13 @@ const geofind = (function() {
 
                     let payload;
 
-                    for(let i=0; i<channels.length; i++) {
+                    for (let i = 0; i < channels.length; i++) {
                         const channelStr = channels[i].trim();
 
-                        if(channelStr) {
-                            if(channelStr.length === 24) {
+                        if (channelStr) {
+                            if (channelStr.length === 24) {
                                 payload = {id: channelStr};
-                            } else if(channelStr.length <= 20) {
+                            } else if (channelStr.length <= 20) {
                                 payload = {forUsername: channelStr};
                             }
 
@@ -310,13 +316,13 @@ const geofind = (function() {
 
                             elements.loadingDiv.show();
 
-                            if(payload) {
-                                query.channels(payload, function(res) {
+                            if (payload) {
+                                query.channels(payload, function (res) {
                                     const channel = res.items[0];
 
-                                    if(channel) {
+                                    if (channel) {
                                         // Does not exist in page yet
-                                        if(!$("#"+channel.id).length) {
+                                        if (!$("#" + channel.id).length) {
                                             const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
 
                                             const channelListHtml = format.channelToListItemHtml(channel);
@@ -325,11 +331,11 @@ const geofind = (function() {
                                             elements.channelsDiv.append(channelListHtml);
 
                                             elements[channel.id] = {};
-                                            elements[channel.id].progress = new ProgressBar("#"+channel.id+" .progress-bar");
-                                            elements[channel.id].tagCount = $("#"+channel.id+" .tag-count");
+                                            elements[channel.id].progress = new ProgressBar("#" + channel.id + " .progress-bar");
+                                            elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
 
                                             controls[channel.id] = {};
-                                            controls[channel.id].btnExport = $("#"+channel.id+" .btn-save");
+                                            controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
 
                                             let videoTotal = 0;
 
@@ -339,10 +345,10 @@ const geofind = (function() {
                                                     maxResults: 50,
                                                     playlistId: uploadsPlaylistId,
                                                     pageToken: pageToken
-                                                }).done(function(res) {
-                                                    console.log("Searching [playlistId="+uploadsPlaylistId+", pageToken="+pageToken+", totalVideos="+videoTotal+"]");
+                                                }).done(function (res) {
+                                                    console.log("Searching [playlistId=" + uploadsPlaylistId + ", pageToken=" + pageToken + ", totalVideos=" + videoTotal + "]");
 
-                                                    if(pageToken === "") {
+                                                    if (pageToken === "") {
                                                         elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
                                                     }
 
@@ -351,7 +357,7 @@ const geofind = (function() {
                                                     elements[channel.id].progress.setValue(videoTotal);
 
                                                     const videoIds = [];
-                                                    for(let i=0; i<res.items.length; i++) {
+                                                    for (let i = 0; i < res.items.length; i++) {
                                                         const playlistVideo = res.items[i];
 
                                                         videoIds.push(playlistVideo.snippet.resourceId.videoId);
@@ -359,27 +365,27 @@ const geofind = (function() {
 
                                                     console.log(videoIds);
 
-                                                    query.videos(videoIds, function(res) {
+                                                    query.videos(videoIds, function (res) {
                                                         console.log(res);
 
-                                                        for(let i=0; i<res.items.length; i++) {
+                                                        for (let i = 0; i < res.items.length; i++) {
                                                             const video = res.items[i];
 
                                                             internal.pushVideo(video, true, true);
                                                         }
                                                     });
 
-                                                    if(internal.markersList.length > 0) {
+                                                    if (internal.markersList.length > 0) {
                                                         internal.adjustMapToResults();
                                                     }
 
-                                                    if(res.hasOwnProperty("nextPageToken")) {
+                                                    if (res.hasOwnProperty("nextPageToken")) {
                                                         searchPlaylist(res.nextPageToken);
                                                     } else {
                                                         elements.loadingDiv.fadeOut(defaults.animationMs);
                                                         elements[channel.id].progress.animated(false);
                                                     }
-                                                }).fail(function(err) {
+                                                }).fail(function (err) {
                                                     elements[channel.id].progress.setBg("bg-danger");
 
                                                     internal.displayError("alert-warning", err);
@@ -390,14 +396,14 @@ const geofind = (function() {
 
                                             searchPlaylist("");
                                         } else {
-                                            console.warn("Channel was already in the list '"+channel.id+"'");
+                                            console.warn("Channel was already in the list '" + channel.id + "'");
                                         }
                                     } else {
-                                        internal.displayMessage("alert-warning", "Channel does not exist '"+channelStr+"'");
+                                        internal.displayMessage("alert-warning", "Channel does not exist '" + channelStr + "'");
                                     }
                                 });
                             } else {
-                                internal.displayMessage("alert-warning", "Did not recognize value as id or username '"+channelStr+"'");
+                                internal.displayMessage("alert-warning", "Did not recognize value as id or username '" + channelStr + "'");
 
                                 console.error("Channel value didn't match expected lengths.");
                             }
@@ -409,7 +415,7 @@ const geofind = (function() {
                     elements.loadingDiv.fadeOut(defaults.animationMs);
                 })
             } else {
-                if(this.pageType === pageTypes.LOCATION) {
+                if (this.pageType === pageTypes.LOCATION) {
                     controls.mapLocationMarker.setMap(this.map);
                     controls.mapRadius.setMap(this.map);
 
@@ -423,14 +429,14 @@ const geofind = (function() {
                     });
 
                     // Geocode address on pressing Enter in address textfield
-                    controls.inputAddress.on("keyup", function(event) {
-                        if(event.keyCode === KEY_ENTER) {
+                    controls.inputAddress.on("keyup", function (event) {
+                        if (event.keyCode === KEY_ENTER) {
                             internal.geocode(controls.inputAddress.val());
                         }
                     });
 
                     // When radius selection changes, adjust zoom on map.
-                    controls.comboRadius.change(function() {
+                    controls.comboRadius.change(function () {
                         const radiusInMeters = controls.comboRadius.find(":selected").val() * 1000;
 
                         controls.mapRadius.setRadius(radiusInMeters);
@@ -442,10 +448,10 @@ const geofind = (function() {
                     internal.adjustMapToCenter();
                 }
 
-                controls.comboTimeframe.change(function() {
+                controls.comboTimeframe.change(function () {
                     const value = controls.comboTimeframe.find(":selected").val();
 
-                    if(value === "custom") {
+                    if (value === "custom") {
                         elements.customRangeDiv.show();
                     } else {
                         elements.customRangeDiv.hide();
@@ -466,16 +472,16 @@ const geofind = (function() {
 
                 controls.inputDateTo.val(getFormattedDate(new Date()));
 
-                controls.btnToggleAdvanced.on('click', function() {
-                    if(elements.advancedDiv.is(":visible")) {
+                controls.btnToggleAdvanced.on('click', function () {
+                    if (elements.advancedDiv.is(":visible")) {
                         elements.advancedDiv.slideUp(defaults.animationMs);
                     } else {
                         elements.advancedDiv.slideDown(defaults.animationMs);
                     }
                 });
 
-                controls.btnSubmit.on('click', function() {
-                    if(controls.checkClearResults.is(":checked")) {
+                controls.btnSubmit.on('click', function () {
+                    if (controls.checkClearResults.is(":checked")) {
                         module.clearResults();
                     }
 
@@ -486,7 +492,7 @@ const geofind = (function() {
                     elements.loadingDiv.show();
 
                     function search(pageToken) {
-                        console.log("Searching [pageValue="+pageValue+", maxPages="+maxPages+", pageToken="+pageToken+"]");
+                        console.log("Searching [pageValue=" + pageValue + ", maxPages=" + maxPages + ", pageToken=" + pageToken + "]");
 
                         elements.loadingText.text("Pg " + (pageValue + 1));
 
@@ -494,7 +500,7 @@ const geofind = (function() {
                             console.log(res);
 
                             const videoIds = [];
-                            for(let i=0; i<res.items.length; i++) {
+                            for (let i = 0; i < res.items.length; i++) {
                                 const searchItemVideo = res.items[i];
 
                                 videoIds.push(searchItemVideo.id.videoId);
@@ -502,13 +508,13 @@ const geofind = (function() {
 
                             console.log(videoIds);
 
-                            query.videos(videoIds, function(res) {
+                            query.videos(videoIds, function (res) {
                                 console.log(res);
 
-                                for(let i=0; i<res.items.length; i++) {
+                                for (let i = 0; i < res.items.length; i++) {
                                     const video = res.items[i];
 
-                                    if(!internal.doesVideoExistYet(video.id)) {
+                                    if (!internal.doesVideoExistYet(video.id)) {
                                         internal.pushVideo(video, true, true);
                                     }
                                 }
@@ -516,7 +522,7 @@ const geofind = (function() {
 
                             pageValue++;
 
-                            if(res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
+                            if (res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
                                 search(res.nextPageToken);
                             } else {
                                 elements.loadingDiv.fadeOut(defaults.animationMs);
@@ -544,10 +550,10 @@ const geofind = (function() {
          *
          * Channel doesn't need this as it will do it's own handling for the request.
          */
-        getRequestPayload: function(pageToken) {
+        getRequestPayload: function (pageToken) {
             const request = {};
 
-            if(internal.pageType === pageTypes.CHANNEL) {
+            if (internal.pageType === pageTypes.CHANNEL) {
                 console.error("internal.getRequestPayload() shouldn't be called on the channel page")
             } else {
                 request.part = "id";
@@ -555,7 +561,7 @@ const geofind = (function() {
                 request.type = "video";
                 request.pageToken = pageToken;
 
-                if(internal.pageType === pageTypes.LOCATION) {
+                if (internal.pageType === pageTypes.LOCATION) {
                     const position = controls.mapLocationMarker.getPosition();
 
                     request.location = position.lat() + "," + position.lng();
@@ -565,28 +571,28 @@ const geofind = (function() {
                 request.q = controls.inputKeywords.val();
                 request.order = controls.comboSortBy.find(":selected").val();
 
-                if(controls.checkCC.is(":checked")) {
+                if (controls.checkCC.is(":checked")) {
                     request.videoLicense = "creativecommon"
                 }
-                if(controls.checkLive.is(":checked")) {
+                if (controls.checkLive.is(":checked")) {
                     request.eventType = "live";
                 }
-                if(controls.checkHQ.is(":checked")) {
+                if (controls.checkHQ.is(":checked")) {
                     request.videoDefinition = "high";
                 }
-                if(controls.checkEmbedded.is(":checked")) {
+                if (controls.checkEmbedded.is(":checked")) {
                     request.videoEmbeddable = "true";
                 }
-                if(controls.checkSyndicated.is(":checked")) {
+                if (controls.checkSyndicated.is(":checked")) {
                     request.videoSyndicated = "true";
                 }
 
                 const timeVal = controls.comboTimeframe.find(":selected").val();
-                if(timeVal !== "any") {
+                if (timeVal !== "any") {
                     let dateFrom = new Date();
                     let dateTo = new Date();
 
-                    if(timeVal === "custom") {
+                    if (timeVal === "custom") {
                         dateFrom = new Date(controls.inputDateFrom.val());
                         dateTo = new Date(controls.inputDateTo.val());
                     } else {
@@ -616,7 +622,7 @@ const geofind = (function() {
                     const html = "<strong>Quota Exceeded</strong> " +
                         "The daily API quota of 1,000,000 units has been reached for this application. " +
                         "This quota resets at midnight Pacific Time (PT) as per the Google Developers Console. " +
-                        "See more detail here with <a target='_blank' href='https://github.com/mattwright324/youtube-geofind/issues/11'>issue #5</a>.";
+                        "See more detail here with <a target='_blank' href='https://github.com/mattwright324/youtube-geofind/issues/11' rel='noopener'>issue #11</a>.";
 
                     this.displayMessage('alert-warning', html);
                 } else {
@@ -625,17 +631,17 @@ const geofind = (function() {
             }
         },
 
-        displayMessage: function(type, message) {
+        displayMessage: function (type, message) {
             const html =
-                "<div class='alert alert-dismissable fade show "+type+"' role='alert'>" +
-                    "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>×</span></button>" +
-                    message +
+                "<div class='alert alert-dismissable fade show " + type + "' role='alert'>" +
+                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>×</span></button>" +
+                message +
                 "</div>";
 
             elements.alerts.append(html);
         },
 
-        doesVideoHaveLocation: function(video) {
+        doesVideoHaveLocation: function (video) {
             const details = video.recordingDetails;
 
             return details &&
@@ -644,7 +650,7 @@ const geofind = (function() {
                 details.location.longitude;
         },
 
-        locationToPosition: function(video) {
+        locationToPosition: function (video) {
             const details = video.recordingDetails;
 
             return {
@@ -653,9 +659,9 @@ const geofind = (function() {
             }
         },
 
-        doesVideoExistYet: function(videoId) {
-            for(let i=0; i<internal.markersList.length; i++) {
-                if(internal.markersList[i].about.videoId === videoId) {
+        doesVideoExistYet: function (videoId) {
+            for (let i = 0; i < internal.markersList.length; i++) {
+                if (internal.markersList[i].about.videoId === videoId) {
                     return true;
                 }
             }
@@ -663,7 +669,7 @@ const geofind = (function() {
             return false;
         },
 
-        getLanguageFromCode: function(lang) {
+        getLanguageFromCode: function (lang) {
             return String(lang);
         },
 
@@ -695,9 +701,9 @@ const geofind = (function() {
             }
         },
 
-        pushVideo: function(video, boolToMap, boolToList) {
-            if(internal.doesVideoHaveLocation(video)) {
-                if(boolToMap) {
+        pushVideo: function (video, boolToMap, boolToList) {
+            if (internal.doesVideoHaveLocation(video)) {
+                if (boolToMap) {
                     const videoId = video.id;
                     const channelId = video.snippet.channelId;
 
@@ -724,30 +730,29 @@ const geofind = (function() {
                         }
                     });
 
-                    internal.adjustMapToResults();
-
                     marker.addListener("click", () => {
                         marker.openPopup();
                     });
 
                     internal.markersList.push(marker);
+                    internal.adjustMapToResults();
 
                     controls.btnExport.prop("disabled", false);
                     controls.btnExport.alterClass("btn-*", "btn-sm btn-success");
 
-                    if(internal.pageType === pageTypes.CHANNEL) {
+                    if (internal.pageType === pageTypes.CHANNEL) {
                         const tagCount = elements[channelId].tagCount;
-                        if(tagCount.length) {
+                        if (tagCount.length) {
                             let tags = 0;
-                            for(let i=0; i<internal.markersList.length; i++) {
+                            for (let i = 0; i < internal.markersList.length; i++) {
                                 const marker = internal.markersList[i];
 
-                                if(marker.about.channelId === channelId) {
+                                if (marker.about.channelId === channelId) {
                                     tags++;
                                 }
                             }
 
-                            if(tags > 0) {
+                            if (tags > 0) {
                                 controls[channelId].btnExport.prop("disabled", false);
                                 controls[channelId].btnExport.alterClass("btn-*", "btn-sm btn-success");
                             }
@@ -757,7 +762,7 @@ const geofind = (function() {
                     }
                 }
 
-                if(boolToList) {
+                if (boolToList) {
                     const listItemHtml = format.videoToListItemHtml(video);
 
                     elements.videoDataTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
@@ -771,10 +776,10 @@ const geofind = (function() {
          * @param address name, address, or city
          * @param callback called when done
          */
-        geocode: function(address, callback) {
+        geocode: function (address, callback) {
             this.geocoder.geocode({address: address}, (res, stat) => {
-                if(stat === "OK") {
-                    if(res[0]) {
+                if (stat === "OK") {
+                    if (res[0]) {
                         const results = res[0];
                         const latlng = results.geometry.location;
 
@@ -783,7 +788,7 @@ const geofind = (function() {
 
                         internal.adjustMapToCenter();
 
-                        if(callback) {
+                        if (callback) {
                             callback.call();
                         }
                     }
@@ -795,16 +800,16 @@ const geofind = (function() {
          * @param position coordinates ot latitude and longitude (google.maps.LatLng)
          * @param callback called when done
          */
-        reverseGeocode: function(position, callback) {
+        reverseGeocode: function (position, callback) {
             this.geocoder.geocode({"location": position}, (res, stat) => {
-                if(stat === "OK") {
-                    if(res[0]) {
+                if (stat === "OK") {
+                    if (res[0]) {
                         controls.inputAddress.attr("value", res[0].formatted_address);
                     } else {
-                        controls.inputAddress.attr("value", pos.lat()+","+pos.lng());
+                        controls.inputAddress.attr("value", pos.lat() + "," + pos.lng());
                     }
 
-                    if(callback) {
+                    if (callback) {
                         callback.call();
                     }
                 }
@@ -814,7 +819,7 @@ const geofind = (function() {
         /**
          * Sets the position of the map to the center.
          */
-        setMapCenter: function(lat, lng) {
+        setMapCenter: function (lat, lng) {
             const position = new google.maps.LatLng(lat, lng);
 
             controls.mapLocationMarker.setPosition(position);
@@ -827,7 +832,7 @@ const geofind = (function() {
         /**
          * Adjusts the zoom & position of the map to the location marker and radius circle.
          */
-        adjustMapToCenter: function() {
+        adjustMapToCenter: function () {
             const bounds = new google.maps.LatLngBounds();
             bounds.extend(controls.mapLocationMarker.getPosition());
             bounds.union(controls.mapRadius.getBounds());
@@ -838,37 +843,37 @@ const geofind = (function() {
         /**
          * Adjusts zoom & position of the map to result markers only.
          */
-        adjustMapToResults: function() {
+        adjustMapToResults: function () {
             const bounds = new google.maps.LatLngBounds();
 
             bounds.extend(controls.mapLocationMarker.getPosition());
 
-            for(let i = 0; i < internal.markersList.length; i++) {
+            for (let i = 0; i < internal.markersList.length; i++) {
                 bounds.extend(internal.markersList[i].getPosition());
             }
 
             internal.map.fitBounds(bounds);
         },
 
-        startChannelConsumer: function() {
-            if(!internal.channelConsumerStarted) {
+        startChannelConsumer: function () {
+            if (!internal.channelConsumerStarted) {
                 function loadProfileIcons() {
                     const toGrab = [];
 
-                    for(let i=0; i<internal.markersList.length; i++) {
+                    for (let i = 0; i < internal.markersList.length; i++) {
                         const marker = internal.markersList[i];
                         const channelId = marker.about.channelId;
                         const hasThumbYet = internal.channelThumbs.hasOwnProperty(channelId);
 
-                        if(toGrab.length < 50) {
-                            if(!hasThumbYet) {
-                                if(toGrab.indexOf(channelId) === -1) {
+                        if (toGrab.length < 50) {
+                            if (!hasThumbYet) {
+                                if (toGrab.indexOf(channelId) === -1) {
                                     toGrab.push(channelId);
                                 }
                             }
                         }
 
-                        if(hasThumbYet && !marker.about.thumbLoaded) {
+                        if (hasThumbYet && !marker.about.thumbLoaded) {
                             const placeholderStr = "https://placehold.it/18x18";
                             const thumbUrl = internal.channelThumbs[channelId];
 
@@ -879,14 +884,14 @@ const geofind = (function() {
 
                             internal.setMarkerIcon(marker, thumbUrl);
 
-                            elements.videoDataTable.$(".authorThumb."+channelId)
+                            elements.videoDataTable.$(".authorThumb." + channelId)
                                 .prop("src", thumbUrl);
 
                             marker.about.thumbLoaded = true;
                         }
                     }
 
-                    if(toGrab.length > 0) {
+                    if (toGrab.length > 0) {
                         console.log("Grabbing channels [" + toGrab.join(", ") + "]");
 
                         youtube.ajax("channels", {
@@ -895,21 +900,27 @@ const geofind = (function() {
                             id: toGrab.join(",")
                         }).done((res) => {
                             res.items.forEach(item => {
-                                const thumbUrl = item.snippet.thumbnails.default.url;
+                                if (!item || !item.snippet || !item.snippet.thumbnails) {
+                                    console.log(item);
+                                    internal.channelThumbs[item.id] = "https://placehold.it/22x22";
+                                } else {
+                                    const thumbs = item.snippet.thumbnails;
+                                    internal.channelThumbs[item.id] = (thumbs.default || thumbs.medium || thumbs.high).url;
+                                }
 
-                                internal.channelThumbs[item.id] = thumbUrl;
+                                const thumbUrl = internal.channelThumbs[item.id];
 
-                                for(let i=0; i<internal.markersList.length; i++) {
+                                for (let i = 0; i < internal.markersList.length; i++) {
                                     const marker = internal.markersList[i];
                                     const channelId = marker.about.channelId;
 
-                                    if(!marker.about.thumbLoaded && channelId === item.id) {
+                                    if (!marker.about.thumbLoaded && channelId === item.id) {
                                         internal.setMarkerIcon(marker, thumbUrl)
                                     }
                                 }
                             });
 
-                            setTimeout(loadProfileIcons, 500);
+                            setTimeout(loadProfileIcons, 100);
                         }).fail((err) => {
                             console.log(err);
                         });
@@ -926,12 +937,12 @@ const geofind = (function() {
             }
         },
         channelConsumerStarted: false,
-        setMarkerIcon: function(marker, iconUrl) {
+        setMarkerIcon: function (marker, iconUrl) {
             const icon = {
                 url: iconUrl,
                 scaledSize: new google.maps.Size(defaults.mapMarkerWidth, defaults.mapMarkerWidth),
-                origin: new google.maps.Point(0,0),
-                anchor: new google.maps.Point(0,0)
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(0, 0)
             };
             marker.setIcon(icon);
             marker.thumbLoaded = true;
@@ -942,21 +953,21 @@ const geofind = (function() {
         channelToListItemHtml(channel) {
             const snippet = channel.snippet;
 
-            return  "<li id='"+channel.id+"' class='list-group-item d-flex flex-row channel' data-tags='0'>" +
-                        "<div class='row w-100'>" +
-                            "<div class='col-auto'>" +
-                                "<img width='64' src='"+snippet.thumbnails.medium.url+"' />" +
-                            "</div>" +
-                            "<div class='col w-100'>" +
-                                "<div class='row channel-title'>"+snippet.title+"</div>" +
-                                "<div class='row'><span class='tag-count'>0</span>&nbsp;videos geo-tagged</div>" +
-                            "</div>" +
-                            "<div class='col-3'>" +
-                                "<div class='row'><div class='progress w-100'><div class='progress-bar progress-bar-striped progress-bar-animated' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div></div></div>" +
-                                "<div class='row'><button type='button' class='btn btn-secondary btn-sm w-100 btn-save' onclick='geofind.exportToCSV(\""+channel.id+"\")' disabled>Export CSV <i class='fa fa-download' aria-hidden='true'></i></button></div>" +
-                            "</div>" +
-                        "</div>" +
-                    "</li>";
+            return "<li id='" + channel.id + "' class='list-group-item d-flex flex-row channel' data-tags='0'>" +
+                "<div class='row w-100'>" +
+                "<div class='col-auto'>" +
+                "<img width='64' src='" + snippet.thumbnails.medium.url + "' referrerpolicy='no-referrer' />" +
+                "</div>" +
+                "<div class='col w-100'>" +
+                "<div class='row channel-title'>" + snippet.title + "</div>" +
+                "<div class='row'><span class='tag-count'>0</span>&nbsp;videos geo-tagged</div>" +
+                "</div>" +
+                "<div class='col-3'>" +
+                "<div class='row'><div class='progress w-100'><div class='progress-bar progress-bar-striped progress-bar-animated' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div></div></div>" +
+                "<div class='row'><button type='button' class='btn btn-secondary btn-sm w-100 btn-save' onclick='geofind.exportToCSV(\"" + channel.id + "\")' disabled>Export CSV <i class='fa fa-download' aria-hidden='true'></i></button></div>" +
+                "</div>" +
+                "</div>" +
+                "</li>";
         },
 
         /**
@@ -971,12 +982,12 @@ const geofind = (function() {
                 options.type === 'list' ?
 
                     "<div class='row' style='margin:0'>" +
-                        "<a class='openInMap' href='javascript:geofind.openInMap(\""+video.id+"\")'>" +
-                            "<div>" +
-                                "<span style='vertical-align:middle'>Open in map</span>" +
-                                "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24'><path fill='gray' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>" +
-                            "</div>" +
-                        "</a>" +
+                    "<a class='openInMap' href='javascript:geofind.openInMap(\"" + video.id + "\")'>" +
+                    "<div>" +
+                    "<span style='vertical-align:middle'>Open in map</span>" +
+                    "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24'><path fill='gray' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>" +
+                    "</div>" +
+                    "</a>" +
                     "</div>"
 
                     : ""
@@ -984,73 +995,67 @@ const geofind = (function() {
             const markerCoordinates = (
                 options.type === 'marker' && details && details.location ?
                     "<div class='row'>" +
-                        "<div class='col'>" +
-                            details.location.latitude + ", " + details.location.longitude +
-                        "</div>" +
+                    "<div class='col'>" +
+                    details.location.latitude + ", " + details.location.longitude +
+                    "</div>" +
                     "</div>"
 
                     : ""
             );
 
-            return  "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
-                        "<div class='col-auto'>" +
-                            "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' />" +
-                        "</div>" +
-                        "<div class='col' style='padding-left:0'>" +
-                            "<div class='row' style='font-size: 1.10em;'>" +
-                                "<div class='col-auto'>" +
-                                    "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "'>" +
-                                        snippet.title +
-                                    "</a>" +
-                                "</div>" +
-                            "</div>" +
-
-                            "<div style='font-size:0.813em'>" +
-                                "<div class='row'>" +
-                                    "<div class='col-auto'>" +
-                                        "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "'>" +
-                                            "<div>" +
-                                                "<img class='authorThumb "+snippet.channelId+"' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/"+options.authorThumbWidth+"x"+options.authorThumbWidth+"' />" +
-                                                "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
-                                            "</div>" +
-                                        "</a>" +
-                                    "</div>" +
-                                "</div>" +
-
-                                "<div class='row'>" +
-                                    "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
-                                        snippet.description.trunc(140) +
-                                    "</div>" +
-                                "</div>" +
-
-                                "<div class='row'>" +
-                                    "<div class='col'>" +
-                                        snippet.publishedAt +
-                                    "</div>" +
-                                "</div>" +
-
-                                "<div class='row'>" +
-                                    "<div class='col'>Language: " +
-                                        internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
-                                    "</div>" +
-                                "</div>" +
-
-                                markerCoordinates +
-                                "<div class='column'>" +
-                                    listOpenInMap +
-
-                                    "<div class='row' style='margin:0'>" +
-                                        "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/"+video.id+"'>" +
-                                            "<div>" +
-                                                "<span style='vertical-align:middle'>View metadata</span>" +
-                                                "<img src='./img/metadata.png' width='14' style='margin-left:4px'>" +
-                                            "</div>" +
-                                        "</a>" +
-                                    "</div>" +
-                                "</div>" +
-                            "</div>" +
-                        "</div>" +
-                    "</div>";
+            return "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
+                    "<div class='col-auto'>" +
+                    "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
+                    "</div>" +
+                    "<div class='col' style='padding-left:0'>" +
+                    "<div class='row' style='font-size: 1.10em;'>" +
+                    "<div class='col-auto'>" +
+                    "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "' rel='noopener'>" +
+                    snippet.title +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "<div style='font-size:0.813em'>" +
+                    "<div class='row'>" +
+                    "<div class='col-auto'>" +
+                    "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
+                    "<div>" +
+                    "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' referrerpolicy='no-referrer' />" +
+                    "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
+                    snippet.description.trunc(140) +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col'>" +
+                    snippet.publishedAt +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col'>Language: " +
+                    internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
+                    "</div>" +
+                    "</div>" +
+                    markerCoordinates +
+                    "<div class='column'>" +
+                    listOpenInMap +
+                    "<div class='row' style='margin:0'>" +
+                    "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "' rel='noopener'>" +
+                    "<div>" +
+                    "<span style='vertical-align:middle'>View metadata</span>" +
+                    "<img src='./img/metadata.png' width='14' style='margin-left:4px' alt='youtube metadata icon' >" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "</div>" +
+                    "</div>" +
+                "</div>";
         },
 
         videoToListItemHtml(video) {
@@ -1071,14 +1076,14 @@ const geofind = (function() {
     };
 
     const query = {
-        videos: function(videoIds, callback) {
+        videos: function (videoIds, callback) {
             youtube.ajax("videos", {
                 id: videoIds.join(","),
                 part: "snippet,recordingDetails",
                 maxResults: 50
-            }).done(function(res) {
+            }).done(function (res) {
                 callback(res);
-            }).fail(function(err) {
+            }).fail(function (err) {
                 console.error(err);
 
                 internal.displayError("alert-warning", err);
@@ -1091,14 +1096,14 @@ const geofind = (function() {
          * @param payload an object with `id` or `forUsername` key and value
          * @param callback called on success
          */
-        channels: function(payload, callback) {
+        channels: function (payload, callback) {
             youtube.ajax("channels",
                 $.extend({
                     part: "snippet,contentDetails"
                 }, payload)
-            ).done(function(res) {
+            ).done(function (res) {
                 callback(res);
-            }).fail(function(err) {
+            }).fail(function (err) {
                 internal.displayError("alert-warning", err);
 
                 console.error(err);
@@ -1110,12 +1115,12 @@ const geofind = (function() {
         /**
          * To be called as a callback when the map finishes loading and we can get the map element.
          */
-        onMapInit: function() {
+        onMapInit: function () {
             if (location.protocol !== "https:" && location.hostname !== "localhost") {
                 location.protocol = "https:";
             }
 
-            if(!this.onMapInitCalled) {
+            if (!this.onMapInitCalled) {
                 console.log("Initializing app");
 
                 const mapElement = document.getElementById("map");
@@ -1129,9 +1134,9 @@ const geofind = (function() {
         },
         onMapInitCalled: false,
 
-        findMyLocation: function() {
+        findMyLocation: function () {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) =>{
+                navigator.geolocation.getCurrentPosition((pos) => {
                     internal.setMapCenter(pos.coords.latitude, pos.coords.longitude);
 
                     internal.reverseGeocode(internal.map.getCenter());
@@ -1139,18 +1144,18 @@ const geofind = (function() {
             }
         },
 
-        openInMap: function(videoId) {
-            for(let i=0; i<internal.markersList.length; i++) {
+        openInMap: function (videoId) {
+            for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
 
-                if(marker.about.videoId === videoId) {
+                if (marker.about.videoId === videoId) {
                     marker.openPopup();
                 }
             }
         },
 
-        clearResults: function() {
-            for(let i=0; i<internal.markersList.length; i++) {
+        clearResults: function () {
+            for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
 
                 marker.setMap(null);
@@ -1165,19 +1170,19 @@ const geofind = (function() {
         /**
          * @param channelId optional, specify to only match videos with this channel id
          */
-        exportToCSV: function(channelId) {
+        exportToCSV: function (channelId) {
             const fileName = channelId ? channelId : "geotags_all";
             const mimeType = "data:text/csv;charset=utf-8";
             const headerColumns = ["channelId", "channelTitle", "videoId", "videoTitle",
                 "videoDesc", "published", "latitude", "longitude"];
             const dataRows = [];
 
-            for(let i=0; i<internal.markersList.length; i++) {
+            for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
                 const position = marker.getPosition();
                 const about = marker.about;
 
-                if(!channelId || channelId === about.channelId) {
+                if (!channelId || channelId === about.channelId) {
                     function csvSanitize(textValue) {
                         return encodeURI(textValue.replace(/#/g, '%23'))
                             .replace(/%20/g, " ")
@@ -1197,7 +1202,7 @@ const geofind = (function() {
                 }
             }
 
-            const fileContents =  mimeType + "," + headerColumns.join("\t") + "\n" + dataRows.join("\n");
+            const fileContents = mimeType + "," + headerColumns.join("\t") + "\n" + dataRows.join("\n");
             const encodedContents = encodeURI(fileContents);
 
             const link = document.createElement("a");
@@ -1218,13 +1223,13 @@ const geofind = (function() {
         // Location Page Only
         paramLocation: {
             param: 'location',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(internal.pageType === pageTypes.LOCATION && paramValue) {
+                if (internal.pageType === pageTypes.LOCATION && paramValue) {
                     const parts = paramValue.split(",");
 
-                    if(parts.length === 2) {
+                    if (parts.length === 2) {
                         internal.setMapCenter(parts[0], parts[1]);
                     }
                 }
@@ -1232,10 +1237,10 @@ const geofind = (function() {
         },
         paramRadius: {
             param: 'radius',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.comboRadius.length && paramValue) {
+                if (controls.comboRadius.length && paramValue) {
                     controls.comboRadius.val(paramValue);
                     controls.comboRadius.trigger("change");
                 }
@@ -1244,20 +1249,20 @@ const geofind = (function() {
         // Location & Topic Pages
         paramKeywords: {
             param: 'keywords',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.inputKeywords.length && paramValue) {
+                if (controls.inputKeywords.length && paramValue) {
                     controls.inputKeywords.val(paramValue);
                 }
             }
         },
         paramSort: {
             param: 'sort',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.comboSortBy.length && paramValue) {
+                if (controls.comboSortBy.length && paramValue) {
                     controls.comboSortBy.val(paramValue);
                     controls.comboSortBy.trigger("change");
                 }
@@ -1265,10 +1270,10 @@ const geofind = (function() {
         },
         paramTimeframe: {
             param: 'timeframe',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.comboTimeframe.length && paramValue) {
+                if (controls.comboTimeframe.length && paramValue) {
                     controls.comboTimeframe.val(paramValue);
                     controls.comboTimeframe.trigger("change");
                 }
@@ -1276,30 +1281,30 @@ const geofind = (function() {
         },
         paramStart: {
             param: 'start',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.inputDateFrom.length && paramValue) {
+                if (controls.inputDateFrom.length && paramValue) {
                     controls.inputDateFrom.val(paramValue);
                 }
             }
         },
         paramEnd: {
             param: 'end',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.inputDateTo.length && paramValue) {
+                if (controls.inputDateTo.length && paramValue) {
                     controls.inputDateTo.val(paramValue);
                 }
             }
         },
         paramPages: {
             param: 'pages',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.comboPageLimit.length && paramValue) {
+                if (controls.comboPageLimit.length && paramValue) {
                     controls.comboPageLimit.val(paramValue);
                     controls.comboPageLimit.trigger("change");
                 }
@@ -1307,10 +1312,10 @@ const geofind = (function() {
         },
         paramLive: {
             param: 'live',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.checkLive.length && paramValue === "true") {
+                if (controls.checkLive.length && paramValue === "true") {
                     controls.checkLive.prop("checked", true);
 
                     module.params.showAdvancedOptions();
@@ -1319,10 +1324,10 @@ const geofind = (function() {
         },
         paramCC: {
             param: 'cc',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.checkCC.length && paramValue === "true") {
+                if (controls.checkCC.length && paramValue === "true") {
                     controls.checkCC.prop("checked", true);
 
                     module.params.showAdvancedOptions();
@@ -1331,10 +1336,10 @@ const geofind = (function() {
         },
         paramHQ: {
             param: 'hq',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.checkHQ.length && paramValue === "true") {
+                if (controls.checkHQ.length && paramValue === "true") {
                     controls.checkHQ.prop("checked", true);
 
                     module.params.showAdvancedOptions();
@@ -1343,10 +1348,10 @@ const geofind = (function() {
         },
         paramEmbedded: {
             param: 'embedded',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.checkEmbedded.length && paramValue === "true") {
+                if (controls.checkEmbedded.length && paramValue === "true") {
                     controls.checkEmbedded.prop("checked", true);
 
                     module.params.showAdvancedOptions();
@@ -1355,10 +1360,10 @@ const geofind = (function() {
         },
         paramSyndicated: {
             param: 'syndicated',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.checkSyndicated.length && paramValue === "true") {
+                if (controls.checkSyndicated.length && paramValue === "true") {
                     controls.checkSyndicated.prop("checked", true);
 
                     module.params.showAdvancedOptions();
@@ -1368,10 +1373,10 @@ const geofind = (function() {
         // Channel Page Only
         paramChannels: {
             param: 'channels',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.inputChannels.length && paramValue) {
+                if (controls.inputChannels.length && paramValue) {
                     controls.inputChannels.val(paramValue);
                 }
             }
@@ -1379,28 +1384,28 @@ const geofind = (function() {
         // All Pages
         paramDoSearch: {
             param: 'doSearch',
-            shouldSearch: function(parsedQuery) {
+            shouldSearch: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
                 return paramValue === "true";
             },
-            updatePage: function(parsedQuery) {
-                if(this.shouldSearch(parsedQuery) && !parsedQuery[module.params.paramLocationAddress.param]) {
+            updatePage: function (parsedQuery) {
+                if (this.shouldSearch(parsedQuery) && !parsedQuery[module.params.paramLocationAddress.param]) {
                     controls.btnSubmit.click();
                 }
             }
         },
         paramLocationAddress: {
             param: 'locationAddress',
-            updatePage: function(parsedQuery) {
+            updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if(controls.inputAddress.length && paramValue) {
+                if (controls.inputAddress.length && paramValue) {
                     controls.inputAddress.val(paramValue);
 
-                    if(paramValue.length) {
-                        internal.geocode(paramValue, function() {
-                            if(module.params.paramDoSearch.shouldSearch(parsedQuery)) {
+                    if (paramValue.length) {
+                        internal.geocode(paramValue, function () {
+                            if (module.params.paramDoSearch.shouldSearch(parsedQuery)) {
                                 controls.btnSubmit.click();
                             }
                         });
@@ -1409,8 +1414,8 @@ const geofind = (function() {
             }
         },
 
-        showAdvancedOptions: function() {
-            if(!elements.advancedDiv.is(":visible")) {
+        showAdvancedOptions: function () {
+            if (!elements.advancedDiv.is(":visible")) {
                 controls.btnToggleAdvanced.click();
             }
         },
@@ -1418,7 +1423,7 @@ const geofind = (function() {
         /**
          * Parses URL query string into key-value object.
          */
-        parseQuery: function(query) {
+        parseQuery: function (query) {
             const parsedQuery = {};
 
             const pairs = (query[0] === '?' ? query.substr(1) : query).split('&');
@@ -1435,18 +1440,21 @@ const geofind = (function() {
         /**
          * Updates the page for all query parameters if present.
          */
-        updatePageFromAll: function() {
+        updatePageFromAll: function () {
             const parsedQuery = this.parseQuery(window.location.search);
 
             console.log(parsedQuery);
 
-            for(let param in this) {
-                if(this[param].updatePage) {
+            for (let param in this) {
+                if (this[param].updatePage) {
                     this[param].updatePage(parsedQuery);
                 }
             }
         }
     };
+
+    module.elements = elements;
+    module.controls = controls;
 
     /**
      * Assign to a variable on the window object so that the Google Maps callback can call it.

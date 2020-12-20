@@ -1,40 +1,44 @@
 <div class="form-group row" style="margin: 0 auto; text-align: center">
-	<span style="font-weight: bold; margin-right: 15px; margin-top: auto; margin-bottom: auto;">Quota errors?</span>
-	<input type="text" class="form-control" id="key" aria-describedby="help" style="max-width: 200px;"
-		   placeholder="YouTube API Key" />
-	<button id="setButton" class="btn btn-info" disabled="disabled">Set</button>
-	<small id="msg" style="font-weight: bold; margin-left: 15px; margin-top: auto; margin-bottom: auto;" align=center>* Optional</small>
-	<br>
-	<script>
-		function getCookie(cn) {
-			var name = cn+"=";
-			var allCookie = decodeURIComponent(document.cookie).split(';');
-			var cval = [];
-			for(var i=0; i < allCookie.length; i++) {
-				if (allCookie[i].trim().indexOf(name) == 0) {
-					cval = allCookie[i].trim().split("=");
-				}   
-			}
-			return (cval.length > 0) ? cval[1] : "";
-		}
-		let cookieKey = getCookie("apiKey");
-		if(cookieKey != undefined && cookieKey != "") {
-			GOOGLE_API_KEY = cookieKey;
-		}
-		$('#setButton').click(function() {
-			let newKey = $("#key").val();
-			if(newKey == "") {
-				$("#msg").text("unset");
-				GOOGLE_API_KEY = DEFAULT_KEY;
-				document.cookie = "apiKey=";
-			} else {
-				$("#msg").text("set");
-				document.cookie = "apiKey="+newKey;
-				GOOGLE_API_KEY = newKey;
-			}
-		});
-		$("#key").attr("value", cookieKey);
-	</script>
+    <span style="font-weight: bold; margin-right: 15px; margin-top: auto; margin-bottom: auto;">Quota errors?</span>
+    <input type="text" class="form-control" id="key" aria-describedby="help" style="max-width: 200px;"
+           placeholder="YouTube API Key"/>
+    <button id="setButton" class="btn btn-info" disabled="disabled">Set</button>
+    <small id="msg" style="font-weight: bold; margin-left: 15px; margin-top: auto; margin-bottom: auto;" align=center>*
+        Optional</small>
+    <br>
+    <script>
+        function getCookie(cn) {
+            var name = cn + "=";
+            var allCookie = decodeURIComponent(document.cookie).split(';');
+            var cval = [];
+            for (var i = 0; i < allCookie.length; i++) {
+                if (allCookie[i].trim().indexOf(name) == 0) {
+                    cval = allCookie[i].trim().split("=");
+                }
+            }
+            return (cval.length > 0) ? cval[1] : "";
+        }
+
+        let cookieKey = getCookie("apiKey");
+        if (cookieKey != undefined && cookieKey != "") {
+            GOOGLE_API_KEY = cookieKey;
+        }
+        $('#setButton').click(function () {
+            let newKey = $("#key").val();
+            if (newKey == "") {
+                $("#msg").text("unset");
+                GOOGLE_API_KEY = DEFAULT_KEY;
+                document.cookie = "apiKey=";
+            } else {
+                $("#msg").text("set");
+                document.cookie = "apiKey=" + newKey;
+                GOOGLE_API_KEY = newKey;
+            }
+        });
+        $("#key").attr("value", cookieKey);
+    </script>
 </div>
-<small class="form-text text-muted" align=center>Here is the <a target="_blank" href="https://developers.google.com/youtube/v3/getting-started">guide to get your key</a>. Enable "YouTube Data API.". Set blank to use default.</small>
+<small class="form-text text-muted" align=center>Here is the
+    <a target="_blank" href="https://developers.google.com/youtube/v3/getting-started" rel="noopener">guide
+    to get your key</a>. Enable "YouTube Data API.". Set blank to use default.</small>
 <br>
