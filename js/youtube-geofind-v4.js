@@ -176,7 +176,10 @@ const geofind = (function () {
             controls.mapLocationMarker = new google.maps.Marker({
                 position: internal.map.center,
                 draggable: true,
-                icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                icon: {
+                    url: "./img/green-dot.png",
+                    scaledSize: new google.maps.Size(32, 32)
+                },
                 title: "Drag me!",
                 optimized: false,
                 zIndex: 99999999,
@@ -619,7 +622,7 @@ const geofind = (function () {
                     const html = "<strong>Quota Exceeded</strong> " +
                         "The daily API quota of 1,000,000 units has been reached for this application. " +
                         "This quota resets at midnight Pacific Time (PT) as per the Google Developers Console. " +
-                        "See more detail here with <a target='_blank' href='https://github.com/mattwright324/youtube-geofind/issues/11'>issue #11</a>.";
+                        "See more detail here with <a target='_blank' href='https://github.com/mattwright324/youtube-geofind/issues/11' rel='noopener'>issue #11</a>.";
 
                     this.displayMessage('alert-warning', html);
                 } else {
@@ -948,7 +951,7 @@ const geofind = (function () {
             return "<li id='" + channel.id + "' class='list-group-item d-flex flex-row channel' data-tags='0'>" +
                 "<div class='row w-100'>" +
                 "<div class='col-auto'>" +
-                "<img width='64' src='" + snippet.thumbnails.medium.url + "' />" +
+                "<img width='64' src='" + snippet.thumbnails.medium.url + "' alt='channel thumbnail' />" +
                 "</div>" +
                 "<div class='col w-100'>" +
                 "<div class='row channel-title'>" + snippet.title + "</div>" +
@@ -996,63 +999,57 @@ const geofind = (function () {
             );
 
             return "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
-                "<div class='col-auto'>" +
-                "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' />" +
-                "</div>" +
-                "<div class='col' style='padding-left:0'>" +
-                "<div class='row' style='font-size: 1.10em;'>" +
-                "<div class='col-auto'>" +
-                "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "'>" +
-                snippet.title +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-
-                "<div style='font-size:0.813em'>" +
-                "<div class='row'>" +
-                "<div class='col-auto'>" +
-                "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "'>" +
-                "<div>" +
-                "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' />" +
-                "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
-                "</div>" +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-
-                "<div class='row'>" +
-                "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
-                snippet.description.trunc(140) +
-                "</div>" +
-                "</div>" +
-
-                "<div class='row'>" +
-                "<div class='col'>" +
-                snippet.publishedAt +
-                "</div>" +
-                "</div>" +
-
-                "<div class='row'>" +
-                "<div class='col'>Language: " +
-                internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
-                "</div>" +
-                "</div>" +
-
-                markerCoordinates +
-                "<div class='column'>" +
-                listOpenInMap +
-
-                "<div class='row' style='margin:0'>" +
-                "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "'>" +
-                "<div>" +
-                "<span style='vertical-align:middle'>View metadata</span>" +
-                "<img src='./img/metadata.png' width='14' style='margin-left:4px'>" +
-                "</div>" +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
+                    "<div class='col-auto'>" +
+                    "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' />" +
+                    "</div>" +
+                    "<div class='col' style='padding-left:0'>" +
+                    "<div class='row' style='font-size: 1.10em;'>" +
+                    "<div class='col-auto'>" +
+                    "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "' rel='noopener'>" +
+                    snippet.title +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "<div style='font-size:0.813em'>" +
+                    "<div class='row'>" +
+                    "<div class='col-auto'>" +
+                    "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
+                    "<div>" +
+                    "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' alt='author thumbnail' />" +
+                    "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
+                    snippet.description.trunc(140) +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col'>" +
+                    snippet.publishedAt +
+                    "</div>" +
+                    "</div>" +
+                    "<div class='row'>" +
+                    "<div class='col'>Language: " +
+                    internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
+                    "</div>" +
+                    "</div>" +
+                    markerCoordinates +
+                    "<div class='column'>" +
+                    listOpenInMap +
+                    "<div class='row' style='margin:0'>" +
+                    "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "' rel='noopener'>" +
+                    "<div>" +
+                    "<span style='vertical-align:middle'>View metadata</span>" +
+                    "<img src='./img/metadata.png' width='14' style='margin-left:4px' alt='youtube metadata icon' >" +
+                    "</div>" +
+                    "</a>" +
+                    "</div>" +
+                    "</div>" +
+                    "</div>" +
+                    "</div>" +
                 "</div>";
         },
 
