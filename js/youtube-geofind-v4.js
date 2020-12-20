@@ -730,13 +730,12 @@ const geofind = (function () {
                         }
                     });
 
-                    internal.adjustMapToResults();
-
                     marker.addListener("click", () => {
                         marker.openPopup();
                     });
 
                     internal.markersList.push(marker);
+                    internal.adjustMapToResults();
 
                     controls.btnExport.prop("disabled", false);
                     controls.btnExport.alterClass("btn-*", "btn-sm btn-success");
@@ -901,9 +900,15 @@ const geofind = (function () {
                             id: toGrab.join(",")
                         }).done((res) => {
                             res.items.forEach(item => {
-                                const thumbUrl = item.snippet.thumbnails.default.url;
+                                if (!item || !item.snippet || !item.snippet.thumbnails) {
+                                    console.log(item);
+                                    internal.channelThumbs[item.id] = "https://placehold.it/22x22";
+                                } else {
+                                    const thumbs = item.snippet.thumbnails;
+                                    internal.channelThumbs[item.id] = (thumbs.default || thumbs.medium || thumbs.high).url;
+                                }
 
-                                internal.channelThumbs[item.id] = thumbUrl;
+                                const thumbUrl = internal.channelThumbs[item.id];
 
                                 for (let i = 0; i < internal.markersList.length; i++) {
                                     const marker = internal.markersList[i];
@@ -915,7 +920,7 @@ const geofind = (function () {
                                 }
                             });
 
-                            setTimeout(loadProfileIcons, 500);
+                            setTimeout(loadProfileIcons, 100);
                         }).fail((err) => {
                             console.log(err);
                         });
@@ -951,7 +956,7 @@ const geofind = (function () {
             return "<li id='" + channel.id + "' class='list-group-item d-flex flex-row channel' data-tags='0'>" +
                 "<div class='row w-100'>" +
                 "<div class='col-auto'>" +
-                "<img width='64' src='" + snippet.thumbnails.medium.url + "' alt='channel thumbnail' />" +
+                "<img width='64' src='" + snippet.thumbnails.medium.url + "' referrerpolicy='no-referrer' />" +
                 "</div>" +
                 "<div class='col w-100'>" +
                 "<div class='row channel-title'>" + snippet.title + "</div>" +
@@ -1000,7 +1005,7 @@ const geofind = (function () {
 
             return "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
                     "<div class='col-auto'>" +
-                    "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' />" +
+                    "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
                     "</div>" +
                     "<div class='col' style='padding-left:0'>" +
                     "<div class='row' style='font-size: 1.10em;'>" +
@@ -1015,7 +1020,7 @@ const geofind = (function () {
                     "<div class='col-auto'>" +
                     "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
                     "<div>" +
-                    "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' alt='author thumbnail' />" +
+                    "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' referrerpolicy='no-referrer' />" +
                     "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
                     "</div>" +
                     "</a>" +
