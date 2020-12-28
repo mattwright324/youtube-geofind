@@ -279,6 +279,7 @@ const geofind = (function () {
         markersList: [],
         channelThumbs: {},
         languageResults: {},
+        coordsMap: {},
 
 
         setupPageControls: function () {
@@ -708,6 +709,7 @@ const geofind = (function () {
                     const channelId = video.snippet.channelId;
 
                     const markerContent = format.videoToMarkerInfoWindowHtml(video);
+                    const latLng = "[" + video.recordingDetails.location.latitude+","+video.recordingDetails.location.longitude + "]";
                     const markerPopup = new google.maps.InfoWindow({
                         content: markerContent
                     });
@@ -715,9 +717,6 @@ const geofind = (function () {
                         position: internal.locationToPosition(video),
                         map: internal.map,
                         markerPopup: markerPopup,
-                        openPopup: () => {
-                            markerPopup.open(internal.map, marker);
-                        },
                         about: {
                             channelId: channelId,
                             channelTitle: video.snippet.channelTitle,
@@ -727,8 +726,55 @@ const geofind = (function () {
                             videoTitle: video.snippet.title,
                             videoDesc: video.snippet.description,
                             published: video.snippet.publishedAt
+                        },
+                        openPopup: () => {
+                            markerPopup.open(internal.map, marker);
+
+                            setTimeout(function () {
+                                const count = internal.coordsMap[latLng].length;
+
+                                if (count > 1) {
+                                    let options = [];
+                                    internal.coordsMap[latLng].sort(function (a, b) {
+                                        return a.about.videoTitle > b.about.videoTitle
+                                    });
+                                    for (let i=0; i<count; i++) {
+                                        const marker = internal.coordsMap[latLng][i];
+                                        const markerId = marker.about.videoId;
+                                        const selected = videoId === markerId ? " selected" : "";
+                                        options.push("<option value='" + markerId + "'" + selected +">" + marker.about.videoTitle.trunc(30) + "</option>");
+                                    }
+
+                                    const html =
+                                        "<div style='margin-bottom:10px;'>" +
+                                            "<select class='form-select form-control-sm '>" +
+                                                options.join("") +
+                                            "</select>" +
+                                        "</div>" +
+                                        "<div style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
+                                            count + " videos at same coords" +
+                                        "</div>";
+
+                                    $(".type-marker." + videoId + " .multi").html(html);
+                                    const select = $(".type-marker." + videoId + " .multi select")
+                                    select.change(function () {
+                                        const selectedVideo = select.val();
+                                        marker.closePopup();
+                                        module.openInMap(selectedVideo);
+                                    });
+                                }
+                            }, 25);
+                        },
+                        closePopup: () => {
+                            markerPopup.close();
                         }
                     });
+
+                    if (internal.coordsMap[latLng]) {
+                        internal.coordsMap[latLng].push(marker);
+                    } else {
+                        internal.coordsMap[latLng] = [marker];
+                    }
 
                     marker.addListener("click", () => {
                         marker.openPopup();
@@ -997,13 +1043,16 @@ const geofind = (function () {
                     "<div class='row'>" +
                     "<div class='col'>" +
                     details.location.latitude + ", " + details.location.longitude +
+                    (details.locationDescription ? "  ≡  " + details.locationDescription + "" : "") +
                     "</div>" +
                     "</div>"
 
                     : ""
             );
 
-            return "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
+            return "<div class='type-" + options.type + " " + video.id + "'>" +
+                (options.type === 'marker' ? "<div class='row multi' style='margin:0;justify-content:flex-start;padding:0 15px;'></div>" : "") +
+                "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
                     "<div class='col-auto'>" +
                     "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
                     "</div>" +
@@ -1055,6 +1104,7 @@ const geofind = (function () {
                     "</div>" +
                     "</div>" +
                     "</div>" +
+                "</div>" +
                 "</div>";
         },
 
@@ -1163,6 +1213,7 @@ const geofind = (function () {
 
             internal.markersList.length = 0;
             internal.languageResults = {}
+            internal.coordsMap = {}
 
             elements.videoDataTable.clear().draw();
         },
