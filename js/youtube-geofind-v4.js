@@ -812,10 +812,10 @@ const geofind = (function () {
                     const listItemHtml = format.videoToListItemHtml(video);
 
                     elements.videoDataTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
+
+                    internal.updateLanguageDropdown(video);
                 }
             }
-
-            internal.updateLanguageDropdown(video);
         },
 
         /**
