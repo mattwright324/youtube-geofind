@@ -786,7 +786,7 @@ const geofind = (function () {
 
                                     const html =
                                         "<div style='margin-bottom:10px;'>" +
-                                        "<select class='form-select form-control-sm '>" +
+                                        "<select style='max-width: 300px' class='form-select form-control-sm '>" +
                                         options.join("") +
                                         "</select>" +
                                         "</div>" +
