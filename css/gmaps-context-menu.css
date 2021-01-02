@@ -25,6 +25,9 @@
     background: transparent !important;
     box-shadow: none !important;
 }
+.context-menu .gm-style-iw-d {
+    overflow: auto !important;
+}
 .context-menu .gm-style-iw-c {
     transform: none !important;
     padding: 6px 0 !important;
