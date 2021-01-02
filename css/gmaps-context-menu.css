@@ -1,0 +1,35 @@
+.context-menu {
+    font-size: 16px;
+    user-select: none;
+}
+.context-menu ul {
+    margin: 0;
+    padding: 0;
+}
+.context-menu li {
+    font-size: 14px;
+    padding: 4px 24px;
+    cursor: pointer;
+}
+.context-menu li:hover {
+    background-color: rgba(127,127,127,0.1);
+}
+.context-menu a {
+    color: black;
+}
+.context-menu a:hover {
+    color: black;
+    text-decoration: none;
+}
+.context-menu::after {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.context-menu .gm-style-iw-c {
+    transform: none !important;
+    padding: 6px 0 !important;
+    border-radius: 4px;
+}
+.context-menu .gm-ui-hover-effect {
+    display: none !important;
+}

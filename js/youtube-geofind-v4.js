@@ -186,6 +186,39 @@ const geofind = (function () {
                 showing: false
             });
 
+            const defaultContextMenu = new GmapsContextMenu(internal.map, {
+                options: [
+                    {
+                        text: "Move marker here",
+                        showWhen: function () {
+                            return internal.pageType === pageTypes.LOCATION;
+                        },
+                        onclick: function (latLng) {
+                            controls.mapLocationMarker.setPosition(latLng);
+                            controls.mapRadius.setCenter(latLng);
+
+                            internal.reverseGeocode(controls.mapRadius.getCenter());
+                        }
+                    },
+                    {
+                        text: "Search here",
+                        showWhen: function () {
+                            return internal.pageType === pageTypes.LOCATION;
+                        },
+                        onclick: function (latLng) {
+                            controls.mapLocationMarker.setPosition(latLng);
+                            controls.mapRadius.setCenter(latLng);
+
+                            internal.reverseGeocode(controls.mapRadius.getCenter());
+
+                            internal.submit();
+                        }
+                    }
+                ]
+            });
+            defaultContextMenu.registerFor(controls.mapRadius);
+            defaultContextMenu.registerFor(controls.mapLocationMarker);
+
             elements.loadingDiv = $("#loading");
             elements.loadingText = $("#loading-page");
 
@@ -281,6 +314,189 @@ const geofind = (function () {
         languageResults: {},
         coordsMap: {},
 
+        channelSubmit: function () {
+            const channels = controls.inputChannels.val()
+                .replace(/\s/g, "")
+                .split(",");
+
+            console.log(channels);
+
+            let payload;
+
+            for (let i = 0; i < channels.length; i++) {
+                const channelStr = channels[i].trim();
+
+                if (channelStr) {
+                    if (channelStr.length === 24) {
+                        payload = {id: channelStr};
+                    } else if (channelStr.length <= 20) {
+                        payload = {forUsername: channelStr};
+                    }
+
+                    console.log(payload);
+
+                    elements.loadingDiv.show();
+
+                    if (payload) {
+                        query.channels(payload, function (res) {
+                            const channel = res.items[0];
+
+                            if (channel) {
+                                // Does not exist in page yet
+                                if (!$("#" + channel.id).length) {
+                                    const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+
+                                    const channelListHtml = format.channelToListItemHtml(channel);
+
+                                    elements.channelPlaceholder.remove();
+                                    elements.channelsDiv.append(channelListHtml);
+
+                                    elements[channel.id] = {};
+                                    elements[channel.id].progress = new ProgressBar("#" + channel.id + " .progress-bar");
+                                    elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
+
+                                    controls[channel.id] = {};
+                                    controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
+
+                                    let videoTotal = 0;
+
+                                    function searchPlaylist(pageToken) {
+                                        youtube.ajax("playlistItems", {
+                                            part: "snippet",
+                                            maxResults: 50,
+                                            playlistId: uploadsPlaylistId,
+                                            pageToken: pageToken
+                                        }).done(function (res) {
+                                            console.log("Searching [playlistId=" + uploadsPlaylistId + ", pageToken=" + pageToken + ", totalVideos=" + videoTotal + "]");
+
+                                            if (pageToken === "") {
+                                                elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
+                                            }
+
+                                            videoTotal += res.items.length;
+
+                                            elements[channel.id].progress.setValue(videoTotal);
+
+                                            const videoIds = [];
+                                            for (let i = 0; i < res.items.length; i++) {
+                                                const playlistVideo = res.items[i];
+
+                                                videoIds.push(playlistVideo.snippet.resourceId.videoId);
+                                            }
+
+                                            console.log(videoIds);
+
+                                            query.videos(videoIds, function (res) {
+                                                console.log(res);
+
+                                                for (let i = 0; i < res.items.length; i++) {
+                                                    const video = res.items[i];
+
+                                                    internal.pushVideo(video, true, true);
+                                                }
+                                            });
+
+                                            if (internal.markersList.length > 0) {
+                                                internal.adjustMapToResults();
+                                            }
+
+                                            if (res.hasOwnProperty("nextPageToken")) {
+                                                searchPlaylist(res.nextPageToken);
+                                            } else {
+                                                elements.loadingDiv.fadeOut(defaults.animationMs);
+                                                elements[channel.id].progress.animated(false);
+                                            }
+                                        }).fail(function (err) {
+                                            elements[channel.id].progress.setBg("bg-danger");
+
+                                            internal.displayError("alert-warning", err);
+
+                                            console.error(err);
+                                        })
+                                    }
+
+                                    searchPlaylist("");
+                                } else {
+                                    console.warn("Channel was already in the list '" + channel.id + "'");
+                                }
+                            } else {
+                                internal.displayMessage("alert-warning", "Channel does not exist '" + channelStr + "'");
+                            }
+                        });
+                    } else {
+                        internal.displayMessage("alert-warning", "Did not recognize value as id or username '" + channelStr + "'");
+
+                        console.error("Channel value didn't match expected lengths.");
+                    }
+                } else {
+                    console.error("Channel value was empty.");
+                }
+            }
+
+            elements.loadingDiv.fadeOut(defaults.animationMs);
+        },
+
+        submit: function () {
+            if (controls.checkClearResults.is(":checked")) {
+                module.clearResults();
+            }
+
+            const maxPages = controls.comboPageLimit.find(":selected").val();
+
+            let pageValue = 0;
+
+            elements.loadingDiv.show();
+
+            function search(pageToken) {
+                console.log("Searching [pageValue=" + pageValue + ", maxPages=" + maxPages + ", pageToken=" + pageToken + "]");
+
+                elements.loadingText.text("Pg " + (pageValue + 1));
+
+                youtube.ajax("search", internal.getRequestPayload(pageToken)).done((res) => {
+                    console.log(res);
+
+                    const videoIds = [];
+                    for (let i = 0; i < res.items.length; i++) {
+                        const searchItemVideo = res.items[i];
+
+                        videoIds.push(searchItemVideo.id.videoId);
+                    }
+
+                    console.log(videoIds);
+
+                    query.videos(videoIds, function (res) {
+                        console.log(res);
+
+                        for (let i = 0; i < res.items.length; i++) {
+                            const video = res.items[i];
+
+                            if (!internal.doesVideoExistYet(video.id)) {
+                                internal.pushVideo(video, true, true);
+                            }
+                        }
+                    });
+
+                    pageValue++;
+
+                    if (res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
+                        search(res.nextPageToken);
+                    } else {
+                        elements.loadingDiv.fadeOut(defaults.animationMs);
+                    }
+                }).fail((err) => {
+                    pageToken = null;
+
+                    elements.loadingDiv.fadeOut(defaults.animationMs);
+
+                    internal.displayError("alert-warning", err);
+
+                    console.error(err);
+                });
+            }
+
+            search("");
+        },
+
 
         setupPageControls: function () {
             const KEY_ENTER = 13;
@@ -294,127 +510,7 @@ const geofind = (function () {
                     }
                 });
 
-                controls.btnSubmit.on('click', function () {
-                    const channels = controls.inputChannels.val()
-                        .replace(/\s/g, "")
-                        .split(",");
-
-                    console.log(channels);
-
-                    let payload;
-
-                    for (let i = 0; i < channels.length; i++) {
-                        const channelStr = channels[i].trim();
-
-                        if (channelStr) {
-                            if (channelStr.length === 24) {
-                                payload = {id: channelStr};
-                            } else if (channelStr.length <= 20) {
-                                payload = {forUsername: channelStr};
-                            }
-
-                            console.log(payload);
-
-                            elements.loadingDiv.show();
-
-                            if (payload) {
-                                query.channels(payload, function (res) {
-                                    const channel = res.items[0];
-
-                                    if (channel) {
-                                        // Does not exist in page yet
-                                        if (!$("#" + channel.id).length) {
-                                            const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-
-                                            const channelListHtml = format.channelToListItemHtml(channel);
-
-                                            elements.channelPlaceholder.remove();
-                                            elements.channelsDiv.append(channelListHtml);
-
-                                            elements[channel.id] = {};
-                                            elements[channel.id].progress = new ProgressBar("#" + channel.id + " .progress-bar");
-                                            elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
-
-                                            controls[channel.id] = {};
-                                            controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
-
-                                            let videoTotal = 0;
-
-                                            function searchPlaylist(pageToken) {
-                                                youtube.ajax("playlistItems", {
-                                                    part: "snippet",
-                                                    maxResults: 50,
-                                                    playlistId: uploadsPlaylistId,
-                                                    pageToken: pageToken
-                                                }).done(function (res) {
-                                                    console.log("Searching [playlistId=" + uploadsPlaylistId + ", pageToken=" + pageToken + ", totalVideos=" + videoTotal + "]");
-
-                                                    if (pageToken === "") {
-                                                        elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
-                                                    }
-
-                                                    videoTotal += res.items.length;
-
-                                                    elements[channel.id].progress.setValue(videoTotal);
-
-                                                    const videoIds = [];
-                                                    for (let i = 0; i < res.items.length; i++) {
-                                                        const playlistVideo = res.items[i];
-
-                                                        videoIds.push(playlistVideo.snippet.resourceId.videoId);
-                                                    }
-
-                                                    console.log(videoIds);
-
-                                                    query.videos(videoIds, function (res) {
-                                                        console.log(res);
-
-                                                        for (let i = 0; i < res.items.length; i++) {
-                                                            const video = res.items[i];
-
-                                                            internal.pushVideo(video, true, true);
-                                                        }
-                                                    });
-
-                                                    if (internal.markersList.length > 0) {
-                                                        internal.adjustMapToResults();
-                                                    }
-
-                                                    if (res.hasOwnProperty("nextPageToken")) {
-                                                        searchPlaylist(res.nextPageToken);
-                                                    } else {
-                                                        elements.loadingDiv.fadeOut(defaults.animationMs);
-                                                        elements[channel.id].progress.animated(false);
-                                                    }
-                                                }).fail(function (err) {
-                                                    elements[channel.id].progress.setBg("bg-danger");
-
-                                                    internal.displayError("alert-warning", err);
-
-                                                    console.error(err);
-                                                })
-                                            }
-
-                                            searchPlaylist("");
-                                        } else {
-                                            console.warn("Channel was already in the list '" + channel.id + "'");
-                                        }
-                                    } else {
-                                        internal.displayMessage("alert-warning", "Channel does not exist '" + channelStr + "'");
-                                    }
-                                });
-                            } else {
-                                internal.displayMessage("alert-warning", "Did not recognize value as id or username '" + channelStr + "'");
-
-                                console.error("Channel value didn't match expected lengths.");
-                            }
-                        } else {
-                            console.error("Channel value was empty.");
-                        }
-                    }
-
-                    elements.loadingDiv.fadeOut(defaults.animationMs);
-                })
+                controls.btnSubmit.on('click', internal.channelSubmit)
             } else {
                 if (this.pageType === pageTypes.LOCATION) {
                     controls.mapLocationMarker.setMap(this.map);
@@ -427,6 +523,8 @@ const geofind = (function () {
                         controls.mapRadius.setCenter(center);
 
                         internal.adjustMapToCenter();
+
+                        internal.reverseGeocode(controls.mapRadius.getCenter());
                     });
 
                     // Geocode address on pressing Enter in address textfield
@@ -481,66 +579,7 @@ const geofind = (function () {
                     }
                 });
 
-                controls.btnSubmit.on('click', function () {
-                    if (controls.checkClearResults.is(":checked")) {
-                        module.clearResults();
-                    }
-
-                    const maxPages = controls.comboPageLimit.find(":selected").val();
-
-                    let pageValue = 0;
-
-                    elements.loadingDiv.show();
-
-                    function search(pageToken) {
-                        console.log("Searching [pageValue=" + pageValue + ", maxPages=" + maxPages + ", pageToken=" + pageToken + "]");
-
-                        elements.loadingText.text("Pg " + (pageValue + 1));
-
-                        youtube.ajax("search", internal.getRequestPayload(pageToken)).done((res) => {
-                            console.log(res);
-
-                            const videoIds = [];
-                            for (let i = 0; i < res.items.length; i++) {
-                                const searchItemVideo = res.items[i];
-
-                                videoIds.push(searchItemVideo.id.videoId);
-                            }
-
-                            console.log(videoIds);
-
-                            query.videos(videoIds, function (res) {
-                                console.log(res);
-
-                                for (let i = 0; i < res.items.length; i++) {
-                                    const video = res.items[i];
-
-                                    if (!internal.doesVideoExistYet(video.id)) {
-                                        internal.pushVideo(video, true, true);
-                                    }
-                                }
-                            });
-
-                            pageValue++;
-
-                            if (res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
-                                search(res.nextPageToken);
-                            } else {
-                                elements.loadingDiv.fadeOut(defaults.animationMs);
-                            }
-                        }).fail((err) => {
-                            pageToken = null;
-
-                            elements.loadingDiv.fadeOut(defaults.animationMs);
-
-                            internal.displayError("alert-warning", err);
-
-                            console.error(err);
-                        });
-                    }
-
-                    search("");
-                });
+                controls.btnSubmit.on('click', internal.submit);
 
                 controls.checkClearResults.prop("checked", true);
             }
@@ -709,7 +748,7 @@ const geofind = (function () {
                     const channelId = video.snippet.channelId;
 
                     const markerContent = format.videoToMarkerInfoWindowHtml(video);
-                    const latLng = "[" + video.recordingDetails.location.latitude+","+video.recordingDetails.location.longitude + "]";
+                    const latLng = "[" + video.recordingDetails.location.latitude + "," + video.recordingDetails.location.longitude + "]";
                     const markerPopup = new google.maps.InfoWindow({
                         content: markerContent
                     });
@@ -730,7 +769,7 @@ const geofind = (function () {
                         openPopup: () => {
                             markerPopup.open(internal.map, marker);
 
-                            setTimeout(function () {
+                            google.maps.event.addListener(markerPopup, "domready", function () {
                                 const count = internal.coordsMap[latLng].length;
 
                                 if (count > 1) {
@@ -738,21 +777,21 @@ const geofind = (function () {
                                     internal.coordsMap[latLng].sort(function (a, b) {
                                         return a.about.videoTitle > b.about.videoTitle
                                     });
-                                    for (let i=0; i<count; i++) {
+                                    for (let i = 0; i < count; i++) {
                                         const marker = internal.coordsMap[latLng][i];
                                         const markerId = marker.about.videoId;
                                         const selected = videoId === markerId ? " selected" : "";
-                                        options.push("<option value='" + markerId + "'" + selected +">" + marker.about.videoTitle.trunc(30) + "</option>");
+                                        options.push("<option value='" + markerId + "'" + selected + ">" + marker.about.videoTitle.trunc(30) + "</option>");
                                     }
 
                                     const html =
                                         "<div style='margin-bottom:10px;'>" +
-                                            "<select class='form-select form-control-sm '>" +
-                                                options.join("") +
-                                            "</select>" +
+                                        "<select style='max-width: 300px' class='form-select form-control-sm '>" +
+                                        options.join("") +
+                                        "</select>" +
                                         "</div>" +
                                         "<div style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
-                                            count + " videos at same coords" +
+                                        count + " videos at same coords" +
                                         "</div>";
 
                                     $(".type-marker." + videoId + " .multi").html(html);
@@ -763,7 +802,7 @@ const geofind = (function () {
                                         module.openInMap(selectedVideo);
                                     });
                                 }
-                            }, 25);
+                            });
                         },
                         closePopup: () => {
                             markerPopup.close();
@@ -812,10 +851,10 @@ const geofind = (function () {
                     const listItemHtml = format.videoToListItemHtml(video);
 
                     elements.videoDataTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
+
+                    internal.updateLanguageDropdown(video);
                 }
             }
-
-            internal.updateLanguageDropdown(video);
         },
 
         /**
@@ -1053,57 +1092,57 @@ const geofind = (function () {
             return "<div class='type-" + options.type + " " + video.id + "'>" +
                 (options.type === 'marker' ? "<div class='row multi' style='margin:0;justify-content:flex-start;padding:0 15px;'></div>" : "") +
                 "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
-                    "<div class='col-auto'>" +
-                    "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
-                    "</div>" +
-                    "<div class='col' style='padding-left:0'>" +
-                    "<div class='row' style='font-size: 1.10em;'>" +
-                    "<div class='col-auto'>" +
-                    "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "' rel='noopener'>" +
-                    snippet.title +
-                    "</a>" +
-                    "</div>" +
-                    "</div>" +
-                    "<div style='font-size:0.813em'>" +
-                    "<div class='row'>" +
-                    "<div class='col-auto'>" +
-                    "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
-                    "<div>" +
-                    "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' referrerpolicy='no-referrer' />" +
-                    "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
-                    "</div>" +
-                    "</a>" +
-                    "</div>" +
-                    "</div>" +
-                    "<div class='row'>" +
-                    "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
-                    snippet.description.trunc(140) +
-                    "</div>" +
-                    "</div>" +
-                    "<div class='row'>" +
-                    "<div class='col'>" +
-                    snippet.publishedAt +
-                    "</div>" +
-                    "</div>" +
-                    "<div class='row'>" +
-                    "<div class='col'>Language: " +
-                    internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
-                    "</div>" +
-                    "</div>" +
-                    markerCoordinates +
-                    "<div class='column'>" +
-                    listOpenInMap +
-                    "<div class='row' style='margin:0'>" +
-                    "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "' rel='noopener'>" +
-                    "<div>" +
-                    "<span style='vertical-align:middle'>View metadata</span>" +
-                    "<img src='./img/metadata.png' width='14' style='margin-left:4px' alt='youtube metadata icon' >" +
-                    "</div>" +
-                    "</a>" +
-                    "</div>" +
-                    "</div>" +
-                    "</div>" +
-                    "</div>" +
+                "<div class='col-auto'>" +
+                "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
+                "</div>" +
+                "<div class='col' style='padding-left:0'>" +
+                "<div class='row' style='font-size: 1.10em;'>" +
+                "<div class='col-auto'>" +
+                "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "' rel='noopener'>" +
+                snippet.title +
+                "</a>" +
+                "</div>" +
+                "</div>" +
+                "<div style='font-size:0.813em'>" +
+                "<div class='row'>" +
+                "<div class='col-auto'>" +
+                "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
+                "<div>" +
+                "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' referrerpolicy='no-referrer' />" +
+                "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
+                "</div>" +
+                "</a>" +
+                "</div>" +
+                "</div>" +
+                "<div class='row'>" +
+                "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
+                snippet.description.trunc(140) +
+                "</div>" +
+                "</div>" +
+                "<div class='row'>" +
+                "<div class='col'>" +
+                snippet.publishedAt +
+                "</div>" +
+                "</div>" +
+                "<div class='row'>" +
+                "<div class='col'>Language: " +
+                internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
+                "</div>" +
+                "</div>" +
+                markerCoordinates +
+                "<div class='column'>" +
+                listOpenInMap +
+                "<div class='row' style='margin:0'>" +
+                "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "' rel='noopener'>" +
+                "<div>" +
+                "<span style='vertical-align:middle'>View metadata</span>" +
+                "<img src='./img/metadata.png' width='14' style='margin-left:4px' alt='youtube metadata icon' >" +
+                "</div>" +
+                "</a>" +
+                "</div>" +
+                "</div>" +
+                "</div>" +
+                "</div>" +
                 "</div>" +
                 "</div>";
         },
