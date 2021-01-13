@@ -265,8 +265,8 @@ const geofind = (function () {
                 ],
                 "dom": "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'<'#langFilterContainer'>><'col-sm-12 col-md-4'f>>" +
                     "<'row'<'col-sm-12'tr>>" +
-                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
-                //'lf<"#langFilterContainer">rtip'
+                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                "iDisplayLength": 25
             });
 
             $("div#langFilterContainer").html(
