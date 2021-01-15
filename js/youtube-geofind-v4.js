@@ -709,14 +709,14 @@ const geofind = (function () {
             return false;
         },
 
-        getLanguageFromCode: function (lang) {
-            return String(lang);
+        getLanguage: function (video) {
+            return video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
         },
 
         updateLanguageDropdown: function (video) {
             // Add lang to map, update counts
             const beforeLanguageCount = Object.keys(internal.languageResults).length;
-            const lang = video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
+            const lang = internal.getLanguage(video);
             internal.languageResults[lang] = ++internal.languageResults[lang] || 1;
             const afterLanguageCount = Object.keys(internal.languageResults).length;
             const totalResults = Object.values(internal.languageResults).reduce((total, langNum) => total + langNum);
@@ -731,7 +731,7 @@ const geofind = (function () {
                 Object.keys(internal.languageResults).forEach(lang => {
                     $("#langFilter").append(
                         "<option value='" + lang + "' data-lang='" + lang + "'>" +
-                        internal.getLanguageFromCode(lang) + " (" + internal.languageResults[lang] + ")" +
+                            String(lang) + " (" + internal.languageResults[lang] + ")" +
                         "</option>");
                 });
             } else {
@@ -765,7 +765,8 @@ const geofind = (function () {
                             videoTitle: video.snippet.title,
                             videoDesc: video.snippet.description,
                             published: video.snippet.publishedAt,
-                            locationDescription: video.recordingDetails.locationDescription
+                            locationDescription: video.recordingDetails.locationDescription,
+                            language: String(internal.getLanguage(video))
                         },
                         openPopup: () => {
                             markerPopup.open(internal.map, marker);
@@ -1127,7 +1128,7 @@ const geofind = (function () {
                 "</div>" +
                 "<div class='row'>" +
                 "<div class='col'>Language: " +
-                internal.getLanguageFromCode(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
+                String(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
                 "</div>" +
                 "</div>" +
                 markerCoordinates +
@@ -1265,7 +1266,8 @@ const geofind = (function () {
             const fileName = channelId ? channelId : "geotags_all";
             const mimeType = "data:text/csv;charset=utf-8";
             const headerColumns = ["channelId", "channelTitle", "videoId", "videoTitle",
-                "videoDesc", "published", "latitude", "longitude", "locationDescription"];
+                "videoDesc", "published", "latitude", "longitude", "locationDescription",
+                "language"];
             const dataRows = [];
 
             for (let i = 0; i < internal.markersList.length; i++) {
@@ -1288,7 +1290,8 @@ const geofind = (function () {
                         about.published,
                         position.lat(),
                         position.lng(),
-                        csvSanitize(about.locationDescription)];
+                        csvSanitize(about.locationDescription),
+                        csvSanitize(about.language)];
 
                     dataRows.push(rowData.join("\t"));
                 }
