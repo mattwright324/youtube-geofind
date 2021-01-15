@@ -764,7 +764,8 @@ const geofind = (function () {
                             videoId: videoId,
                             videoTitle: video.snippet.title,
                             videoDesc: video.snippet.description,
-                            published: video.snippet.publishedAt
+                            published: video.snippet.publishedAt,
+                            locationDescription: video.recordingDetails.locationDescription
                         },
                         openPopup: () => {
                             markerPopup.open(internal.map, marker);
@@ -1264,7 +1265,7 @@ const geofind = (function () {
             const fileName = channelId ? channelId : "geotags_all";
             const mimeType = "data:text/csv;charset=utf-8";
             const headerColumns = ["channelId", "channelTitle", "videoId", "videoTitle",
-                "videoDesc", "published", "latitude", "longitude"];
+                "videoDesc", "published", "latitude", "longitude", "locationDescription"];
             const dataRows = [];
 
             for (let i = 0; i < internal.markersList.length; i++) {
@@ -1286,7 +1287,8 @@ const geofind = (function () {
                         csvSanitize(about.videoDesc),
                         about.published,
                         position.lat(),
-                        position.lng()];
+                        position.lng(),
+                        csvSanitize(about.locationDescription)];
 
                     dataRows.push(rowData.join("\t"));
                 }
