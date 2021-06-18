@@ -731,7 +731,7 @@ const geofind = (function () {
                 Object.keys(internal.languageResults).forEach(lang => {
                     $("#langFilter").append(
                         "<option value='" + lang + "' data-lang='" + lang + "'>" +
-                            String(lang) + " (" + internal.languageResults[lang] + ")" +
+                        String(lang) + " (" + internal.languageResults[lang] + ")" +
                         "</option>");
                 });
             } else {
@@ -1170,7 +1170,7 @@ const geofind = (function () {
         videos: function (videoIds, callback) {
             youtube.ajax("videos", {
                 id: videoIds.join(","),
-                part: "snippet,recordingDetails",
+                part: "snippet,statistics,recordingDetails,status,liveStreamingDetails,localizations,contentDetails,topicDetails",
                 maxResults: 50
             }).done(function (res) {
                 callback(res);
@@ -1277,6 +1277,9 @@ const geofind = (function () {
 
                 if (!channelId || channelId === about.channelId) {
                     function csvSanitize(textValue) {
+                        if (!textValue) {
+                            return "";
+                        }
                         return encodeURI(textValue.replace(/#/g, '%23'))
                             .replace(/%20/g, " ")
                     }
@@ -1291,7 +1294,8 @@ const geofind = (function () {
                         position.lat(),
                         position.lng(),
                         csvSanitize(about.locationDescription),
-                        csvSanitize(about.language)];
+                        csvSanitize(about.language)
+                    ];
 
                     dataRows.push(rowData.join("\t"));
                 }
