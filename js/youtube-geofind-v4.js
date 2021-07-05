@@ -235,6 +235,7 @@ const geofind = (function () {
             controls.comboRadius = $("#radius");
             controls.inputKeywords = $("#keywords");
             controls.comboSortBy = $("#sortBy");
+            controls.comboDuration = $("#videoDuration");
             controls.comboTimeframe = $("#timeframe");
             elements.customRangeDiv = $("#customRange");
             controls.inputDateFrom = $("#dateFrom");
@@ -247,6 +248,7 @@ const geofind = (function () {
             controls.checkCC = $("#creativeCommons");
             controls.checkHQ = $("#highQuality");
             controls.checkEmbedded = $("#embeddedOnly");
+            controls.checkDimension3d = $("#dimension3d");
             controls.checkSyndicated = $("#syndicatedOnly");
 
             controls.checkClearResults = $("#clearOnSearch");
@@ -622,11 +624,19 @@ const geofind = (function () {
                 if (controls.checkHQ.is(":checked")) {
                     request.videoDefinition = "high";
                 }
+                if (controls.checkDimension3d.is(":checked")) {
+                    request.videoDimension = "3d";
+                }
                 if (controls.checkEmbedded.is(":checked")) {
                     request.videoEmbeddable = "true";
                 }
                 if (controls.checkSyndicated.is(":checked")) {
                     request.videoSyndicated = "true";
+                }
+
+                const duration = controls.comboDuration.find(":selected").val();
+                if (duration !== "any") {
+                    request.videoDuration = duration;
                 }
 
                 const timeVal = controls.comboTimeframe.find(":selected").val();

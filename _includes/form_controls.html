@@ -1,3 +1,15 @@
+<div class="form-group row">
+    <label class="col-2 col-form-label">Duration</label>
+    <div class="col-10" style="width: 100%">
+        <select id="videoDuration" aria-describedby="page-msg" class="custom-select">
+            <option value="any" selected>Any</option>
+            <option value="short">Short (< 4 mins)</option>
+            <option value="medium">Medium (20 mins <> 4 mins)</option>
+            <option value="long">Long (> 20 mins)</option>
+        </select>
+    </div>
+</div>
+
 <!-- Shared form controls for location and topic search -->
 <div class="form-group row">
     <label class="col-2 col-form-label">Timeframe</label>
@@ -72,6 +84,11 @@
             <div id="hd-only" class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input" id="highQuality">
                 <label class="custom-control-label" for="highQuality">High Quality only</label>
+            </div>
+
+            <div id="3d-only" class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="dimension3d">
+                <label class="custom-control-label" for="dimension3d">3D only</label>
             </div>
 
             <div id="embedded-only" class="custom-control custom-checkbox">
