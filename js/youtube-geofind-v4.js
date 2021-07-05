@@ -1237,6 +1237,18 @@ const geofind = (function () {
             }
         },
 
+        randomLocation: function () {
+            const randomCoords = CITIES[Math.trunc(Math.random() * CITIES.length)];
+
+            defaults.mapCenterCoords = {
+                lat: randomCoords[0],
+                lng: randomCoords[1]
+            }
+
+            internal.setMapCenter(randomCoords[0], randomCoords[1]);
+            internal.reverseGeocode(internal.map.getCenter());
+        },
+
         openInMap: function (videoId) {
             for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];

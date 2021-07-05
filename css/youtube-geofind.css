@@ -219,3 +219,7 @@ body, html {
 #langFilterContainer {
     text-align: center;
 }
+
+.btn {
+    height: 38px;
+}
