@@ -1391,6 +1391,17 @@ const geofind = (function () {
                 }
             }
         },
+        paramDuration: {
+            param: 'duration',
+            updatePage: function (parsedQuery) {
+                const paramValue = parsedQuery[this.param];
+
+                if (controls.comboDuration.length && paramValue) {
+                    controls.comboDuration.val(paramValue);
+                    controls.comboDuration.trigger("change");
+                }
+            }
+        },
         paramTimeframe: {
             param: 'timeframe',
             updatePage: function (parsedQuery) {
@@ -1464,6 +1475,18 @@ const geofind = (function () {
 
                 if (controls.checkHQ.length && paramValue === "true") {
                     controls.checkHQ.prop("checked", true);
+
+                    module.params.showAdvancedOptions();
+                }
+            }
+        },
+        param3D: {
+            param: '3d',
+            updatePage: function (parsedQuery) {
+                const paramValue = parsedQuery[this.param];
+
+                if (controls.checkDimension3d.length && paramValue === "true") {
+                    controls.checkDimension3d.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
