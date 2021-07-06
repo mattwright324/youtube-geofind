@@ -15,13 +15,15 @@ const geofind = (function () {
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
 
+    const randomCoords = CITIES[Math.trunc(Math.random() * CITIES.length)];
+
     const defaults = {
         animationMs: 250,
 
         // Coords are centered near New York, completely arbitrary.
         mapCenterCoords: {
-            lat: 40.697,
-            lng: -74.259
+            lat: randomCoords[0],
+            lng: randomCoords[1]
         },
 
         mapMarkerWidth: 20,
@@ -233,6 +235,7 @@ const geofind = (function () {
             controls.comboRadius = $("#radius");
             controls.inputKeywords = $("#keywords");
             controls.comboSortBy = $("#sortBy");
+            controls.comboDuration = $("#videoDuration");
             controls.comboTimeframe = $("#timeframe");
             elements.customRangeDiv = $("#customRange");
             controls.inputDateFrom = $("#dateFrom");
@@ -245,6 +248,7 @@ const geofind = (function () {
             controls.checkCC = $("#creativeCommons");
             controls.checkHQ = $("#highQuality");
             controls.checkEmbedded = $("#embeddedOnly");
+            controls.checkDimension3d = $("#dimension3d");
             controls.checkSyndicated = $("#syndicatedOnly");
 
             controls.checkClearResults = $("#clearOnSearch");
@@ -620,11 +624,19 @@ const geofind = (function () {
                 if (controls.checkHQ.is(":checked")) {
                     request.videoDefinition = "high";
                 }
+                if (controls.checkDimension3d.is(":checked")) {
+                    request.videoDimension = "3d";
+                }
                 if (controls.checkEmbedded.is(":checked")) {
                     request.videoEmbeddable = "true";
                 }
                 if (controls.checkSyndicated.is(":checked")) {
                     request.videoSyndicated = "true";
+                }
+
+                const duration = controls.comboDuration.find(":selected").val();
+                if (duration !== "any") {
+                    request.videoDuration = duration;
                 }
 
                 const timeVal = controls.comboTimeframe.find(":selected").val();
@@ -1233,6 +1245,18 @@ const geofind = (function () {
                     internal.reverseGeocode(internal.map.getCenter());
                 });
             }
+        },
+
+        randomLocation: function () {
+            const randomCoords = CITIES[Math.trunc(Math.random() * CITIES.length)];
+
+            defaults.mapCenterCoords = {
+                lat: randomCoords[0],
+                lng: randomCoords[1]
+            }
+
+            internal.setMapCenter(randomCoords[0], randomCoords[1]);
+            internal.reverseGeocode(internal.map.getCenter());
         },
 
         openInMap: function (videoId) {
