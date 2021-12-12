@@ -15,7 +15,7 @@ const geofind = (function () {
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
 
-    const randomCoords = CITIES[Math.trunc(Math.random() * CITIES.length)];
+    const randomCoords = CITIES[rando(0, CITIES.length)];
 
     const defaults = {
         animationMs: 250,
@@ -1248,7 +1248,7 @@ const geofind = (function () {
         },
 
         randomLocation: function () {
-            const randomCoords = CITIES[Math.trunc(Math.random() * CITIES.length)];
+            const randomCoords = CITIES[rando(0, CITIES.length)];
 
             defaults.mapCenterCoords = {
                 lat: randomCoords[0],
