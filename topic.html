@@ -1,6 +1,33 @@
 ---
-layout: search
-title : Topic Search
-title_text: By Topic
-is_topic: true
+layout: default
+title: Topic Search
+type: topic
 ---
+<div class="container mb-15">
+    <h2>Topic Search</h2>
+    <p>Search YouTube normally to see if any results have geotags (usually not many).</p>
+    <div class="row g-3">
+        <div class="col-12">
+            <label for="keywords" class="form-label"><b>Keywords</b></label>
+            <input type="text" class="form-control" id="keywords" placeholder="Search" aria-describedby="keywordsHelp" autocomplete="off">
+            <div id="keywordsHelp" class="form-text">As if searching in YouTube.</div>
+        </div>
+        {% include form_controls.html %}
+    </div>
+</div>
+{% include export_share.html %}
+<div class="container">
+    <h2>Geotags</h2>
+    <p>Alternate view of results that are in the map.</p>
+</div>
+<div class="container mb-15">
+    <div class="mb-3 mt-3" hidden>
+        <label for="display-mode">Display</label>
+        <select id="display-mode" class="form-select" style="width: auto; display: inline">
+            <option>Formatted</option>
+            <option>Table</option>
+        </select>
+    </div>
+    <table id="geotagsTable" class="table table-hover" style="width:100%"></table>
+</div>
+

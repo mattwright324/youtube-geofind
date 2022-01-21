@@ -1,0 +1,33 @@
+<div class="container mb-15">
+    <h2>Export & Share</h2>
+    <p>Save this result as a zip file or load from a previous export. Drag and drop supported.</p>
+    <button class="btn btn-secondary" id="export">
+        <span class="spinner"><span class="spinner-border spinner-border-sm" role="status"></span></span>
+        <span class="text"><i class="bi bi-download"></i>&nbsp;&nbsp;Export</span>
+    </button>&nbsp;
+    <button class="btn btn-secondary" id="import" onclick="document.getElementById('importFileChooser').click()">
+        <span class="spinner"><span class="spinner-border spinner-border-sm" role="status"></span></span>
+        <span class="text"><i class="bi bi-upload"></i>&nbsp;&nbsp;Import</span>
+        <input id="importFileChooser" type="file" hidden/>
+    </button>
+    <p></p>
+    <p>Contains file(s)</p>
+    <ul>
+        <li>about.txt - Metadata about this result.</li>
+        <li>videos.json - Array of all raw video data.</li>
+        <li>channels.json - Array of all raw video data.</li>
+        <li>geotags.csv - Geotags in csv format.</li>
+    </ul>
+    <p>Share this result:</p>
+    <div class="input-group" style="max-width: 226px;">
+        <input type="text" class="form-control" aria-describedby="copy" id="shareLink" autocomplete="off">
+        <button class="btn btn-primary clipboard" type="button"  data-clipboard-target="#shareLink"><i class="bi bi-clipboard"></i></button>
+    </div>
+    <div class="form-check absolute-timeframe" style="margin-top: 5px">
+        <input class="form-check-input" type="checkbox" value="" id="absoluteTimeframe" autocomplete="off">
+        <label class="form-check-label" for="absoluteTimeframe">
+            Use absolute timeframe
+            <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Converts relative time (e.g. Past 7 days) to absolute timestamps."></i>
+        </label>
+    </div>
+</div>

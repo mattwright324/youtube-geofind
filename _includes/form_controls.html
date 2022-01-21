@@ -1,106 +1,100 @@
-<div class="form-group row">
-    <label class="col-2 col-form-label">Duration</label>
-    <div class="col-10" style="width: 100%">
-        <select id="videoDuration" aria-describedby="page-msg" class="custom-select">
-            <option value="any" selected>Any</option>
-            <option value="short">Short (< 4 mins)</option>
-            <option value="medium">Medium (20 mins <> 4 mins)</option>
-            <option value="long">Long (> 20 mins)</option>
-        </select>
+<div class="col-md-3">
+    <label for="timeframe" class="form-label">
+        Timeframe
+        <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="YouTube API time is based in UTC ±00:00"></i>
+    </label>
+    <select id="timeframe" aria-describedby="orderhelp" class="form-select" autocomplete="off">
+        <option value="any" selected>Any</option>
+        <option value="hour-1">Past hour</option>
+        <option value="hour-3">Past 3 hours</option>
+        <option value="hour-6">Past 6 hours</option>
+        <option value="hour-12">Past 12 hours</option>
+        <option value="hour-24">Past 24 hours</option>
+        <option value="day-7">Past 7 days</option>
+        <option value="day-30">Past 30 days</option>
+        <option value="day-90">Past 90 days</option>
+        <option value="day-365">Past year</option>
+        <option value="custom">Custom</option>
+    </select>
+</div>
+<div class="col-md-3">
+    <label for="sortBy" class="form-label">Sort by</label>
+    <select id="sortBy" aria-describedby="orderhelp" class="form-select" autocomplete="off">
+        <option value="date" selected>Date</option>
+        <option value="rating">Rating</option>
+        <option value="relevance">Relevance</option>
+        <option value="title">Title</option>
+        <option value="viewCount">View Count</option>
+    </select>
+</div>
+<div class="col-md-3">
+    <label for="videoDuration" class="form-label">Duration</label>
+    <select id="videoDuration" aria-describedby="page-msg" class="form-select" autocomplete="off">
+        <option value="any" selected>Any</option>
+        <option value="short">Short (< 4 mins)</option>
+        <option value="medium">Medium (20 mins <> 4 mins)</option>
+        <option value="long">Long (> 20 mins)</option>
+    </select>
+</div>
+<div class="col-md-3">
+    <label for="pageLimit" class="form-label">
+        Page limit
+        <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="YouTube API pages of 50 results per page"></i>
+    </label>
+    <select id="pageLimit" aria-describedby="pageLimitHelp" class="form-select" autocomplete="off">
+        <option value="1">1 page</option>
+        <option value="2">2 pages</option>
+        <option value="3" selected>3 pages</option>
+        <option value="4">4 pages</option>
+        <option value="5">5 pages</option>
+    </select>
+</div>
+
+<div class="col-md-3 customRange" style="display:none;">
+    <label for="dateFrom" class="form-label">Date from</label>
+    <input class="form-control" id="dateFrom" type="datetime-local" value="2005-02-13T00:00" autocomplete="off">
+</div>
+<div class="col-md-3 customRange" style="display:none;">
+    <label for="dateTo" class="form-label">Date to</label>
+    <input class="form-control" id="dateTo" type="datetime-local" value="2022-01-18T23:59" autocomplete="off">
+</div>
+
+<div class="col-12">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="liveOnly" autocomplete="off">
+        <label class="form-check-label" for="liveOnly">
+            Live events only
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="creativeCommons" autocomplete="off">
+        <label class="form-check-label" for="creativeCommons">
+            Licensed with Creative Commons
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="highQuality" autocomplete="off">
+        <label class="form-check-label" for="highQuality">
+            High Quality only
+        </label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="dimension3d" autocomplete="off">
+        <label class="form-check-label" for="dimension3d">
+            3D only
+        </label>
     </div>
 </div>
 
-<!-- Shared form controls for location and topic search -->
-<div class="form-group row">
-    <label class="col-2 col-form-label">Timeframe</label>
-    <div class="col-10" style="width: 100%">
-        <select id="timeframe" aria-describedby="orderhelp" class="custom-select">
-            <option value="any" selected>Any</option>
-            <option value="hour-1">Past hour</option>
-            <option value="hour-3">Past 3 hours</option>
-            <option value="hour-6">Past 6 hours</option>
-            <option value="hour-12">Past 12 hours</option>
-            <option value="hour-24">Past 24 hours</option>
-            <option value="day-7">Past 7 days</option>
-            <option value="day-30">Past 30 days</option>
-            <option value="day-90">Past 90 days</option>
-            <option value="day-365">Past year</option>
-            <option value="custom">Custom</option>
-        </select>
-    </div>
-</div>
-<div id="customRange" style="display:none;">
-    <div class="form-group row">
-        <label class="col-2 col-form-label"><i>Date From</i></label>
-        <div class="col-10">
-            <input class="form-control" style="max-width: 200px;" id="dateFrom" type="date" value="2005-02-13">
-        </div>
-    </div>
-    <div class="form-group row">
-        <label class="col-2 col-form-label"><i>Date To</i></label>
-        <div class="col-10">
-            <input class="form-control" style="max-width: 200px;" id="dateTo" type="date">
-        </div>
-    </div>
-</div>
-
-<div class="form-group row">
-    <label class="col-2 col-form-label"><b>Page limit</b></label>
-    <div class="col-10" style="width: 100%">
-        <select id="pageLimit" aria-describedby="page-msg" class="custom-select">
-            <option value="1">1 page</option>
-            <option value="2">2 pages</option>
-            <option value="3" selected>3 pages</option>
-            <option value="5">5 pages</option>
-            <option value="7">7 pages</option>
-            <option value="15">All pages (up to 15)</option>
-        </select>
-        <small id="page-msg" class="form-text text-muted">
-            * API limits stop returning results around pages 10 to 13.
-            <br>
-            * Pages are set to return maximum of 50 results per page.
-        </small>
-    </div>
-</div>
-
-<button class="btn btn-outline-secondary" id="btnToggleAdvanced">
-    Toggle Advanced Options
-</button>
-<div id="advanced-form" style="display: none">
-    <div class="row">
-        <legend class="col-2 col-form-label">Options</legend>
-
-        <div class="col-sm-10">
-            <div id="live-only" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="liveOnly">
-                <label class="custom-control-label" for="liveOnly">Live events only</label>
-            </div>
-
-            <div id="creative-commons" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="creativeCommons">
-                <label class="custom-control-label" for="creativeCommons">Licensed with Creative Commons</label>
-            </div>
-
-            <div id="hd-only" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="highQuality">
-                <label class="custom-control-label" for="highQuality">High Quality only</label>
-            </div>
-
-            <div id="3d-only" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="dimension3d">
-                <label class="custom-control-label" for="dimension3d">3D only</label>
-            </div>
-
-            <div id="embedded-only" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="embeddedOnly">
-                <label class="custom-control-label" for="embeddedOnly">Can be embedded on other sites.</label>
-            </div>
-
-            <div id="syndicated-only" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="syndicatedOnly">
-                <label class="custom-control-label" for="syndicatedOnly">Syndicated (Can be played outside
-                    youtube.com)</label>
-            </div>
-        </div>
+<div class="col-12">
+    <button id="btnSubmit" type="submit" class="btn btn-primary mb-3" style="width: 100%">
+        <span id="text">Submit</span>
+        <span class="spinner"></span>
+    </button>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="clearOnSearch" checked autocomplete="off">
+        <label class="form-check-label" for="clearOnSearch">
+            Clear results on every search
+        </label>
     </div>
 </div>

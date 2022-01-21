@@ -8,12 +8,77 @@
  */
 const geofind = (function () {
 
+    const RFC_3339 = 'YYYY-MM-DDTHH:mm:ss';
+
+    let videoTemplateHtml = '';
+    $.ajax({
+        url: './video-template.html'
+    }).done(function (res) {
+        console.log('Loaded video-template.html')
+
+        videoTemplateHtml = res;
+    }).fail(function (err) {
+        console.err(err);
+    })
+
+    function videoToHtml(video, options) {
+        const thumbs = idx(["snippet", "thumbnails"], video);
+        const thumbUrl = (thumbs.medium || thumbs.default || {url: "https://placehold.it/320x180"}).url;
+        const videoId = idx(["id"], video) || '';
+        const videoTitle = idx(["snippet", "title"], video) || '';
+        const videoDescription = idx(["snippet", "description"], video) || '';
+        const publishDate = idx(["snippet", "publishedAt"], video) || '';
+        const channelId = idx(["snippet", "channelId"], video) || '';
+        const channelTitle = idx(["snippet", "channelTitle"], video) || '';
+        const latitude = idx(["recordingDetails", "location", "latitude"], video);
+        const longitude = idx(["recordingDetails", "location", "longitude"], video);
+        const locationDescription = idx(["recordingDetails", "locationDescription"], video);
+        const location = latitude ? latitude + ", " + longitude + (locationDescription ? "  ≡  " + locationDescription + "" : "") : "";
+
+
+        const views = idx(["statistics", "viewCount"], video);
+        const likes = idx(["statistics", "likeCount"], video);
+        const properties = [
+            views ? Number(views).toLocaleString() + " views" : "views disabled",
+            likes ? Number(likes).toLocaleString() + " likes" : "likes disabled"
+        ];
+        const lang = idx(["snippet", "defaultLanguage"], video);
+        const audioLang = idx(["snippet", "defaultAudioLanguage"], video);
+        const language = lang || audioLang;
+        if (language) {
+            properties.push("lang:" + language)
+        }
+        const propertiesHtml = properties.length ?
+            "<span class='tag'>" +
+            properties.join("</span><span class='comma'>, </span><span class='tag'>") +
+            "</span>"
+            : "";
+
+        return videoTemplateHtml
+            .replace(/{type}/g, options.type)
+            .replace(/{videoThumbWidth}/g, options.videoThumbSize.width)
+            .replace(/{videoThumbHeight}/g, options.videoThumbSize.height)
+            .replace(/{authorThumbWidth}/g, options.authorThumbSize.width)
+            .replace(/{authorThumbHeight}/g, options.authorThumbSize.height)
+            .replace(/{videoThumb}/g, thumbUrl)
+            .replace(/{videoId}/g, videoId)
+            .replace(/{videoTitle}/g, videoTitle)
+            .replace(/{videoDescription}/g, videoDescription.trunc(140))
+            .replace(/{publishDate}/g, publishDate)
+            .replace(/{channelId}/g, channelId)
+            .replace(/{channelTitle}/g, channelTitle)
+            .replace(/{location}/g, location)
+            .replace(/{properties}/g, propertiesHtml)
+    }
+
     String.prototype.trunc = function (length) {
         return this.length > length ? this.substring(0, length) + "..." : this;
     };
 
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
+    const randomChannel = CHANNELS[rando(0, CHANNELS.length)];
+    const randomTopic = TOPICS[rando(0, TOPICS.length)];
     const randomCoords = CITIES[rando(0, CITIES.length)];
     const idx = (p, o) => p.reduce((xs, x) => (xs && xs[x]) ? xs[x] : null, o);
 
@@ -152,6 +217,9 @@ const geofind = (function () {
          * This should only be called once.
          */
         init: function (mapElement) {
+            $("input[type='number']").inputSpinner();
+            new ClipboardJS(".clipboard");
+
             internal.map = new google.maps.Map(mapElement, {
                 zoom: 7,
                 center: defaults.mapCenterCoords
@@ -173,7 +241,7 @@ const geofind = (function () {
                 strokeWeight: 2,
                 fillColor: "#00fff0",
                 fillOpacity: 0.15,
-                radius: 10000
+                radius: 15000
             });
             controls.mapLocationMarker = new google.maps.Marker({
                 position: internal.map.center,
@@ -189,21 +257,24 @@ const geofind = (function () {
             });
 
             controls.geotagsTable = $("#geotagsTable").DataTable({
-                columns: [
+                dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'<'#langFilterContainer'>><'col-sm-12 col-md-4'f>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                iDisplayLength: 25,
+                columnDefs: [
                     {
-                        title: "",
-                        type: 'html'
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": [2],
+                        "visible": false,
+                        "searchable": true
                     }
                 ],
-                columnDefs: [{
-                    "defaultContent": "",
-                    "targets": "_all"
-                }],
-                order: [],
-                lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
-                deferRender: true,
-                bDeferRender: true,
-                pageLength: -1
+                order: [[0, 'desc']],
+                lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]]
             });
 
             const defaultContextMenu = new GmapsContextMenu(internal.map, {
@@ -233,6 +304,27 @@ const geofind = (function () {
 
                             internal.submit();
                         }
+                    },
+                    {
+                        text: "Close all",
+                        onclick: function () {
+                            internal.closeAllPopups();
+                        }
+                    },
+                    {
+                        text: "Adjust to results",
+                        onclick: function () {
+                            internal.adjustMapToResults()
+                        }
+                    },
+                    {
+                        text: "Adjust to center",
+                        showWhen: function () {
+                            return internal.pageType === pageTypes.LOCATION;
+                        },
+                        onclick: function () {
+                            internal.adjustMapToCenter()
+                        }
                     }
                 ]
             });
@@ -250,50 +342,30 @@ const geofind = (function () {
 
             controls.inputAddress = $("#address");
             controls.btnGeolocate = $("#geolocate");
-            controls.comboRadius = $("#radius");
+            controls.inputRadius = $("#radius");
             controls.inputKeywords = $("#keywords");
             controls.comboSortBy = $("#sortBy");
             controls.comboDuration = $("#videoDuration");
             controls.comboTimeframe = $("#timeframe");
-            elements.customRangeDiv = $("#customRange");
+            elements.customRangeDiv = $(".customRange");
             controls.inputDateFrom = $("#dateFrom");
             controls.inputDateTo = $("#dateTo");
             controls.comboPageLimit = $("#pageLimit");
+            controls.shareLink = $("#shareLink");
 
             controls.btnToggleAdvanced = $("#btnToggleAdvanced");
             elements.advancedDiv = $("#advanced-form");
             controls.checkLive = $("#liveOnly");
             controls.checkCC = $("#creativeCommons");
             controls.checkHQ = $("#highQuality");
-            controls.checkEmbedded = $("#embeddedOnly");
             controls.checkDimension3d = $("#dimension3d");
-            controls.checkSyndicated = $("#syndicatedOnly");
 
             controls.checkClearResults = $("#clearOnSearch");
-
-            elements.videoDataTable = $("#dataTable").DataTable({
-                "order": [[0, "asc"]],
-                "columnDefs": [
-                    {
-                        "targets": [0],
-                        "visible": false,
-                        "searchable": false
-                    },
-                    {
-                        "targets": [2],
-                        "visible": false,
-                        "searchable": true
-                    }
-                ],
-                "dom": "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'<'#langFilterContainer'>><'col-sm-12 col-md-4'f>>" +
-                    "<'row'<'col-sm-12'tr>>" +
-                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                "iDisplayLength": 25
-            });
+            controls.checkAbsoluteTimeframe = $("#absoluteTimeframe");
 
             $("div#langFilterContainer").html(
                 "Language: " +
-                "<select id='langFilter' class='form-control form-control-sm' style='display:inline; width:auto;'>" +
+                "<select id='langFilter' class='form-select form-control-sm' style='display:inline; width:auto;'>" +
                 "</select>");
 
             $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -306,10 +378,10 @@ const geofind = (function () {
             });
 
             $("#langFilter").change(function () {
-                elements.videoDataTable.draw();
+                controls.geotagsTable.draw();
             });
 
-            controls.btnExport = $("#btnExportAll");
+            // controls.btnExport = $("#btnExportAll");
             controls.btnSubmit = $("#btnSubmit");
 
             const typeMeta = $("meta[name='pagetype']").attr('content');
@@ -339,6 +411,26 @@ const geofind = (function () {
         coordsMap: {},
 
         channelSubmit: function () {
+            $("#btnSubmit").addClass("loading").addClass("disabled")
+            function countdown(count) {
+                console.log(count);
+
+                $("#btnSubmit .spinner").text(count);
+
+                setTimeout(function () {
+                    if (count === 1) {
+                        $("#btnSubmit").removeClass("loading").removeClass("disabled")
+                    } else {
+                        countdown(count - 1);
+                    }
+                }, 1000);
+            }
+            countdown(3);
+
+            controls.shareLink.val(location.origin + location.pathname +
+                "?channels=" + encodeURIComponent(controls.inputChannels.val()) + "&doSearch=true");
+            controls.shareLink.attr("disabled", false);
+
             const channels = controls.inputChannels.val()
                 .replace(/\s/g, "")
                 .split(",");
@@ -380,7 +472,7 @@ const geofind = (function () {
                                     elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
 
                                     controls[channel.id] = {};
-                                    controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
+                                    // controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
 
                                     let videoTotal = 0;
 
@@ -460,7 +552,92 @@ const geofind = (function () {
             elements.loadingDiv.fadeOut(defaults.animationMs);
         },
 
+        buildShareLink: function () {
+            const params = [];
+            if (internal.pageType === pageTypes.LOCATION) {
+                const position = controls.mapLocationMarker.getPosition();
+                params.push("location=" + position.lat() + "," + position.lng());
+
+                const radius = controls.inputRadius.val();
+                if (radius !== 15) {
+                    params.push("radius=" + radius);
+                }
+            }
+            const keywords = controls.inputKeywords.val();
+            if (keywords.trim().length > 0) {
+                params.push("keywords=" + encodeURIComponent(keywords))
+            }
+            const absolute = controls.checkAbsoluteTimeframe.is(":checked");
+            const timeframe = controls.comboTimeframe.find(":selected").val();
+            if (timeframe !== 'any' && (timeframe === 'custom' || absolute)) {
+                params.push("timeframe=custom");
+                if (absolute && timeframe !== 'custom') {
+                    const dateTo = new Date();
+                    const dateFrom = new Date();
+                    dateFrom.setTime(dateTo.getTime() - defaults.time[timeframe]);
+                    params.push("start=" + moment(dateFrom).utcOffset(0, true).format(RFC_3339));
+                    params.push("end=" + moment(dateTo).utcOffset(0, true).format(RFC_3339));
+                    params.push("timeframeWas=" + timeframe);
+                } else {
+                    params.push("start=" + controls.inputDateFrom.val())
+                    params.push("end=" + controls.inputDateTo.val())
+                }
+            } else if (timeframe !== 'any') {
+                params.push("timeframe=" + timeframe);
+            }
+            const sortBy = controls.comboSortBy.find(":selected").val();
+            if (sortBy !== 'date') {
+                params.push("sort=" + encodeURIComponent(sortBy))
+            }
+            const duration = controls.comboDuration.find(":selected").val();
+            if (duration !== 'any') {
+                params.push("duration=" + encodeURIComponent(duration))
+            }
+            const pages = controls.comboPageLimit.find(":selected").val();
+            if (pages !== '3') {
+                params.push("pages=" + encodeURIComponent(pages))
+            }
+            const islive = controls.checkLive.is(":checked");
+            if (islive === true) {
+                params.push("live=" + encodeURIComponent(islive))
+            }
+            const iscreativeCommons = controls.checkCC.is(":checked");
+            if (iscreativeCommons === true) {
+                params.push("creativeCommons=" + encodeURIComponent(iscreativeCommons))
+            }
+            const ishd = controls.checkHQ.is(":checked");
+            if (ishd === true) {
+                params.push("hd=" + encodeURIComponent(ishd))
+            }
+            const is3d = controls.checkDimension3d.is(":checked");
+            if (is3d === true) {
+                params.push("3d=" + encodeURIComponent(is3d))
+            }
+            params.push("doSearch=true");
+
+            controls.shareLink.val(location.origin + location.pathname + "?" + params.join("&"));
+            controls.shareLink.attr("disabled", false);
+        },
+
         submit: function () {
+            $("#btnSubmit").addClass("loading").addClass("disabled")
+            function countdown(count) {
+                console.log(count);
+
+                $("#btnSubmit .spinner").text(count);
+
+                setTimeout(function () {
+                    if (count === 1) {
+                        $("#btnSubmit").removeClass("loading").removeClass("disabled")
+                    } else {
+                        countdown(count - 1);
+                    }
+                }, 1000);
+            }
+            countdown(3)
+
+            internal.buildShareLink();
+
             if (controls.checkClearResults.is(":checked")) {
                 module.clearResults();
             }
@@ -480,24 +657,20 @@ const geofind = (function () {
                     console.log(res);
 
                     const videoIds = [];
-                    for (let i = 0; i < res.items.length; i++) {
-                        const searchItemVideo = res.items[i];
-
-                        videoIds.push(searchItemVideo.id.videoId);
-                    }
+                    (res.items || []).forEach(function (searchResult) {
+                        videoIds.push(searchResult.id.videoId);
+                    });
 
                     console.log(videoIds);
 
                     query.videos(videoIds, function (res) {
                         console.log(res);
 
-                        for (let i = 0; i < res.items.length; i++) {
-                            const video = res.items[i];
-
+                        (res.items || []).forEach(function (video) {
                             if (!internal.doesVideoExistYet(video.id)) {
                                 internal.pushVideo(video, true, true);
                             }
-                        }
+                        });
                     });
 
                     pageValue++;
@@ -527,7 +700,19 @@ const geofind = (function () {
 
             internal.startChannelConsumer();
 
+            controls.checkAbsoluteTimeframe.change(function () {
+                if (controls.shareLink.val().length) {
+                    internal.buildShareLink();
+                }
+            });
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
             if (this.pageType === pageTypes.CHANNEL) {
+                controls.inputChannels.val(randomChannel);
                 controls.inputChannels.keyup(function (event) {
                     if (event.keyCode === KEY_ENTER) {
                         $("#btnFind").click();
@@ -559,8 +744,15 @@ const geofind = (function () {
                     });
 
                     // When radius selection changes, adjust zoom on map.
-                    controls.comboRadius.change(function () {
-                        const radiusInMeters = controls.comboRadius.find(":selected").val() * 1000;
+                    controls.inputRadius.change(function () {
+                        let radiusInKm = controls.inputRadius.val();
+                        if (radiusInKm < 1) {
+                            radiusInKm = 1;
+                        }
+                        if (radiusInKm > 1000) {
+                            radiusInKm = 1000;
+                        }
+                        const radiusInMeters = radiusInKm * 1000;
 
                         controls.mapRadius.setRadius(radiusInMeters);
 
@@ -569,6 +761,8 @@ const geofind = (function () {
 
                     internal.reverseGeocode(internal.map.getCenter());
                     internal.adjustMapToCenter();
+                } else {
+                    controls.inputKeywords.val(randomTopic);
                 }
 
                 controls.comboTimeframe.change(function () {
@@ -581,19 +775,7 @@ const geofind = (function () {
                     }
                 });
 
-                function getFormattedDate(date) {
-                    const year = date.getFullYear();
-
-                    let month = (1 + date.getMonth()).toString();
-                    month = month.length > 1 ? month : '0' + month;
-
-                    let day = date.getDate().toString();
-                    day = day.length > 1 ? day : '0' + day;
-
-                    return year + "-" + month + '-' + day;
-                }
-
-                controls.inputDateTo.val(getFormattedDate(new Date()));
+                controls.inputDateTo.val(moment().format('yyyy-MM-DDT23:59'));
 
                 controls.btnToggleAdvanced.on('click', function () {
                     if (elements.advancedDiv.is(":visible")) {
@@ -629,7 +811,7 @@ const geofind = (function () {
                     const position = controls.mapLocationMarker.getPosition();
 
                     request.location = position.lat() + "," + position.lng();
-                    request.locationRadius = controls.comboRadius.val() * 1000 + "m";
+                    request.locationRadius = controls.inputRadius.val() * 1000 + "m";
                 }
 
                 request.q = controls.inputKeywords.val();
@@ -646,12 +828,6 @@ const geofind = (function () {
                 }
                 if (controls.checkDimension3d.is(":checked")) {
                     request.videoDimension = "3d";
-                }
-                if (controls.checkEmbedded.is(":checked")) {
-                    request.videoEmbeddable = "true";
-                }
-                if (controls.checkSyndicated.is(":checked")) {
-                    request.videoSyndicated = "true";
                 }
 
                 const duration = controls.comboDuration.find(":selected").val();
@@ -702,9 +878,9 @@ const geofind = (function () {
 
         displayMessage: function (type, message) {
             const html =
-                "<div class='alert alert-dismissable fade show " + type + "' role='alert'>" +
-                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>×</span></button>" +
+                "<div class='alert " + type + " alert-dismissible fade show' role='alert'>" +
                 message +
+                "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>" +
                 "</div>";
 
             elements.alerts.append(html);
@@ -810,21 +986,21 @@ const geofind = (function () {
                                     }
 
                                     const html =
-                                        "<div style='margin-bottom:10px;'>" +
+                                        "<span style='margin-bottom:10px;'>" +
                                         "<select style='max-width: 300px' class='form-select form-control-sm '>" +
                                         options.join("") +
                                         "</select>" +
-                                        "</div>" +
-                                        "<div style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
+                                        "</span>" +
+                                        "<span style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
                                         count + " videos at same coords" +
-                                        "</div>";
+                                        "</span>";
 
                                     $(".type-marker." + videoId + " .multi").html(html);
                                     const select = $(".type-marker." + videoId + " .multi select")
                                     select.change(function () {
                                         const selectedVideo = select.val();
                                         marker.closePopup();
-                                        module.openInMap(selectedVideo);
+                                        module.openInMap(selectedVideo, true);
                                     });
                                 }
                             });
@@ -847,8 +1023,8 @@ const geofind = (function () {
                     internal.markersList.push(marker);
                     internal.adjustMapToResults();
 
-                    controls.btnExport.prop("disabled", false);
-                    controls.btnExport.alterClass("btn-*", "btn-sm btn-success");
+                    // controls.btnExport.prop("disabled", false);
+                    // controls.btnExport.alterClass("btn-*", "btn-sm btn-success");
 
                     if (internal.pageType === pageTypes.CHANNEL) {
                         const tagCount = elements[channelId].tagCount;
@@ -863,8 +1039,8 @@ const geofind = (function () {
                             }
 
                             if (tags > 0) {
-                                controls[channelId].btnExport.prop("disabled", false);
-                                controls[channelId].btnExport.alterClass("btn-*", "btn-sm btn-success");
+                                // controls[channelId].btnExport.prop("disabled", false);
+                                // controls[channelId].btnExport.alterClass("btn-*", "btn-sm btn-success");
                             }
 
                             tagCount.text(tags);
@@ -875,7 +1051,7 @@ const geofind = (function () {
                 if (boolToList) {
                     const listItemHtml = format.videoToListItemHtml(video);
 
-                    elements.videoDataTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
+                    controls.geotagsTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
 
                     internal.updateLanguageDropdown(video);
                 }
@@ -994,7 +1170,7 @@ const geofind = (function () {
 
                             internal.setMarkerIcon(marker, thumbUrl);
 
-                            elements.videoDataTable.$(".authorThumb." + channelId)
+                            controls.geotagsTable.$(".authorThumb." + channelId)
                                 .prop("src", thumbUrl);
 
                             marker.about.thumbLoaded = true;
@@ -1005,20 +1181,14 @@ const geofind = (function () {
                         console.log("Grabbing channels [" + toGrab.join(", ") + "]");
 
                         youtube.ajax("channels", {
-                            part: "snippet",
+                            part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
                             maxResults: 50,
                             id: toGrab.join(",")
                         }).done((res) => {
-                            res.items.forEach(item => {
-                                if (!item || !item.snippet || !item.snippet.thumbnails) {
-                                    console.log(item);
-                                    internal.channelThumbs[item.id] = "https://placehold.it/22x22";
-                                } else {
-                                    const thumbs = item.snippet.thumbnails;
-                                    internal.channelThumbs[item.id] = (thumbs.default || thumbs.medium || thumbs.high).url;
-                                }
-
-                                const thumbUrl = internal.channelThumbs[item.id];
+                            (res.items || []).forEach(item => {
+                                const thumbs = idx(["snippet", "thumbnails"], item);
+                                const thumbUrl = (thumbs.default || thumbs.medium || {url: "https://placehold.it/22x22"}).url;
+                                internal.channelThumbs[item.id] = thumbUrl;
 
                                 for (let i = 0; i < internal.markersList.length; i++) {
                                     const marker = internal.markersList[i];
@@ -1056,135 +1226,43 @@ const geofind = (function () {
             };
             marker.setIcon(icon);
             marker.thumbLoaded = true;
+        },
+
+        closeAllPopups: function () {
+            for (let i = 0; i < internal.markersList.length; i++) {
+                const marker = internal.markersList[i];
+
+                marker.closePopup();
+            }
         }
     };
 
     const format = {
-        channelToListItemHtml(channel) {
-            const snippet = channel.snippet;
-
-            return "<li id='" + channel.id + "' class='list-group-item d-flex flex-row channel' data-tags='0'>" +
-                "<div class='row w-100'>" +
-                "<div class='col-auto'>" +
-                "<img width='64' src='" + snippet.thumbnails.medium.url + "' referrerpolicy='no-referrer' />" +
-                "</div>" +
-                "<div class='col w-100'>" +
-                "<div class='row channel-title'>" + snippet.title + "</div>" +
-                "<div class='row'><span class='tag-count'>0</span>&nbsp;videos geo-tagged</div>" +
-                "</div>" +
-                "<div class='col-3'>" +
-                "<div class='row'><div class='progress w-100'><div class='progress-bar progress-bar-striped progress-bar-animated' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'></div></div></div>" +
-                "<div class='row'><button type='button' class='btn btn-secondary btn-sm w-100 btn-save' onclick='geofind.exportToCSV(\"" + channel.id + "\")' disabled>Export CSV <i class='fa fa-download' aria-hidden='true'></i></button></div>" +
-                "</div>" +
-                "</div>" +
-                "</li>";
-        },
-
-        /**
-         * This general format is shared between list and marker InfoWindow content, besides a few tweaks.
-         */
-        videoToGeneralFormat(video, options) {
-            const snippet = video.snippet;
-            const details = video.recordingDetails;
-            const videoThumb = snippet.thumbnails.medium.url;
-
-            const listOpenInMap = (
-                options.type === 'list' ?
-
-                    "<div class='row' style='margin:0'>" +
-                    "<a class='openInMap' href='javascript:geofind.openInMap(\"" + video.id + "\")'>" +
-                    "<div>" +
-                    "<span style='vertical-align:middle'>Open in map</span>" +
-                    "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24'><path fill='gray' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>" +
-                    "</div>" +
-                    "</a>" +
-                    "</div>"
-
-                    : ""
-            );
-            const markerCoordinates = (
-                options.type === 'marker' && details && details.location ?
-                    "<div class='row'>" +
-                    "<div class='col'>" +
-                    details.location.latitude + ", " + details.location.longitude +
-                    (details.locationDescription ? "  ≡  " + details.locationDescription + "" : "") +
-                    "</div>" +
-                    "</div>"
-
-                    : ""
-            );
-
-            return "<div class='type-" + options.type + " " + video.id + "'>" +
-                (options.type === 'marker' ? "<div class='row multi' style='margin:0;justify-content:flex-start;padding:0 15px;'></div>" : "") +
-                "<div class='row video' style='margin:0' data-lang='" + String(snippet.defaultLanguage || snippet.defaultAudioLanguage) + "'>" +
-                "<div class='col-auto'>" +
-                "<img width='" + options.videoThumbWidth + "' src='" + videoThumb + "' alt='video thumbnail' referrerpolicy='no-referrer' />" +
-                "</div>" +
-                "<div class='col' style='padding-left:0'>" +
-                "<div class='row' style='font-size: 1.10em;'>" +
-                "<div class='col-auto'>" +
-                "<a target='_blank' class='videoLink' href='https://youtu.be/" + video.id + "' rel='noopener'>" +
-                snippet.title +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-                "<div style='font-size:0.813em'>" +
-                "<div class='row'>" +
-                "<div class='col-auto'>" +
-                "<a target='_blank' class='authorLink' href='https://www.youtube.com/channel/" + snippet.channelId + "' rel='noopener'>" +
-                "<div>" +
-                "<img class='authorThumb " + snippet.channelId + "' width='" + options.authorThumbWidth + "' style='vertical-align:middle;margin-right:0.25em;border-radius:5px;' src='https://placehold.it/" + options.authorThumbWidth + "x" + options.authorThumbWidth + "' referrerpolicy='no-referrer' />" +
-                "<span style='vertical-align:middle;margin-left:2px;'>" + snippet.channelTitle + "</span>" +
-                "</div>" +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col' style='margin-top:8px;margin-bottom:8px;'>" +
-                snippet.description.trunc(140) +
-                "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col'>" +
-                snippet.publishedAt +
-                "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col'>Language: " +
-                String(snippet.defaultLanguage || snippet.defaultAudioLanguage) +
-                "</div>" +
-                "</div>" +
-                markerCoordinates +
-                "<div class='column'>" +
-                listOpenInMap +
-                "<div class='row' style='margin:0'>" +
-                "<a class='openInMap' target='_blank' href='https://mattw.io/youtube-metadata?submit=true&amp;url=https://youtu.be/" + video.id + "' rel='noopener'>" +
-                "<div>" +
-                "<span style='vertical-align:middle'>View metadata</span>" +
-                "<img src='./img/metadata.png' width='14' style='margin-left:4px' alt='youtube metadata icon' >" +
-                "</div>" +
-                "</a>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>";
-        },
-
         videoToListItemHtml(video) {
-            return this.videoToGeneralFormat(video, {
+            return videoToHtml(video, {
                 type: "list",
-                videoThumbWidth: 246,
-                authorThumbWidth: 22
+                videoThumbSize: {
+                    width: 320,
+                    height: 180
+                },
+                authorThumbSize: {
+                    width: 22,
+                    height: 22
+                }
             });
         },
 
         videoToMarkerInfoWindowHtml(video) {
-            return this.videoToGeneralFormat(video, {
+            return videoToHtml(video, {
                 type: "marker",
-                videoThumbWidth: 180,
-                authorThumbWidth: 18
+                videoThumbSize: {
+                    width: 200,
+                    height: 112
+                },
+                authorThumbSize: {
+                    width: 18,
+                    height: 18
+                }
             });
         }
     };
@@ -1213,7 +1291,7 @@ const geofind = (function () {
         channels: function (payload, callback) {
             youtube.ajax("channels",
                 $.extend({
-                    part: "snippet,contentDetails"
+                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails"
                 }, payload)
             ).done(function (res) {
                 callback(res);
@@ -1249,6 +1327,8 @@ const geofind = (function () {
         onMapInitCalled: false,
 
         findMyLocation: function () {
+            $("#geolocate").addClass("loading").addClass("disabled")
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     internal.setMapCenter(pos.coords.latitude, pos.coords.longitude);
@@ -1256,9 +1336,26 @@ const geofind = (function () {
                     internal.reverseGeocode(internal.map.getCenter());
                 });
             }
+
+            function countdown(count) {
+                console.log(count);
+
+                $("#geolocate .spinner").text(count);
+
+                setTimeout(function () {
+                    if (count === 1) {
+                        $("#geolocate").removeClass("loading").removeClass("disabled")
+                    } else {
+                        countdown(count - 1);
+                    }
+                }, 1000);
+            }
+            countdown(3)
         },
 
         randomLocation: function () {
+            $("#randomLocation").addClass("loading").addClass("disabled")
+
             const randomCoords = CITIES[rando(0, CITIES.length)];
 
             defaults.mapCenterCoords = {
@@ -1268,15 +1365,37 @@ const geofind = (function () {
 
             internal.setMapCenter(randomCoords[0], randomCoords[1]);
             internal.reverseGeocode(internal.map.getCenter());
+
+            function countdown(count) {
+                console.log(count);
+
+                $("#randomLocation .spinner").text(count);
+
+                setTimeout(function () {
+                    if (count === 1) {
+                        $("#randomLocation").removeClass("loading").removeClass("disabled")
+                    } else {
+                        countdown(count - 1);
+                    }
+                }, 1000);
+            }
+            countdown(3)
         },
 
-        openInMap: function (videoId) {
+        openInMap: function (videoId, focusOnSelect) {
             for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
 
                 if (marker.about.videoId === videoId) {
                     marker.openPopup();
+
                 }
+            }
+
+            if (focusOnSelect) {
+                setTimeout(function () {
+                    $(".type-marker." + videoId + " .multi select").focus().click();
+                }, 50);
             }
         },
 
@@ -1291,7 +1410,7 @@ const geofind = (function () {
             internal.languageResults = {}
             internal.coordsMap = {}
 
-            elements.videoDataTable.clear().draw();
+            controls.geotagsTable.clear().draw();
         },
 
         /**
@@ -1374,9 +1493,9 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.comboRadius.length && paramValue) {
-                    controls.comboRadius.val(paramValue);
-                    controls.comboRadius.trigger("change");
+                if (controls.inputRadius.length && paramValue) {
+                    controls.inputRadius.val(paramValue);
+                    controls.inputRadius.trigger("change");
                 }
             }
         },
@@ -1396,7 +1515,7 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.comboSortBy.length && paramValue) {
+                if (paramValue && $("#sort option[value='" + paramValue + "']").length) {
                     controls.comboSortBy.val(paramValue);
                     controls.comboSortBy.trigger("change");
                 }
@@ -1407,7 +1526,7 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.comboDuration.length && paramValue) {
+                if (paramValue && $("#duration option[value='" + paramValue + "']").length) {
                     controls.comboDuration.val(paramValue);
                     controls.comboDuration.trigger("change");
                 }
@@ -1418,7 +1537,7 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.comboTimeframe.length && paramValue) {
+                if (paramValue && $("#timeframe option[value='" + paramValue + "']").length) {
                     controls.comboTimeframe.val(paramValue);
                     controls.comboTimeframe.trigger("change");
                 }
@@ -1429,8 +1548,9 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.inputDateFrom.length && paramValue) {
-                    controls.inputDateFrom.val(paramValue);
+                const rfcDate = moment(paramValue).utcOffset(0, true).format(RFC_3339);
+                if (controls.inputDateFrom.length && rfcDate && rfcDate !== 'Invalid date') {
+                    controls.inputDateFrom.val(rfcDate);
                 }
             }
         },
@@ -1439,8 +1559,9 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.inputDateTo.length && paramValue) {
-                    controls.inputDateTo.val(paramValue);
+                const rfcDate = moment(paramValue).utcOffset(0, true).format(RFC_3339);
+                if (controls.inputDateTo.length && rfcDate && rfcDate !== 'Invalid date') {
+                    controls.inputDateTo.val(rfcDate);
                 }
             }
         },
@@ -1498,30 +1619,6 @@ const geofind = (function () {
 
                 if (controls.checkDimension3d.length && paramValue === "true") {
                     controls.checkDimension3d.prop("checked", true);
-
-                    module.params.showAdvancedOptions();
-                }
-            }
-        },
-        paramEmbedded: {
-            param: 'embedded',
-            updatePage: function (parsedQuery) {
-                const paramValue = parsedQuery[this.param];
-
-                if (controls.checkEmbedded.length && paramValue === "true") {
-                    controls.checkEmbedded.prop("checked", true);
-
-                    module.params.showAdvancedOptions();
-                }
-            }
-        },
-        paramSyndicated: {
-            param: 'syndicated',
-            updatePage: function (parsedQuery) {
-                const paramValue = parsedQuery[this.param];
-
-                if (controls.checkSyndicated.length && paramValue === "true") {
-                    controls.checkSyndicated.prop("checked", true);
 
                     module.params.showAdvancedOptions();
                 }
