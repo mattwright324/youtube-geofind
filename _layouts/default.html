@@ -16,6 +16,7 @@
     <link href="//cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-nightshade.min.css" rel="stylesheet">
     <link href="//cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="./css/youtube-geofind.css?v={{ site.time | date_to_xmlschema }}" rel="stylesheet"/>
+    <link href="./css/gmaps-context-menu.css?v={{ site.time | date_to_xmlschema }}" rel="stylesheet"/>
     <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="//cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script src="//cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.js"></script>
@@ -30,10 +31,11 @@
     <script src="//randojs.com/2.0.0.js"></script>
 
     <!-- App -->
-    <link href="./css/gmaps-context-menu.css?v={{ site.time | date_to_xmlschema }}" rel="stylesheet" />
     <script src="./js/youtube-api-v3.js?v={{ site.time | date_to_xmlschema }}" type="text/javascript"></script>
     <script src="./js/gmaps-context-menu.js?v={{ site.time | date_to_xmlschema }}" type="text/javascript"></script>
     <script src="./js/examples.js?v={{ site.time | date_to_xmlschema }}" type="text/javascript"></script>
+    <script src="//mattw.io/youtube-metadata/js/shared.js?v={{ site.time | date_to_xmlschema }}"
+            type="text/javascript"></script>
     <script src="./js/youtube-geofind-v5.js?v={{ site.time | date_to_xmlschema }}" type="text/javascript"></script>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -94,7 +96,18 @@
         </div>
     </div>
 </nav>
-<div id="map" class="mb-15"></div>
+<div style="position: relative">
+    <div id="map" class="mb-15"></div>
+    <div id="loading" align="center">
+        <div style="display: flex;width: 100%;height: 100%;align-items: center;">
+            <div style="margin: auto auto;">
+                <div class="spinner-grow" style="width: 3.5rem; height: 3.5rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% include announcement.html %}
 {{ content }}
 <div class="ui container" style="padding-top:3%;padding-bottom:3%;color:darkgray;text-align:center">

@@ -109,11 +109,11 @@ p.mb-15 {
     width: 100px;
 }
 
-button .spinner {
+button .countdown, button .spinner {
     display: none;
 }
 
-button.loading .spinner {
+button.loading .countdown, button.loading .spinner {
     display: initial;
 }
 
@@ -166,6 +166,27 @@ button.loading .text {
 
 html.channel .absolute-timeframe {
     display: none;
+}
+
+#langFilterContainer {
+    text-align: center;
+}
+
+#loading {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    position: absolute;
+    background-color: rgba(127, 127, 127, 0.5);
+    white-space: nowrap;
+}
+
+#loading-page {
+    color: #fffffc;
+    font-size: 4em;
+    margin-left: 25px;
 }
 
 /* Dark mode tweaks */

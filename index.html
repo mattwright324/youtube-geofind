@@ -4,6 +4,14 @@ title: Channel Search
 type: channel
 ---
 <div class="container mb-15">
+    <div class="progress" style="margin-bottom:5px">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="label"></div>
+        </div>
+    </div>
+    <div id="progressText" style="width: 100%;text-align: center;">Idle</div>
+</div>
+<div class="container mb-15">
     <h2>Channel Search</h2>
     <p>Check the uploads of channel(s) for geotagged videos.</p>
     <p>
@@ -14,7 +22,7 @@ type: channel
                aria-label="https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw" aria-describedby="btnSubmit" autocomplete="off">
         <button class="btn btn-primary" type="button" id="btnSubmit">
             <span id="text">Submit</span>
-            <span class="spinner"></span>
+            <span class="countdown"></span>
         </button>
     </div>
     <div>
@@ -38,7 +46,12 @@ type: channel
 {% include export_share.html %}
 <div class="container">
     <h2>Geotags</h2>
-    <p>Alternate view of results that are in the map.</p>
+    <p>
+        Alternate view of results that are in the map.
+        Want to see, search, filter more detailed data about these videos?
+        Export this result and import into
+        <a target="_blank" href="https://mattw.io/youtube-metadata/bulk">YouTube Metadata Bulk</a>.
+    </p>
 </div>
 <div class="container mb-15">
     <div class="mb-3 mt-3" hidden>

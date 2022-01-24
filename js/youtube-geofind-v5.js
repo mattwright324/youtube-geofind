@@ -22,7 +22,7 @@ const geofind = (function () {
     })
 
     function videoToHtml(video, options) {
-        const thumbs = idx(["snippet", "thumbnails"], video);
+        const thumbs = idx(["snippet", "thumbnails"], video) || {};
         const thumbUrl = (thumbs.medium || thumbs.default || {url: "https://placehold.it/320x180"}).url;
         const videoId = idx(["id"], video) || '';
         const videoTitle = idx(["snippet", "title"], video) || '';
@@ -54,6 +54,10 @@ const geofind = (function () {
             "</span>"
             : "";
 
+        const authorThumbs = idx([channelId, "snippet", "thumbnails"], rawChannelMap) || {};
+        const authorThumbUrl = (authorThumbs.default || authorThumbs.medium ||
+            {url: "https://placehold.it/" + options.authorThumbSize.width + "x" + options.authorThumbSize.height}).url;
+
         return videoTemplateHtml
             .replace(/{type}/g, options.type)
             .replace(/{videoThumbWidth}/g, options.videoThumbSize.width)
@@ -67,6 +71,7 @@ const geofind = (function () {
             .replace(/{publishDate}/g, publishDate)
             .replace(/{channelId}/g, channelId)
             .replace(/{channelTitle}/g, channelTitle)
+            .replace(/{authorThumb}/g, authorThumbUrl)
             .replace(/{location}/g, location)
             .replace(/{properties}/g, propertiesHtml)
     }
@@ -77,9 +82,9 @@ const geofind = (function () {
 
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
-    const randomChannel = CHANNELS[rando(0, CHANNELS.length)];
-    const randomTopic = TOPICS[rando(0, TOPICS.length)];
-    const randomCoords = CITIES[rando(0, CITIES.length)];
+    const randomChannel = CHANNELS[rando(0, CHANNELS.length-1)];
+    const randomTopic = TOPICS[rando(0, TOPICS.length-1)];
+    const randomCoords = CITIES[rando(0, CITIES.length-1)];
     const idx = (p, o) => p.reduce((xs, x) => (xs && xs[x]) ? xs[x] : null, o);
 
     const defaults = {
@@ -114,81 +119,410 @@ const geofind = (function () {
     const controls = {};
     const elements = {};
 
-    const ProgressBar = function (element) {
-        this.element = $(element);
-        this.textDisplay = true;
-    };
-    ProgressBar.prototype = {
-        getElement() {
-            return this.element;
-        },
+    let uniqueVideoIds = {};
+    let rawVideoData = [];
+    let rawChannelMap = {};
+    let searchParams = {};
+    let coordsMap = {}; // coordinate to marker. first video processed at coord gets the marker
+    let popupMap = {}; // video id to marker popup
+    // Omit default values from share link
+    const defaultParams = {
+        radius: 15,
+        pages: 3,
+        keywords: '',
+        timeframe: 'any',
+        duration: 'any',
+        sort: 'date',
+        live: false,
+        creativeCommons: false,
+        hq: false,
+        "3d": false
+    }
 
-        setRange(min, max) {
-            this.setMin(min);
-            this.setMax(max);
-        },
-        getMin() {
-            return this.element.attr("aria-valuemin");
-        },
-        setMin(min) {
-            this.element.attr("aria-valuemin", min);
-            this.update();
-        },
-        getMax() {
-            return this.element.attr("aria-valuemax");
-        },
-        setMax(max) {
-            this.element.attr("aria-valuemax", max);
-            this.update();
-        },
-        getValue() {
-            return this.element.attr("aria-valuenow");
-        },
-        setValue(number) {
-            this.element.attr("aria-valuenow", number);
-            this.update();
-        },
-        incrementValue(number) {
-            const incrValue = number ? number : 1;
-
-            this.setValue(this.getValue() + incrValue);
-        },
-        animated(bool) {
-            if (bool) {
-                this.element.addClass("progress-bar-animated");
-            } else {
-                this.element.removeClass("progress-bar-animated");
+    function sliceLoad(data, table, callback) {
+        function slice(index, size) {
+            const toAdd = data.slice(index, index + size);
+            if (toAdd.length === 0) {
+                if (callback) {
+                    callback();
+                }
+                return;
             }
-        },
-        striped(bool) {
-            if (bool) {
-                this.element.addClass("progress-bar-striped");
-            } else {
-                this.element.removeClass("progress-bar-striped");
-            }
-        },
-        showText(bool) {
-            this.textDisplay = false;
-            this.update();
-        },
-        setBg(bgValue) {
-            this.element.alterClass("bg-*", bgValue);
-        },
 
+            table.rows.add(toAdd).draw(false);
+            table.columns.adjust().draw(false);
 
-        update() {
-            const min = this.getMin();
-            const max = this.getMax();
-            const value = this.getValue();
-            const percentage = 100 * ((value - min) / (max - min));
+            setTimeout(function () {
+                slice(index + size, size)
+            }, 200);
+        }
 
-            this.element.css("width", percentage + "%");
+        slice(0, 1000);
+    }
 
-            if (this.textDisplay) {
-                this.element.text(value + " / " + max)
+    function buildSearchShareLink(absolute) {
+        if (Object.keys(searchParams).length === 0) {
+            // Must have done a search to populate share link
+            return "";
+        }
+
+        const copyParams = $.extend({}, searchParams);
+        if (copyParams.hasOwnProperty("timeframe")) {
+            if (!absolute) {
+                // relative time should not show calculated timestamps
+                delete copyParams["start"];
+                delete copyParams["end"];
+            } else if (absolute && copyParams.timeframe !== 'any' && copyParams.timeframe !== 'custom') {
+                copyParams["timeframeWas"] = copyParams.timeframe;
+                copyParams.timeframe = "custom";
             }
         }
-    };
+
+        const params = [];
+        for (let key in copyParams) {
+            if (defaultParams.hasOwnProperty(key) && defaultParams[key] === copyParams[key]) {
+                console.log('skip ' + key + '==' + defaultParams[key])
+                continue;
+            }
+            params.push(key + "=" + encodeURIComponent(copyParams[key]));
+        }
+        params.push("doSearch=true");
+
+        return location.origin + location.pathname + "?" + params.join("&").replace("%2C", ",");
+    }
+
+    function getSafeRadiusValue() {
+        let radius = Number(controls.inputRadius.val());
+        if (!Number.isInteger(radius) || radius < 1) {
+            radius = 1;
+        }
+        if (radius > 1000) {
+            radius = 1000;
+        }
+        return radius;
+    }
+
+    function buildSearchInputParams() {
+        const params = {};
+        if (controls.inputAddress.length) {
+            const markerPosition = controls.mapLocationMarker.getPosition();
+
+            params["location"] = markerPosition.lat() + "," + markerPosition.lng();
+            params["radius"] = getSafeRadiusValue();
+        }
+        params["keywords"] = controls.inputKeywords.val();
+        params["timeframe"] = controls.comboTimeframe.find(":selected").val();
+        if (params.timeframe !== "any") {
+            let dateFrom = new Date();
+            let dateTo = new Date();
+
+            if (params.timeframe === "custom") {
+                dateFrom = new Date(controls.inputDateFrom.val());
+                dateTo = new Date(controls.inputDateTo.val());
+            } else {
+                dateFrom.setTime(dateTo.getTime() - defaults.time[params.timeframe]);
+            }
+
+            params["start"] = dateFrom.toISOString();
+            params["end"] = dateTo.toISOString();
+        }
+        params["sort"] = controls.comboSortBy.find(":selected").val();
+        params["duration"] = controls.comboDuration.find(":selected").val();
+        let pages = Number(controls.comboPageLimit.find(":selected").val());
+        if (!Number.isInteger(pages) || pages < 1) {
+            pages = 1;
+        }
+        if (pages > 5) {
+            pages = 5;
+        }
+        params["pages"] = pages;
+        if (controls.checkLive.is(":checked")) {
+            params["live"] = true;
+        }
+        if (controls.checkCC.is(":checked")) {
+            params["creativeCommons"] = true;
+        }
+        if (controls.checkHQ.is(":checked")) {
+            params["hq"] = true;
+        }
+        if (controls.checkDimension3d.is(":checked")) {
+            params["3d"] = true;
+        }
+        return params;
+    }
+
+    function handleSearch(searchParams) {
+        console.log(searchParams);
+
+        const queryParams = {
+            part: 'id',
+            maxResults: 50,
+            type: 'video'
+        };
+        const maxPages = searchParams.pages;
+        if (searchParams.hasOwnProperty("keywords")) {
+            queryParams["q"] = searchParams.keywords;
+        }
+        if (searchParams.hasOwnProperty("sort")) {
+            queryParams["order"] = searchParams.sort;
+        }
+        if (searchParams.hasOwnProperty("duration")) {
+            queryParams["videoDuration"] = searchParams.duration;
+        }
+        if (searchParams.hasOwnProperty("location")) {
+            queryParams["location"] = searchParams.location;
+        }
+        if (searchParams.hasOwnProperty("radius")) {
+            queryParams["locationRadius"] = searchParams.radius * 1000 + "m";
+        }
+        if (searchParams.hasOwnProperty("creativeCommons")) {
+            queryParams["videoLicense"] = "creativecommon";
+        }
+        if (searchParams.hasOwnProperty("live")) {
+            queryParams["eventType"] = "live";
+        }
+        if (searchParams.hasOwnProperty("hq")) {
+            queryParams["videoDefinition"] = "high";
+        }
+        if (searchParams.hasOwnProperty("3d")) {
+            queryParams["videoDimension"] = "3d";
+        }
+        if (searchParams.hasOwnProperty("start")) {
+            queryParams["publishedAfter"] = searchParams.start;
+        }
+        if (searchParams.hasOwnProperty("end")) {
+            queryParams["publishedBefore"] = searchParams.end;
+        }
+
+        console.log(queryParams)
+
+        controls.progress.update({
+            value: 1,
+            max: 1,
+            text: '0',
+            subtext: 'Searching'
+        });
+
+        return new Promise(function (resolve) {
+            const results = [];
+
+            function doSearch(page, token) {
+                console.log("page " + page);
+
+                youtube.ajax("search", $.extend({pageToken: token}, queryParams)).done(function (res) {
+                    console.log(res);
+
+                    (res.items || []).forEach(function (item) {
+                        const videoId = shared.idx(["id", "videoId"], item);
+                        if (videoId && results.indexOf(videoId) === -1) {
+                            results.push(videoId);
+                        }
+                    });
+
+                    controls.progress.update({
+                        value: 1,
+                        max: 1,
+                        text: results.length,
+                        subtext: 'Searching'
+                    });
+
+                    if (res.hasOwnProperty("nextPageToken") && page < maxPages) {
+                        doSearch(page + 1, res.nextPageToken);
+                    } else {
+                        resolve(results);
+                    }
+                }).fail(function (err) {
+                    console.log(err);
+                    resolve(results);
+                });
+            }
+
+            doSearch(1, "");
+        });
+    }
+
+    function handleVideoIds(videoIds) {
+        let processed = 0;
+
+        const newVideoIds = [];
+        videoIds.forEach(function (videoId) {
+            if (!uniqueVideoIds.hasOwnProperty(videoId)) {
+                newVideoIds.push(videoId);
+            }
+        })
+
+        return new Promise(function (resolve) {
+            if (videoIds.length === 0) {
+                console.log("no videoIds")
+                resolve();
+                return;
+            }
+
+            controls.progress.update({
+                value: processed,
+                max: videoIds.length,
+                text: processed + " / " + videoIds.length,
+                subtext: 'Processing video ids'
+            })
+
+            console.log("checking " + newVideoIds.length + " videoIds");
+
+            function get(index, slice) {
+                if (index >= newVideoIds.length) {
+                    console.log("finished videoIds");
+                    resolve();
+                    return;
+                }
+
+                console.log("handleVideoIds.get(" + index + ", " + (index + slice) + ")")
+
+                const ids = newVideoIds.slice(index, index + slice);
+
+                console.log(ids.length);
+                console.log(ids);
+
+                youtube.ajax("videos", {
+                    part: "snippet,statistics,recordingDetails," +
+                        "status,liveStreamingDetails,localizations," +
+                        "contentDetails,topicDetails",
+                    maxResults: 50,
+                    id: ids.join(",")
+                }).done(function (res) {
+                    console.log(res);
+
+                    (res.items || []).forEach(function (video) {
+                        if (internal.doesVideoHaveLocation(video) && !uniqueVideoIds.hasOwnProperty(video.id)) {
+                            uniqueVideoIds[video.id] = {
+                                loaded: false
+                            };
+                            rawVideoData.push(video);
+                        }
+                    });
+
+                    processed = processed + ids.length;
+
+                    controls.progress.update({
+                        value: processed,
+                        max: newVideoIds.length,
+                        text: processed + " / " + newVideoIds.length
+                    })
+
+                    get(index + slice, slice);
+                }).fail(function (err) {
+                    console.error(err);
+                    get(index + slice, slice);
+                });
+            }
+
+            get(0, 50);
+        });
+    }
+
+    function handleChannelIds() {
+        let processed = 0;
+
+        const newChannelIds = [];
+        rawVideoData.forEach(function (video) {
+            const channelId = idx(["snippet", "channelId"], video);
+
+            if (!rawChannelMap.hasOwnProperty(channelId) && newChannelIds.indexOf(channelId) === -1) {
+                newChannelIds.push(channelId);
+            }
+        });
+
+        return new Promise(function (resolve) {
+            if (newChannelIds.length === 0) {
+                console.log("no channelIds")
+                resolve();
+                return;
+            }
+
+            controls.progress.update({
+                value: 0,
+                max: newChannelIds.length,
+                text: "0 / " + newChannelIds.length,
+                subtext: 'Processing channel ids'
+            });
+
+            function get(index, slice) {
+                if (index >= newChannelIds.length) {
+                    console.log("finished channelIds");
+                    resolve();
+                    return;
+                }
+
+                console.log("handleChannelIds.get(" + index + ", " + slice + ")")
+
+                const ids = newChannelIds.slice(index, index + slice);
+
+                youtube.ajax("channels", {
+                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
+                    id: ids.join(","),
+                    maxResults: 50
+                }).done(function (res) {
+                    console.log(res);
+
+                    (res.items || []).forEach(function (channel) {
+                        rawChannelMap[channel.id] = channel;
+                    });
+
+                    processed = processed + ids.length;
+
+                    controls.progress.update({
+                        value: processed,
+                        text: processed + " / " + newChannelIds.length
+                    });
+
+                    get(index + slice, slice);
+                }).fail(function (err) {
+                    console.error(err);
+                    get(index + slice, slice);
+                });
+            }
+
+            get(0, 50);
+        });
+    }
+
+    function doneProgressMessage() {
+        return [
+            rawVideoData.length + " geotagged video(s)",
+            Object.keys(rawChannelMap).length + " channel(s)"
+        ].join(", ");
+    }
+
+    function processSearch(searchParams) {
+        handleSearch(searchParams).then(function (videoIds) {
+            return handleVideoIds(videoIds)
+        }).then(function () {
+            return handleChannelIds()
+        }).then(function () {
+
+            controls.progress.update({
+                value: 1,
+                max: 1,
+                text: doneProgressMessage(),
+                subtext: 'Done'
+            });
+
+            rawVideoData.forEach(function (video) {
+                internal.pushVideo(video);
+            });
+
+            console.log(popupMap);
+            console.log(coordsMap)
+
+            elements.loadingDiv.fadeOut();
+        }).fail(function (err) {
+            console.error(err);
+
+            elements.loadingDiv.fadeOut();
+        })
+    }
+
+    function processChannelSearch() {
+
+    }
 
     function sortObject(unordered, sortArrays = false) {
         if (!unordered || typeof unordered !== 'object') {
@@ -274,7 +608,9 @@ const geofind = (function () {
                     }
                 ],
                 order: [[0, 'desc']],
-                lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]]
+                lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
+                deferRender: true,
+                bDeferRender: true,
             });
 
             const defaultContextMenu = new GmapsContextMenu(internal.map, {
@@ -302,7 +638,11 @@ const geofind = (function () {
 
                             internal.reverseGeocode(controls.mapRadius.getCenter());
 
-                            internal.submit();
+                            new Promise(function (resolve) {
+                                internal.submit();
+
+                                resolve();
+                            })
                         }
                     },
                     {
@@ -313,6 +653,9 @@ const geofind = (function () {
                     },
                     {
                         text: "Adjust to results",
+                        showWhen: function () {
+                            return internal.markersList.length;
+                        },
                         onclick: function () {
                             internal.adjustMapToResults()
                         }
@@ -351,7 +694,51 @@ const geofind = (function () {
             controls.inputDateFrom = $("#dateFrom");
             controls.inputDateTo = $("#dateTo");
             controls.comboPageLimit = $("#pageLimit");
+
+            controls.btnExport = $("#export");
+            controls.btnImport = $("#import");
+            controls.importFileChooser = $("#importFileChooser");
             controls.shareLink = $("#shareLink");
+            controls.progress = $("#progressBar");
+            elements.progressText = $("#progressText")
+            controls.progress.progressData = {
+                min: 0,
+                value: 0,
+                max: 100
+            }
+            controls.progress.update = function (options) {
+                console.log(options)
+                if (String(options["reset"]).toLowerCase() === "true") {
+                    console.log('reset')
+                    this.update({
+                        min: 0,
+                        value: 0,
+                        max: 100,
+                        text: "",
+                        subtext: 'Idle'
+                    });
+                    return;
+                }
+                if (options.hasOwnProperty("subtext")) {
+                    elements.progressText.text(options.subtext);
+                }
+                if (options.hasOwnProperty("text")) {
+                    this.find('.label').text(options.text);
+                }
+                if (options.hasOwnProperty("min")) {
+                    this.progressData.min = options.min;
+                }
+                if (options.hasOwnProperty("value")) {
+                    this.progressData.value = options.value;
+                }
+                if (options.hasOwnProperty("max")) {
+                    this.progressData.max = options.max;
+                }
+
+                const data = this.progressData;
+                const percent = 100 * ((data.value - data.min) / (data.max - data.min));
+                this.css('width', percent + "%");
+            }
 
             controls.btnToggleAdvanced = $("#btnToggleAdvanced");
             elements.advancedDiv = $("#advanced-form");
@@ -365,7 +752,7 @@ const geofind = (function () {
 
             $("div#langFilterContainer").html(
                 "Language: " +
-                "<select id='langFilter' class='form-select form-control-sm' style='display:inline; width:auto;'>" +
+                "<select id='langFilter' class='form-select form-select-sm' style='display:inline; width:auto;'>" +
                 "</select>");
 
             $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -381,7 +768,6 @@ const geofind = (function () {
                 controls.geotagsTable.draw();
             });
 
-            // controls.btnExport = $("#btnExportAll");
             controls.btnSubmit = $("#btnSubmit");
 
             const typeMeta = $("meta[name='pagetype']").attr('content');
@@ -415,7 +801,7 @@ const geofind = (function () {
             function countdown(count) {
                 console.log(count);
 
-                $("#btnSubmit .spinner").text(count);
+                $("#btnSubmit .countdown").text(count);
 
                 setTimeout(function () {
                     if (count === 1) {
@@ -430,6 +816,12 @@ const geofind = (function () {
             controls.shareLink.val(location.origin + location.pathname +
                 "?channels=" + encodeURIComponent(controls.inputChannels.val()) + "&doSearch=true");
             controls.shareLink.attr("disabled", false);
+
+            const parsed = [];
+            controls.inputChannels.val().split(",").forEach(function (part) {
+                parsed.push(shared.determineInput(part.trim()));
+            });
+            console.log(parsed);
 
             const channels = controls.inputChannels.val()
                 .replace(/\s/g, "")
@@ -472,7 +864,6 @@ const geofind = (function () {
                                     elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
 
                                     controls[channel.id] = {};
-                                    // controls[channel.id].btnExport = $("#" + channel.id + " .btn-save");
 
                                     let videoTotal = 0;
 
@@ -508,7 +899,7 @@ const geofind = (function () {
                                                 for (let i = 0; i < res.items.length; i++) {
                                                     const video = res.items[i];
 
-                                                    internal.pushVideo(video, true, true);
+                                                    internal.pushVideo(video);
                                                 }
                                             });
 
@@ -552,70 +943,10 @@ const geofind = (function () {
             elements.loadingDiv.fadeOut(defaults.animationMs);
         },
 
-        buildShareLink: function () {
-            const params = [];
-            if (internal.pageType === pageTypes.LOCATION) {
-                const position = controls.mapLocationMarker.getPosition();
-                params.push("location=" + position.lat() + "," + position.lng());
-
-                const radius = controls.inputRadius.val();
-                if (radius !== 15) {
-                    params.push("radius=" + radius);
-                }
-            }
-            const keywords = controls.inputKeywords.val();
-            if (keywords.trim().length > 0) {
-                params.push("keywords=" + encodeURIComponent(keywords))
-            }
+        updateShareLink: function () {
             const absolute = controls.checkAbsoluteTimeframe.is(":checked");
-            const timeframe = controls.comboTimeframe.find(":selected").val();
-            if (timeframe !== 'any' && (timeframe === 'custom' || absolute)) {
-                params.push("timeframe=custom");
-                if (absolute && timeframe !== 'custom') {
-                    const dateTo = new Date();
-                    const dateFrom = new Date();
-                    dateFrom.setTime(dateTo.getTime() - defaults.time[timeframe]);
-                    params.push("start=" + moment(dateFrom).utcOffset(0, true).format(RFC_3339));
-                    params.push("end=" + moment(dateTo).utcOffset(0, true).format(RFC_3339));
-                    params.push("timeframeWas=" + timeframe);
-                } else {
-                    params.push("start=" + controls.inputDateFrom.val())
-                    params.push("end=" + controls.inputDateTo.val())
-                }
-            } else if (timeframe !== 'any') {
-                params.push("timeframe=" + timeframe);
-            }
-            const sortBy = controls.comboSortBy.find(":selected").val();
-            if (sortBy !== 'date') {
-                params.push("sort=" + encodeURIComponent(sortBy))
-            }
-            const duration = controls.comboDuration.find(":selected").val();
-            if (duration !== 'any') {
-                params.push("duration=" + encodeURIComponent(duration))
-            }
-            const pages = controls.comboPageLimit.find(":selected").val();
-            if (pages !== '3') {
-                params.push("pages=" + encodeURIComponent(pages))
-            }
-            const islive = controls.checkLive.is(":checked");
-            if (islive === true) {
-                params.push("live=" + encodeURIComponent(islive))
-            }
-            const iscreativeCommons = controls.checkCC.is(":checked");
-            if (iscreativeCommons === true) {
-                params.push("creativeCommons=" + encodeURIComponent(iscreativeCommons))
-            }
-            const ishd = controls.checkHQ.is(":checked");
-            if (ishd === true) {
-                params.push("hd=" + encodeURIComponent(ishd))
-            }
-            const is3d = controls.checkDimension3d.is(":checked");
-            if (is3d === true) {
-                params.push("3d=" + encodeURIComponent(is3d))
-            }
-            params.push("doSearch=true");
 
-            controls.shareLink.val(location.origin + location.pathname + "?" + params.join("&"));
+            controls.shareLink.val(buildSearchShareLink(absolute));
             controls.shareLink.attr("disabled", false);
         },
 
@@ -624,7 +955,7 @@ const geofind = (function () {
             function countdown(count) {
                 console.log(count);
 
-                $("#btnSubmit .spinner").text(count);
+                $("#btnSubmit .countdown").text(count);
 
                 setTimeout(function () {
                     if (count === 1) {
@@ -636,75 +967,182 @@ const geofind = (function () {
             }
             countdown(3)
 
-            internal.buildShareLink();
+            elements.loadingDiv.show();
+
+            searchParams = buildSearchInputParams();
+
+            internal.updateShareLink();
 
             if (controls.checkClearResults.is(":checked")) {
                 module.clearResults();
             }
 
-            const maxPages = controls.comboPageLimit.find(":selected").val();
-
-            let pageValue = 0;
-
-            elements.loadingDiv.show();
-
-            function search(pageToken) {
-                console.log("Searching [pageValue=" + pageValue + ", maxPages=" + maxPages + ", pageToken=" + pageToken + "]");
-
-                elements.loadingText.text("Pg " + (pageValue + 1));
-
-                youtube.ajax("search", internal.getRequestPayload(pageToken)).done((res) => {
-                    console.log(res);
-
-                    const videoIds = [];
-                    (res.items || []).forEach(function (searchResult) {
-                        videoIds.push(searchResult.id.videoId);
-                    });
-
-                    console.log(videoIds);
-
-                    query.videos(videoIds, function (res) {
-                        console.log(res);
-
-                        (res.items || []).forEach(function (video) {
-                            if (!internal.doesVideoExistYet(video.id)) {
-                                internal.pushVideo(video, true, true);
-                            }
-                        });
-                    });
-
-                    pageValue++;
-
-                    if (res.hasOwnProperty("nextPageToken") && pageValue < maxPages) {
-                        search(res.nextPageToken);
-                    } else {
-                        elements.loadingDiv.fadeOut(defaults.animationMs);
-                    }
-                }).fail((err) => {
-                    pageToken = null;
-
-                    elements.loadingDiv.fadeOut(defaults.animationMs);
-
-                    internal.displayError("alert-warning", err);
-
-                    console.error(err);
-                });
-            }
-
-            search("");
+            processSearch(searchParams);
         },
 
 
         setupPageControls: function () {
             const KEY_ENTER = 13;
 
-            internal.startChannelConsumer();
-
             controls.checkAbsoluteTimeframe.change(function () {
                 if (controls.shareLink.val().length) {
-                    internal.buildShareLink();
+                    internal.updateShareLink();
                 }
             });
+
+            controls.btnExport.on('click', function () {
+                controls.btnExport.addClass("loading").addClass("disabled");
+
+                const zip = new JSZip();
+                console.log("Creating about.txt...")
+                const share = buildSearchShareLink(false);
+                const shareAbsolute = buildSearchShareLink(true);
+                zip.file("about.txt",
+                    "Downloaded by YouTube Geofind " + new Date().toLocaleString() + "\n\n" +
+                    "URL: " + window.location + "\n\n" +
+                    "Share URL: " + share + "\n" +
+                    (share !== shareAbsolute ? "Share URL (absolute): " + shareAbsolute : "")
+
+                );
+
+                console.log("Creating videos.json...")
+                zip.file("videos.json", JSON.stringify(rawVideoData));
+
+                console.log("Creating channels.json...")
+                const rawChannelData = [];
+                for (let id in rawChannelMap) {
+                    rawChannelData.push(rawChannelMap[id]);
+                }
+                zip.file("channels.json", JSON.stringify(rawChannelData));
+
+                console.log("Creating geotags.csv...")
+                const geotagCsvRows = ["TODO\tTODO\tTODO"];
+                zip.file("geotags.csv", geotagCsvRows.join("\r\n"));
+
+                const fileName = shared.safeFileName("geofind_" + internal.pageType + ".zip");
+
+                console.log("Saving as " + fileName);
+                zip.generateAsync({
+                    type: "blob",
+                    compression: "DEFLATE",
+                    compressionOptions: {
+                        level: 9
+                    }
+                }).then(function (content) {
+                    saveAs(content, fileName);
+
+                    controls.btnExport.removeClass("loading").removeClass("disabled");
+                });
+            });
+
+            // Drag & Drop listener
+            document.addEventListener("dragover", function(event) {event.preventDefault();});
+            document.documentElement.addEventListener('drop', async function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                let file = e.dataTransfer.files[0];
+                console.log("Loading file");
+                console.log(file);
+
+                importFile(file);
+            });
+
+            controls.importFileChooser.on('change', function (event) {
+                console.log(event);
+
+                let file = event.target.files[0];
+
+                if (file) {
+                    controls.inputValue.val(file.name);
+                } else {
+                    return;
+                }
+
+                importFile(file);
+            });
+
+            function importFile(file) {
+                console.log("Importing from file " + file.name);
+
+                controls.btnImport.addClass("loading").addClass("disabled");
+                module.clearResults();
+
+                controls.progress.update({
+                    text: '',
+                    subtext: 'Importing file',
+                    value: 2,
+                    max: 5
+                });
+
+                function loadZipFile(fileName, process, onfail) {
+                    return new Promise(function (resolve, reject) {
+                        console.log('loading ' + fileName);
+
+                        JSZip.loadAsync(file).then(function (content) {
+                            // if you return a promise in a "then", you will chain the two promises
+                            return content.file(fileName).async("string");
+                        }).then(function (text) {
+                            process(text);
+
+                            resolve();
+                        }).catch(function (err) {
+                            console.warn(err);
+                            console.warn(fileName + ' not in imported file');
+                            if (onfail) {
+                                onfail()
+                                reject()
+                            } else {
+                                resolve()
+                            }
+                        });
+                    })
+                }
+
+                loadZipFile("channels.json", function (text) {
+                    const channels = JSON.parse(text);
+                    if (Array.isArray(channels)) {
+                        channels.forEach(function (channel) {
+                            rawChannelMap[channel.id] = channel;
+                        })
+                    } else {
+                        rawChannelMap = channels;
+                    }
+                }).then(function () {
+                    return loadZipFile("videos.json", function (text) {
+                        const data = JSON.parse(text);
+                        data.forEach(function (video) {
+                            if (internal.doesVideoHaveLocation(video) && !uniqueVideoIds.hasOwnProperty(video.id)) {
+                                rawVideoData.push(video);
+                                uniqueVideoIds[video.id] = {loaded: false};
+                            }
+                        })
+                    }, function () {
+                        controls.progress.update({
+                            value: 0,
+                            max: 5,
+                            subtext: 'Import failed (no videos.json)'
+                        });
+
+                        controls.btnImport.removeClass("loading").removeClass("disabled");
+                    })
+                }).then(function () {
+                    return handleChannelIds();
+                }).then(function () {
+                    rawVideoData.forEach(function (video) {
+                        internal.pushVideo(video);
+                    });
+
+                    controls.progress.update({
+                        value: 5,
+                        max: 5,
+                        text: doneProgressMessage(),
+                        subtext: 'Import done'
+                    });
+
+                    controls.btnImport.removeClass("loading").removeClass("disabled");
+                });
+            }
 
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -745,14 +1183,7 @@ const geofind = (function () {
 
                     // When radius selection changes, adjust zoom on map.
                     controls.inputRadius.change(function () {
-                        let radiusInKm = controls.inputRadius.val();
-                        if (radiusInKm < 1) {
-                            radiusInKm = 1;
-                        }
-                        if (radiusInKm > 1000) {
-                            radiusInKm = 1000;
-                        }
-                        const radiusInMeters = radiusInKm * 1000;
+                        const radiusInMeters = getSafeRadiusValue() * 1000;
 
                         controls.mapRadius.setRadius(radiusInMeters);
 
@@ -789,75 +1220,6 @@ const geofind = (function () {
 
                 controls.checkClearResults.prop("checked", true);
             }
-        },
-
-        /**
-         * This returns the payload for topic and location searching.
-         *
-         * Channel doesn't need this as it will do it's own handling for the request.
-         */
-        getRequestPayload: function (pageToken) {
-            const request = {};
-
-            if (internal.pageType === pageTypes.CHANNEL) {
-                console.error("internal.getRequestPayload() shouldn't be called on the channel page")
-            } else {
-                request.part = "id";
-                request.maxResults = 50;
-                request.type = "video";
-                request.pageToken = pageToken;
-
-                if (internal.pageType === pageTypes.LOCATION) {
-                    const position = controls.mapLocationMarker.getPosition();
-
-                    request.location = position.lat() + "," + position.lng();
-                    request.locationRadius = controls.inputRadius.val() * 1000 + "m";
-                }
-
-                request.q = controls.inputKeywords.val();
-                request.order = controls.comboSortBy.find(":selected").val();
-
-                if (controls.checkCC.is(":checked")) {
-                    request.videoLicense = "creativecommon"
-                }
-                if (controls.checkLive.is(":checked")) {
-                    request.eventType = "live";
-                }
-                if (controls.checkHQ.is(":checked")) {
-                    request.videoDefinition = "high";
-                }
-                if (controls.checkDimension3d.is(":checked")) {
-                    request.videoDimension = "3d";
-                }
-
-                const duration = controls.comboDuration.find(":selected").val();
-                if (duration !== "any") {
-                    request.videoDuration = duration;
-                }
-
-                const timeVal = controls.comboTimeframe.find(":selected").val();
-                if (timeVal !== "any") {
-                    let dateFrom = new Date();
-                    let dateTo = new Date();
-
-                    if (timeVal === "custom") {
-                        dateFrom = new Date(controls.inputDateFrom.val());
-                        dateTo = new Date(controls.inputDateTo.val());
-                    } else {
-                        dateFrom.setTime(dateTo.getTime() - defaults.time[timeVal]);
-                    }
-
-                    console.log(dateFrom.toISOString());
-                    console.log(dateTo.toISOString());
-
-                    request.publishedAfter = dateFrom.toISOString();
-                    request.publishedBefore = dateTo.toISOString();
-                }
-
-                console.log(request);
-            }
-
-            return request;
         },
 
         displayError: function (type, err) {
@@ -898,16 +1260,6 @@ const geofind = (function () {
             }
         },
 
-        doesVideoExistYet: function (videoId) {
-            for (let i = 0; i < internal.markersList.length; i++) {
-                if (internal.markersList[i].about.videoId === videoId) {
-                    return true;
-                }
-            }
-
-            return false;
-        },
-
         getLanguage: function (video) {
             return video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
         },
@@ -940,122 +1292,137 @@ const geofind = (function () {
             }
         },
 
-        pushVideo: function (video, boolToMap, boolToList) {
-            if (internal.doesVideoHaveLocation(video)) {
-                if (boolToMap) {
-                    const videoId = video.id;
-                    const channelId = video.snippet.channelId;
-
-                    const markerContent = format.videoToMarkerInfoWindowHtml(video);
-                    const latLng = "[" + video.recordingDetails.location.latitude + "," + video.recordingDetails.location.longitude + "]";
-                    const markerPopup = new google.maps.InfoWindow({
-                        content: markerContent
-                    });
-                    const marker = new google.maps.Marker({
-                        position: internal.locationToPosition(video),
-                        map: internal.map,
-                        markerPopup: markerPopup,
-                        about: {
-                            channelId: channelId,
-                            channelTitle: video.snippet.channelTitle,
-                            thumbLoaded: false,
-
-                            videoId: videoId,
-                            videoTitle: video.snippet.title,
-                            videoDesc: video.snippet.description,
-                            published: video.snippet.publishedAt,
-                            locationDescription: video.recordingDetails.locationDescription,
-                            language: String(internal.getLanguage(video))
-                        },
-                        openPopup: () => {
-                            markerPopup.open(internal.map, marker);
-
-                            google.maps.event.addListener(markerPopup, "domready", function () {
-                                const count = internal.coordsMap[latLng].length;
-
-                                if (count > 1) {
-                                    let options = [];
-                                    internal.coordsMap[latLng].sort(function (a, b) {
-                                        return a.about.videoTitle > b.about.videoTitle
-                                    });
-                                    for (let i = 0; i < count; i++) {
-                                        const marker = internal.coordsMap[latLng][i];
-                                        const markerId = marker.about.videoId;
-                                        const selected = videoId === markerId ? " selected" : "";
-                                        options.push("<option value='" + markerId + "'" + selected + ">" + marker.about.videoTitle.trunc(30) + "</option>");
-                                    }
-
-                                    const html =
-                                        "<span style='margin-bottom:10px;'>" +
-                                        "<select style='max-width: 300px' class='form-select form-control-sm '>" +
-                                        options.join("") +
-                                        "</select>" +
-                                        "</span>" +
-                                        "<span style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
-                                        count + " videos at same coords" +
-                                        "</span>";
-
-                                    $(".type-marker." + videoId + " .multi").html(html);
-                                    const select = $(".type-marker." + videoId + " .multi select")
-                                    select.change(function () {
-                                        const selectedVideo = select.val();
-                                        marker.closePopup();
-                                        module.openInMap(selectedVideo, true);
-                                    });
-                                }
-                            });
-                        },
-                        closePopup: () => {
-                            markerPopup.close();
-                        }
-                    });
-
-                    if (internal.coordsMap[latLng]) {
-                        internal.coordsMap[latLng].push(marker);
-                    } else {
-                        internal.coordsMap[latLng] = [marker];
-                    }
-
-                    marker.addListener("click", () => {
-                        marker.openPopup();
-                    });
-
-                    internal.markersList.push(marker);
-                    internal.adjustMapToResults();
-
-                    // controls.btnExport.prop("disabled", false);
-                    // controls.btnExport.alterClass("btn-*", "btn-sm btn-success");
-
-                    if (internal.pageType === pageTypes.CHANNEL) {
-                        const tagCount = elements[channelId].tagCount;
-                        if (tagCount.length) {
-                            let tags = 0;
-                            for (let i = 0; i < internal.markersList.length; i++) {
-                                const marker = internal.markersList[i];
-
-                                if (marker.about.channelId === channelId) {
-                                    tags++;
-                                }
-                            }
-
-                            if (tags > 0) {
-                                // controls[channelId].btnExport.prop("disabled", false);
-                                // controls[channelId].btnExport.alterClass("btn-*", "btn-sm btn-success");
-                            }
-
-                            tagCount.text(tags);
-                        }
-                    }
-                }
-
-                if (boolToList) {
-                    const listItemHtml = format.videoToListItemHtml(video);
-
-                    controls.geotagsTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
-
-                    internal.updateLanguageDropdown(video);
-                }
+        pushVideo: function (video) {
+            if (!internal.doesVideoHaveLocation(video)) {
+                return;
             }
+
+            const videoId = video.id;
+            if (uniqueVideoIds.hasOwnProperty(videoId) && uniqueVideoIds[videoId].loaded === true) {
+                return;
+            }
+            if (uniqueVideoIds.hasOwnProperty(videoId) && uniqueVideoIds[videoId].loaded === false) {
+                uniqueVideoIds[videoId] = {loaded: true};
+            }
+            if (!uniqueVideoIds.hasOwnProperty(videoId)) {
+                uniqueVideoIds[videoId] = {loaded: true};
+                rawVideoData.push(video);
+            }
+            const position = internal.locationToPosition(video);
+            // Combine very close yet slightly different coordinates into same marker group
+            // 4 decimal precision ~ 10 meter area
+            const latLng = "[" +
+                String(position.lat).substr(0, String(position.lat).lastIndexOf('.') + 5) + "," +
+                String(position.lng).substr(0, String(position.lat).lastIndexOf('.') + 5) + "]";
+
+            const channelId = video.snippet.channelId;
+            const markerPopup = new google.maps.InfoWindow({
+                content: format.videoToMarkerInfoWindowHtml(video),
+
+                latLng: latLng,
+
+                about: {
+                    channelId: channelId,
+                    channelTitle: video.snippet.channelTitle,
+                    thumbLoaded: false,
+
+                    videoId: videoId,
+                    videoTitle: video.snippet.title,
+                    videoDesc: video.snippet.description,
+                    published: video.snippet.publishedAt,
+                    locationDescription: video.recordingDetails.locationDescription,
+                    language: String(internal.getLanguage(video))
+                }
+            });
+            popupMap[videoId] = markerPopup;
+
+            google.maps.event.addListener(markerPopup, "domready", function () {
+                let count = 0;
+                for (let latLng in coordsMap) {
+                    if (coordsMap[latLng].videoIds.indexOf(videoId) >= 0) {
+                        count = coordsMap[latLng].videoIds.length;
+                        break;
+                    }
+                }
+
+                if (count <= 1) {
+                    return;
+                }
+
+                let options = [];
+                let popups = [];
+                coordsMap[latLng].videoIds.forEach(function (id) {
+                    popups.push(popupMap[id]);
+                })
+                popups.sort(function (a, b) {
+                    return String(a.about.videoTitle).toLowerCase() > String(b.about.videoTitle).toLowerCase()
+                });
+                for (let i = 0; i < popups.length; i++) {
+                    const markerId = popups[i].about.videoId;
+                    const selected = videoId === markerId ? " selected" : "";
+                    options.push("<option value='" + markerId + "'" + selected + ">" + popups[i].about.videoTitle.trunc(30) + "</option>");
+                }
+
+                const html =
+                    "<span style='margin-bottom:10px;'>" +
+                    "<select style='max-width: 300px' class='form-select form-select-sm '>" +
+                    options.join("") +
+                    "</select>" +
+                    "</span>" +
+                    "<span style='margin-bottom:10px;margin-left:10px;display:flex;align-items:center;'>" +
+                    count + " videos at same coords" +
+                    "</span>";
+
+                $(".type-marker." + videoId + " .multi").html(html);
+                const select = $(".type-marker." + videoId + " .multi select")
+                select.change(function () {
+                    const selectedVideo = select.val();
+                    popupMap[videoId].close();
+                    module.openInMap(selectedVideo, true);
+                });
+            });
+
+            if (!coordsMap.hasOwnProperty(latLng)) {
+                const authorThumbs = idx([channelId, "snippet", "thumbnails"], rawChannelMap) || {};
+                const authorThumbUrl = (authorThumbs.default || authorThumbs.medium ||
+                    {url: "https://placehold.it/18x18"}).url;
+                const icon = {
+                    url: authorThumbUrl,
+                    scaledSize: new google.maps.Size(defaults.mapMarkerWidth, defaults.mapMarkerWidth),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(0, 0)
+                };
+                const marker = new google.maps.Marker({
+                    position: position,
+                    map: internal.map,
+                    icon: icon,
+                    openPopup: () => {
+                        markerPopup.open(internal.map, marker);
+                    },
+                    closePopup: () => {
+                        markerPopup.close();
+                    }
+                });
+                coordsMap[latLng] = {
+                    marker: marker,
+                    videoIds: [videoId]
+                };
+
+                marker.addListener("click", () => {
+                    marker.openPopup();
+                });
+
+                internal.markersList.push(marker);
+                internal.adjustMapToResults();
+            }
+            if (coordsMap[latLng].videoIds.indexOf(videoId) === -1) {
+                coordsMap[latLng].videoIds.push(videoId);
+            }
+
+            // Push to list
+            const listItemHtml = format.videoToListItemHtml(video);
+            controls.geotagsTable.row.add([0, listItemHtml, String(video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage)]).draw();
+            internal.updateLanguageDropdown(video);
         },
 
         /**
@@ -1132,100 +1499,11 @@ const geofind = (function () {
         adjustMapToResults: function () {
             const bounds = new google.maps.LatLngBounds();
 
-            bounds.extend(controls.mapLocationMarker.getPosition());
-
             for (let i = 0; i < internal.markersList.length; i++) {
                 bounds.extend(internal.markersList[i].getPosition());
             }
 
             internal.map.fitBounds(bounds);
-        },
-
-        startChannelConsumer: function () {
-            if (!internal.channelConsumerStarted) {
-                function loadProfileIcons() {
-                    const toGrab = [];
-
-                    for (let i = 0; i < internal.markersList.length; i++) {
-                        const marker = internal.markersList[i];
-                        const channelId = marker.about.channelId;
-                        const hasThumbYet = internal.channelThumbs.hasOwnProperty(channelId);
-
-                        if (toGrab.length < 50) {
-                            if (!hasThumbYet) {
-                                if (toGrab.indexOf(channelId) === -1) {
-                                    toGrab.push(channelId);
-                                }
-                            }
-                        }
-
-                        if (hasThumbYet && !marker.about.thumbLoaded) {
-                            const placeholderStr = "https://placehold.it/18x18";
-                            const thumbUrl = internal.channelThumbs[channelId];
-
-                            const popupContentWithThumb = marker.markerPopup.getContent()
-                                .replace(placeholderStr, thumbUrl);
-
-                            marker.markerPopup.setContent(popupContentWithThumb);
-
-                            internal.setMarkerIcon(marker, thumbUrl);
-
-                            controls.geotagsTable.$(".authorThumb." + channelId)
-                                .prop("src", thumbUrl);
-
-                            marker.about.thumbLoaded = true;
-                        }
-                    }
-
-                    if (toGrab.length > 0) {
-                        console.log("Grabbing channels [" + toGrab.join(", ") + "]");
-
-                        youtube.ajax("channels", {
-                            part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
-                            maxResults: 50,
-                            id: toGrab.join(",")
-                        }).done((res) => {
-                            (res.items || []).forEach(item => {
-                                const thumbs = idx(["snippet", "thumbnails"], item);
-                                const thumbUrl = (thumbs.default || thumbs.medium || {url: "https://placehold.it/22x22"}).url;
-                                internal.channelThumbs[item.id] = thumbUrl;
-
-                                for (let i = 0; i < internal.markersList.length; i++) {
-                                    const marker = internal.markersList[i];
-                                    const channelId = marker.about.channelId;
-
-                                    if (!marker.about.thumbLoaded && channelId === item.id) {
-                                        internal.setMarkerIcon(marker, thumbUrl)
-                                    }
-                                }
-                            });
-
-                            setTimeout(loadProfileIcons, 100);
-                        }).fail((err) => {
-                            console.log(err);
-                        });
-                    } else {
-                        setTimeout(loadProfileIcons, 500);
-                    }
-                }
-
-                loadProfileIcons();
-
-                internal.channelConsumerStarted = true;
-            } else {
-                console.error("Channel consumer is already running");
-            }
-        },
-        channelConsumerStarted: false,
-        setMarkerIcon: function (marker, iconUrl) {
-            const icon = {
-                url: iconUrl,
-                scaledSize: new google.maps.Size(defaults.mapMarkerWidth, defaults.mapMarkerWidth),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(0, 0)
-            };
-            marker.setIcon(icon);
-            marker.thumbLoaded = true;
         },
 
         closeAllPopups: function () {
@@ -1340,7 +1618,7 @@ const geofind = (function () {
             function countdown(count) {
                 console.log(count);
 
-                $("#geolocate .spinner").text(count);
+                $("#geolocate .countdown").text(count);
 
                 setTimeout(function () {
                     if (count === 1) {
@@ -1369,7 +1647,7 @@ const geofind = (function () {
             function countdown(count) {
                 console.log(count);
 
-                $("#randomLocation .spinner").text(count);
+                $("#randomLocation .countdown").text(count);
 
                 setTimeout(function () {
                     if (count === 1) {
@@ -1383,14 +1661,16 @@ const geofind = (function () {
         },
 
         openInMap: function (videoId, focusOnSelect) {
-            for (let i = 0; i < internal.markersList.length; i++) {
-                const marker = internal.markersList[i];
-
-                if (marker.about.videoId === videoId) {
-                    marker.openPopup();
-
-                }
+            if (!popupMap.hasOwnProperty(videoId)) {
+                console.log('Video does not have popup [' + videoId + ']')
+                return;
             }
+
+            const popup = popupMap[videoId];
+            const latLng = popup.latLng;
+
+            const marker = coordsMap[latLng].marker;
+            popup.open(internal.map, marker)
 
             if (focusOnSelect) {
                 setTimeout(function () {
@@ -1400,6 +1680,12 @@ const geofind = (function () {
         },
 
         clearResults: function () {
+            uniqueVideoIds = {};
+            rawVideoData = [];
+            rawChannelMap = {};
+            popupMap = {};
+            coordsMap = {};
+
             for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
 
