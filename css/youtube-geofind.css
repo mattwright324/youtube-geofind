@@ -189,6 +189,22 @@ html.channel .absolute-timeframe {
     margin-left: 25px;
 }
 
+.videoLength {
+    position:absolute;
+    bottom: 3px;
+    right: 3px;
+    color: white !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 3px 4px;
+    border-radius: 2px;
+    font-size: 0.7em;
+    font-family: Roboto, Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.35px;
+    line-height: 12px;
+    user-select: none;
+}
+
 /* Dark mode tweaks */
 html.dark .tag {
     background-color: gray;

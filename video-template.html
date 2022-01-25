@@ -4,7 +4,12 @@
     </div>
     <div class="row">
         <div class="col-auto" style="padding-right: 0">
-            <img src="{videoThumb}" width="{videoThumbWidth}" height="{videoThumbHeight}">
+            <div style="width:{videoThumbWidth}px">
+                <div style="position:absolute">
+                    <img src="{videoThumb}" width="{videoThumbWidth}" height="{videoThumbHeight}">
+                    <div class="videoLength">{videoLength}</div>
+                </div>
+            </div>
         </div>
         <div class="col" style="word-break: break-all;">
             <div class="title" style="font-size: 1.25em">

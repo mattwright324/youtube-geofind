@@ -35,6 +35,12 @@ const geofind = (function () {
         const locationDescription = idx(["recordingDetails", "locationDescription"], video);
         const location = latitude ? latitude + ", " + longitude + (locationDescription ? "  ≡  " + locationDescription + "" : "") : "";
 
+        const duration = moment.duration(idx(["contentDetails", "duration"], video));
+        const length = duration.asMilliseconds();
+        const hours = moment.duration(length).asHours()|0 || 0;
+
+        const videoLength = length === 0 ? 'live' :
+            (hours > 0 ? hours + ":" : "") + moment.utc(length).format((hours > 0 ? "mm" : "m") + ":ss");
 
         const views = idx(["statistics", "viewCount"], video);
         const likes = idx(["statistics", "likeCount"], video);
@@ -68,6 +74,7 @@ const geofind = (function () {
             .replace(/{videoId}/g, videoId)
             .replace(/{videoTitle}/g, videoTitle)
             .replace(/{videoDescription}/g, videoDescription.trunc(140))
+            .replace(/{videoLength}/g, videoLength)
             .replace(/{publishDate}/g, publishDate)
             .replace(/{channelId}/g, channelId)
             .replace(/{channelTitle}/g, channelTitle)
