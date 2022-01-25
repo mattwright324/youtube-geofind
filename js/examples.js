@@ -32,7 +32,10 @@ const TOPICS = [
     "…ø·ø ̈ùšù„ø© … ø£øoù†ùšø© ù„ù„ø£ø·ù ø§ù„ … ù„ùšø ̈ùšø§",
     "walk around",
     "nature walk",
-    "nursery rhymes"
+    "nursery rhymes",
+    "abandonded",
+    "railroad",
+    "kayak fishing"
 ];
 
 // List of prominent cities.
