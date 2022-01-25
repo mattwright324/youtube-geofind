@@ -1,6 +1,17 @@
 const CHANNELS = [
     "https://www.youtube.com/channel/UC6lT5sasqj6Qcdh6NNABS1A",
-    "https://www.youtube.com/channel/UCms2m2qPsk_gqBaApq2gNyA"
+    "https://www.youtube.com/channel/UCms2m2qPsk_gqBaApq2gNyA",
+    "https://www.youtube.com/channel/UCE7GmAYeBVgqDItdX2ihuHQ",
+    "https://www.youtube.com/channel/UCTxGMLFlXjI0U185EbkhNzA",
+    "https://www.youtube.com/channel/UCnzDWHTbEE5UWd3WuQAX6zQ",
+    "https://www.youtube.com/channel/UCYWJ32GJbOgtzU2uHh0OMCQ",
+    "https://www.youtube.com/channel/UCtr07mdKhsUwVJjL8Kw_q5A",
+    "https://www.youtube.com/channel/UCxKe4i-V3vg-aBrWQtrpNbg",
+    "https://www.youtube.com/channel/UCmpHOZ6GqCvcWyPX3svgz-g",
+    "https://www.youtube.com/channel/UCxe_lXdpe23VdHdmN_KvUNg",
+    "https://www.youtube.com/channel/UChWv6Pn_zP0rI6lgGt3MyfA",
+    "https://www.youtube.com/channel/UCrS7LVKWs4YIJNWgW3cM6sw",
+    "https://www.youtube.com/channel/UCyEd6QBSgat5kkC6svyjudA"
 ];
 
 const TOPICS = [
