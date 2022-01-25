@@ -129,9 +129,13 @@ const geofind = (function () {
     let uniqueVideoIds = {};
     let rawVideoData = [];
     let rawChannelMap = {};
+    let rawPlaylistMap = {};
+    let playlistMap = {};
     let searchParams = {};
     let coordsMap = {}; // coordinate to marker. first video processed at coord gets the marker
     let popupMap = {}; // video id to marker popup
+    let shareUrls = [];
+    let absoluteShareUrls = [];
     // Omit default values from share link
     const defaultParams = {
         radius: 15,
@@ -139,6 +143,8 @@ const geofind = (function () {
         keywords: '',
         timeframe: 'any',
         duration: 'any',
+        safeSearch: 'moderate',
+        relevanceLanguage: 'any',
         sort: 'date',
         live: false,
         creativeCommons: false,
@@ -233,6 +239,11 @@ const geofind = (function () {
             params["start"] = dateFrom.toISOString();
             params["end"] = dateTo.toISOString();
         }
+        const lang = controls.comboRelevanceLanguage.find(":selected").val();
+        if (lang !== 'any') {
+            params["relevanceLanguage"] = lang;
+        }
+        params["safeSearch"] = controls.comboSafeSearch.find(":selected").val();
         params["sort"] = controls.comboSortBy.find(":selected").val();
         params["duration"] = controls.comboDuration.find(":selected").val();
         let pages = Number(controls.comboPageLimit.find(":selected").val());
@@ -269,6 +280,12 @@ const geofind = (function () {
         const maxPages = searchParams.pages;
         if (searchParams.hasOwnProperty("keywords")) {
             queryParams["q"] = searchParams.keywords;
+        }
+        if (searchParams.hasOwnProperty("relevanceLanguage")) {
+            queryParams["relevanceLanguage"] = searchParams.relevanceLanguage;
+        }
+        if (searchParams.hasOwnProperty("safeSearch")) {
+            queryParams["safeSearch"] = searchParams.safeSearch;
         }
         if (searchParams.hasOwnProperty("sort")) {
             queryParams["order"] = searchParams.sort;
@@ -425,7 +442,7 @@ const geofind = (function () {
         });
     }
 
-    function handleChannelIds() {
+    function handleNewChannelIds() {
         let processed = 0;
 
         const newChannelIds = [];
@@ -502,7 +519,7 @@ const geofind = (function () {
         handleSearch(searchParams).then(function (videoIds) {
             return handleVideoIds(videoIds)
         }).then(function () {
-            return handleChannelIds()
+            return handleNewChannelIds()
         }).then(function () {
 
             controls.progress.update({
@@ -520,16 +537,411 @@ const geofind = (function () {
             console.log(coordsMap)
 
             elements.loadingDiv.fadeOut();
-        }).fail(function (err) {
+        }).catch(function (err) {
             console.error(err);
 
+            internal.displayError("alert-warning", err);
+
             elements.loadingDiv.fadeOut();
-        })
+        });
     }
 
-    function processChannelSearch() {
+    function processFromParsed(parsed) {
+        console.log(parsed);
 
+        const channelUsers = [];
+        const channelCustoms = [];
+        const channelIds = [];
+        const channelIdsCreatedPlaylists = [];
+        const playlistIds = [];
+        const videoIds = [];
+
+        parsed.forEach(function (p) {
+            if (p.type === 'video_id' && videoIds.indexOf(p.value) === -1) {
+                videoIds.push(p.value);
+
+                controls.progress.update({
+                    text: videoIds.length
+                });
+            } else if (p.type === "playlist_id" && playlistIds.indexOf(p.value) === -1) {
+                playlistIds.push(p.value);
+            } else if (p.type === "channel_id" && channelIds.indexOf(p.value) === -1) {
+                channelIds.push(p.value);
+            } else if (p.type === "channel_custom" && channelCustoms.indexOf(p.value) === -1) {
+                channelCustoms.push(p.value);
+            } else if (p.type === "channel_user" && channelUsers.indexOf(p.value) === -1) {
+                channelUsers.push(p.value);
+            }
+        });
+
+        controls.progress.update({
+            subtext: 'Grabbing unique video ids'
+        });
+
+        Promise.all([
+            handleChannelCustoms(channelCustoms, channelIds)
+        ]).then(function () {
+            return Promise.all([
+                // Channels condense to uploads playlist ids and channel ids
+                handleChannelUsers(channelUsers, playlistIds, channelIdsCreatedPlaylists),
+                handleChannelIds(channelIds, playlistIds, channelIdsCreatedPlaylists)
+            ]);
+        }).then(function () {
+            // Grab playlist names
+            return handlePlaylistNames(playlistIds);
+        }).then(function () {
+            // Playlists condense to video ids
+            return handlePlaylistIds(playlistIds, videoIds);
+        }).then(function () {
+            controls.progress.update({
+                subtext: 'Processing video ids'
+            });
+
+            // Videos are results to be displayed
+            return handleVideoIds(videoIds);
+        }).then(function () {
+            return new Promise(function (resolve) {
+                rawVideoData.forEach(function (video) {
+                    internal.pushVideo(video);
+                });
+                resolve();
+            });
+        }).then(function () {
+            controls.progress.update({
+                subtext: 'Processing channel ids'
+            });
+
+            // Ids for channels not in the original request, likely from playlists
+            const newChannelIds = [];
+            rawVideoData.forEach(function (video) {
+                const channelId = shared.idx(["snippet", "channelId"], video);
+                if (!rawChannelMap.hasOwnProperty(channelId) && newChannelIds.indexOf(channelId) === -1) {
+                    newChannelIds.push(channelId);
+                }
+            });
+
+            return handleNewChannelIds(newChannelIds, [], []);
+        }).then(function () {
+            console.log(videoIds);
+
+            controls.progress.update({
+                value: 1,
+                max: 1,
+                text: doneProgressMessage(),
+                subtext: 'Done'
+            });
+        }).catch(function (err) {
+            console.error(err);
+            internal.displayError("alert-warning", err);
+
+            elements.loadingDiv.fadeOut();
+        });
     }
+
+    function handleChannelUsers(channelUsers, playlistIds, channelIdsCreatedPlaylists) {
+        return new Promise(function (resolve) {
+            if (channelUsers.length === 0) {
+                console.log("no channelUsers")
+                resolve();
+                return;
+            }
+
+            function get(index) {
+                if (index >= channelUsers.length) {
+                    console.log("finished channelUsers");
+                    resolve();
+                    return;
+                }
+
+                console.log("handleChannelUsers.get(" + index + ")")
+                console.log(channelUsers[index])
+
+                youtube.ajax("channels", {
+                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
+                    forUsername: channelUsers[index]
+                }).done(function (res) {
+                    console.log(res);
+
+                    const channel = shared.idx(["items", 0], res);
+                    if (!channel) {
+                        get(index + 1);
+                        return;
+                    }
+
+                    const channelId = shared.idx(["id"], channel);
+                    rawChannelMap[channelId] = channel;
+
+                    if (channelIdsCreatedPlaylists.indexOf(channelId) === -1) {
+                        channelIdsCreatedPlaylists.push(channelId);
+                    }
+
+                    const uploadsPlaylistId = shared.idx(["items", 0, "contentDetails", "relatedPlaylists", "uploads"], res);
+                    console.log(uploadsPlaylistId);
+
+                    if (playlistIds.indexOf(uploadsPlaylistId) === -1) {
+                        playlistIds.push(uploadsPlaylistId);
+                    }
+
+                    get(index + 1);
+                }).fail(function (err) {
+                    console.error(err);
+                    get(index + 1);
+                });
+            }
+
+            get(0);
+        });
+    }
+
+    function handleChannelCustoms(channelCustoms, channelIds) {
+        return new Promise(function (resolve) {
+            if (channelCustoms.length === 0) {
+                console.log("no channelCustoms")
+                resolve();
+                return;
+            }
+
+            function get(index) {
+                if (index >= channelCustoms.length) {
+                    console.log("finished channelCustoms");
+                    resolve();
+                    return;
+                }
+
+                console.log("handleChannelCustoms.get(" + index + ")")
+
+                youtube.ajax("search", {
+                    part: "snippet",
+                    maxResults: 50,
+                    q: channelCustoms[index],
+                    type: 'channel',
+                    order: 'relevance'
+                }).done(function (res) {
+                    console.log(res);
+
+                    const ids = [];
+                    (res.items || []).forEach(function (channel) {
+                        ids.push(shared.idx(["id", "channelId"], channel));
+                    });
+
+                    youtube.ajax("channels", {
+                        part: "snippet",
+                        id: ids.join(","),
+                        maxResults: 50
+                    }).done(function (res2) {
+                        console.log(res2);
+
+                        (res2.items || []).forEach(function (channel) {
+                            const channelId = shared.idx(["id"], channel);
+                            const customUrl = shared.idx(["snippet", "customUrl"], channel);
+
+                            if (String(customUrl).toLowerCase() === String(channelCustoms[index]).toLowerCase()) {
+                                channelIds.push(channelId);
+                            }
+                        });
+
+                        get(index + 1);
+                    }).fail(function (err) {
+                        console.error(err);
+                        get(index + 1);
+                    });
+                }).fail(function (err) {
+                    console.error(err);
+                    get(index + 1);
+                });
+            }
+
+            get(0);
+        });
+    }
+
+    function handleChannelIds(channelIds, playlistIds, channelIdsCreatedPlaylists) {
+        let processed = 0;
+        channelIds.forEach(function (channelId) {
+            if (channelIdsCreatedPlaylists.indexOf(channelId) === -1) {
+                channelIdsCreatedPlaylists.push(channelId);
+            }
+        });
+        return new Promise(function (resolve) {
+            if (channelIds.length === 0) {
+                console.log("no channelIds")
+                resolve();
+                return;
+            }
+
+            controls.progress.update({
+                value: 0,
+                max: channelIds.length,
+                text: "0 / " + channelIds.length
+            });
+
+            function get(index, slice) {
+                if (index >= channelIds.length) {
+                    console.log("finished channelIds");
+                    resolve();
+                    return;
+                }
+
+                console.log("handleChannelIds.get(" + index + ", " + slice + ")")
+
+                const ids = channelIds.slice(index, index + slice);
+
+                youtube.ajax("channels", {
+                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
+                    id: ids.join(","),
+                    maxResults: 50
+                }).done(function (res) {
+                    console.log(res);
+
+                    (res.items || []).forEach(function (channel) {
+                        const channelId = shared.idx(["id"], channel);
+                        rawChannelMap[channelId] = channel;
+
+                        const uploadsPlaylistId = shared.idx(["contentDetails", "relatedPlaylists", "uploads"], channel);
+                        console.log(uploadsPlaylistId);
+
+                        if (playlistIds.indexOf(uploadsPlaylistId) === -1) {
+                            playlistIds.push(uploadsPlaylistId);
+                        }
+                    });
+
+                    processed = processed + ids.length;
+
+                    controls.progress.update({
+                        value: processed,
+                        text: processed + " / " + channelIds.length
+                    });
+
+                    get(index + slice, slice);
+                }).fail(function (err) {
+                    console.error(err);
+                    get(index + slice, slice);
+                });
+            }
+
+            get(0, 50);
+        });
+    }
+
+
+    function handlePlaylistNames(playlistIds) {
+        return new Promise(function (resolve) {
+            if (playlistIds.length === 0) {
+                console.log("no playlistIds")
+                resolve();
+                return;
+            }
+
+            const notYetRetrieved = [];
+            playlistIds.forEach(function (id) {
+                if (!playlistMap.hasOwnProperty(id)) {
+                    notYetRetrieved.push(id);
+                }
+            });
+            console.log(notYetRetrieved);
+
+            function get(index) {
+                if (index >= notYetRetrieved.length) {
+                    console.log("finished notYetRetrieved");
+                    resolve();
+                    return;
+                }
+
+                console.log("handlePlaylistNames.get(" + index + ")")
+
+                function paginate(pageToken) {
+                    console.log(pageToken);
+                    youtube.ajax("playlists", {
+                        part: "snippet,status,localizations,contentDetails",
+                        maxResults: 50,
+                        id: notYetRetrieved[index],
+                        pageToken: pageToken
+                    }).done(function (res) {
+                        console.log(res);
+
+                        (res.items || []).forEach(function (playlist) {
+                            const playlistId = shared.idx(["id"], playlist);
+                            console.log(playlistId);
+
+                            rawPlaylistMap[playlistId] = playlist;
+                            playlistMap[playlistId] = shared.idx(["snippet", "title"], playlist);
+                        });
+
+                        if (res.hasOwnProperty("nextPageToken")) {
+                            paginate(res.nextPageToken);
+                        } else {
+                            get(index + 1);
+                        }
+                    }).fail(function (err) {
+                        console.error(err);
+                        get(index + 1);
+                    });
+                }
+
+                paginate("");
+            }
+
+            get(0);
+        });
+    }
+
+    function handlePlaylistIds(playlistIds, videoIds) {
+        return new Promise(function (resolve) {
+            if (playlistIds.length === 0) {
+                console.log("no playlistIds")
+                resolve();
+                return;
+            }
+
+            function get(index) {
+                if (index >= playlistIds.length) {
+                    console.log("finished playlistIds");
+                    resolve();
+                    return;
+                }
+
+                function paginate(pageToken) {
+                    console.log("handlePlaylistIds.get(" + index + ")")
+
+                    youtube.ajax("playlistItems", {
+                        part: "snippet",
+                        maxResults: 50,
+                        playlistId: playlistIds[index],
+                        pageToken: pageToken
+                    }).done(function (res) {
+                        console.log(res);
+
+                        (res.items || []).forEach(function (video) {
+                            const videoId = shared.idx(["snippet", "resourceId", "videoId"], video);
+                            const videoOwnerChannelId = shared.idx(["snippet", "videoOwnerChannelId"], video);
+
+                            if (videoIds.indexOf(videoId) === -1 && videoOwnerChannelId) {
+                                videoIds.push(videoId);
+                            }
+                        });
+
+                        controls.progress.update({
+                            text: videoIds.length
+                        })
+
+                        if (res.hasOwnProperty("nextPageToken")) {
+                            paginate(res.nextPageToken);
+                        } else {
+                            get(index + 1);
+                        }
+                    }).fail(function (err) {
+                        console.error(err);
+                        get(index + 1);
+                    });
+                }
+
+                paginate("");
+            }
+
+            get(0);
+        });
+    }
+
 
     function sortObject(unordered, sortArrays = false) {
         if (!unordered || typeof unordered !== 'object') {
@@ -616,6 +1028,7 @@ const geofind = (function () {
                 ],
                 order: [[0, 'desc']],
                 lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
+                ordering: false,
                 deferRender: true,
                 bDeferRender: true,
             });
@@ -695,6 +1108,8 @@ const geofind = (function () {
             controls.inputRadius = $("#radius");
             controls.inputKeywords = $("#keywords");
             controls.comboSortBy = $("#sortBy");
+            controls.comboRelevanceLanguage = $("#relevanceLanguage");
+            controls.comboSafeSearch = $("#safeSearch");
             controls.comboDuration = $("#videoDuration");
             controls.comboTimeframe = $("#timeframe");
             elements.customRangeDiv = $(".customRange");
@@ -824,130 +1239,13 @@ const geofind = (function () {
                 "?channels=" + encodeURIComponent(controls.inputChannels.val()) + "&doSearch=true");
             controls.shareLink.attr("disabled", false);
 
+            module.clearResults();
+
             const parsed = [];
             controls.inputChannels.val().split(",").forEach(function (part) {
                 parsed.push(shared.determineInput(part.trim()));
             });
-            console.log(parsed);
-
-            const channels = controls.inputChannels.val()
-                .replace(/\s/g, "")
-                .split(",");
-
-            console.log(channels);
-
-            let payload;
-
-            for (let i = 0; i < channels.length; i++) {
-                const channelStr = channels[i].trim();
-
-                if (channelStr) {
-                    if (channelStr.length === 24) {
-                        payload = {id: channelStr};
-                    } else if (channelStr.length <= 20) {
-                        payload = {forUsername: channelStr};
-                    }
-
-                    console.log(payload);
-
-                    elements.loadingDiv.show();
-
-                    if (payload) {
-                        query.channels(payload, function (res) {
-                            const channel = res.items[0];
-
-                            if (channel) {
-                                // Does not exist in page yet
-                                if (!$("#" + channel.id).length) {
-                                    const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
-
-                                    const channelListHtml = format.channelToListItemHtml(channel);
-
-                                    elements.channelPlaceholder.remove();
-                                    elements.channelsDiv.append(channelListHtml);
-
-                                    elements[channel.id] = {};
-                                    elements[channel.id].progress = new ProgressBar("#" + channel.id + " .progress-bar");
-                                    elements[channel.id].tagCount = $("#" + channel.id + " .tag-count");
-
-                                    controls[channel.id] = {};
-
-                                    let videoTotal = 0;
-
-                                    function searchPlaylist(pageToken) {
-                                        youtube.ajax("playlistItems", {
-                                            part: "snippet",
-                                            maxResults: 50,
-                                            playlistId: uploadsPlaylistId,
-                                            pageToken: pageToken
-                                        }).done(function (res) {
-                                            console.log("Searching [playlistId=" + uploadsPlaylistId + ", pageToken=" + pageToken + ", totalVideos=" + videoTotal + "]");
-
-                                            if (pageToken === "") {
-                                                elements[channel.id].progress.setRange(0, res.pageInfo.totalResults);
-                                            }
-
-                                            videoTotal += res.items.length;
-
-                                            elements[channel.id].progress.setValue(videoTotal);
-
-                                            const videoIds = [];
-                                            for (let i = 0; i < res.items.length; i++) {
-                                                const playlistVideo = res.items[i];
-
-                                                videoIds.push(playlistVideo.snippet.resourceId.videoId);
-                                            }
-
-                                            console.log(videoIds);
-
-                                            query.videos(videoIds, function (res) {
-                                                console.log(res);
-
-                                                for (let i = 0; i < res.items.length; i++) {
-                                                    const video = res.items[i];
-
-                                                    internal.pushVideo(video);
-                                                }
-                                            });
-
-                                            if (internal.markersList.length > 0) {
-                                                internal.adjustMapToResults();
-                                            }
-
-                                            if (res.hasOwnProperty("nextPageToken")) {
-                                                searchPlaylist(res.nextPageToken);
-                                            } else {
-                                                elements.loadingDiv.fadeOut(defaults.animationMs);
-                                                elements[channel.id].progress.animated(false);
-                                            }
-                                        }).fail(function (err) {
-                                            elements[channel.id].progress.setBg("bg-danger");
-
-                                            internal.displayError("alert-warning", err);
-
-                                            console.error(err);
-                                        })
-                                    }
-
-                                    searchPlaylist("");
-                                } else {
-                                    console.warn("Channel was already in the list '" + channel.id + "'");
-                                }
-                            } else {
-                                internal.displayMessage("alert-warning", "Channel does not exist '" + channelStr + "'");
-                            }
-                        });
-                    } else {
-                        internal.displayMessage("alert-warning", "Did not recognize value as id or username '" + channelStr + "'");
-
-                        console.error("Channel value didn't match expected lengths.");
-                    }
-                } else {
-                    console.error("Channel value was empty.");
-                }
-            }
-
-            elements.loadingDiv.fadeOut(defaults.animationMs);
+            processFromParsed(parsed);
         },
 
         updateShareLink: function () {
@@ -977,11 +1275,17 @@ const geofind = (function () {
             elements.loadingDiv.show();
 
             searchParams = buildSearchInputParams();
-
             internal.updateShareLink();
 
             if (controls.checkClearResults.is(":checked")) {
                 module.clearResults();
+            }
+
+            const share = buildSearchShareLink(false);
+            shareUrls.push(share);
+            const shareAbsolute = buildSearchShareLink(true);
+            if (share !== shareAbsolute) {
+                absoluteShareUrls.push(shareAbsolute);
             }
 
             processSearch(searchParams);
@@ -1002,14 +1306,14 @@ const geofind = (function () {
 
                 const zip = new JSZip();
                 console.log("Creating about.txt...")
-                const share = buildSearchShareLink(false);
-                const shareAbsolute = buildSearchShareLink(true);
                 zip.file("about.txt",
                     "Downloaded by YouTube Geofind " + new Date().toLocaleString() + "\n\n" +
                     "URL: " + window.location + "\n\n" +
-                    "Share URL: " + share + "\n" +
-                    (share !== shareAbsolute ? "Share URL (absolute): " + shareAbsolute : "")
-
+                    (shareUrls.length > 0 ? "Share url(s): " + JSON.stringify(shareUrls, null, 4) + "\n\n"
+                        : "") +
+                    (absoluteShareUrls.length > 0 ?
+                        "Share url(s) absolute timeframe: " + JSON.stringify(absoluteShareUrls, null, 4)
+                        : "")
                 );
 
                 console.log("Creating videos.json...")
@@ -1023,8 +1327,7 @@ const geofind = (function () {
                 zip.file("channels.json", JSON.stringify(rawChannelData));
 
                 console.log("Creating geotags.csv...")
-                const geotagCsvRows = ["TODO\tTODO\tTODO"];
-                zip.file("geotags.csv", geotagCsvRows.join("\r\n"));
+                zip.file("geotags.csv", module.formatVideosToCSV());
 
                 const fileName = shared.safeFileName("geofind_" + internal.pageType + ".zip");
 
@@ -1134,7 +1437,7 @@ const geofind = (function () {
                         controls.btnImport.removeClass("loading").removeClass("disabled");
                     })
                 }).then(function () {
-                    return handleChannelIds();
+                    return handleNewChannelIds();
                 }).then(function () {
                     rawVideoData.forEach(function (video) {
                         internal.pushVideo(video);
@@ -1268,7 +1571,8 @@ const geofind = (function () {
         },
 
         getLanguage: function (video) {
-            return video.snippet.defaultLanguage || video.snippet.defaultAudioLanguage;
+            const snippet = video.snippet || {};
+            return snippet.defaultLanguage || snippet.defaultAudioLanguage;
         },
 
         updateLanguageDropdown: function (video) {
@@ -1338,7 +1642,8 @@ const geofind = (function () {
                     videoDesc: video.snippet.description,
                     published: video.snippet.publishedAt,
                     locationDescription: video.recordingDetails.locationDescription,
-                    language: String(internal.getLanguage(video))
+                    language: String(internal.getLanguage(video)),
+                    position: position
                 }
             });
             popupMap[videoId] = markerPopup;
@@ -1552,42 +1857,6 @@ const geofind = (function () {
         }
     };
 
-    const query = {
-        videos: function (videoIds, callback) {
-            youtube.ajax("videos", {
-                id: videoIds.join(","),
-                part: "snippet,statistics,recordingDetails,status,liveStreamingDetails,localizations,contentDetails,topicDetails",
-                maxResults: 50
-            }).done(function (res) {
-                callback(res);
-            }).fail(function (err) {
-                console.error(err);
-
-                internal.displayError("alert-warning", err);
-
-                elements.loadingDiv.fadeOut(1000);
-            });
-        },
-
-        /**
-         * @param payload an object with `id` or `forUsername` key and value
-         * @param callback called on success
-         */
-        channels: function (payload, callback) {
-            youtube.ajax("channels",
-                $.extend({
-                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails"
-                }, payload)
-            ).done(function (res) {
-                callback(res);
-            }).fail(function (err) {
-                internal.displayError("alert-warning", err);
-
-                console.error(err);
-            });
-        },
-    };
-
     const module = {
         /**
          * To be called as a callback when the map finishes loading and we can get the map element.
@@ -1690,8 +1959,12 @@ const geofind = (function () {
             uniqueVideoIds = {};
             rawVideoData = [];
             rawChannelMap = {};
+            rawPlaylistMap = {};
+            playlistMap = {};
             popupMap = {};
             coordsMap = {};
+            shareUrls = [];
+            absoluteShareUrls = [];
 
             for (let i = 0; i < internal.markersList.length; i++) {
                 const marker = internal.markersList[i];
@@ -1709,28 +1982,25 @@ const geofind = (function () {
         /**
          * @param channelId optional, specify to only match videos with this channel id
          */
-        exportToCSV: function (channelId) {
-            const fileName = channelId ? channelId : "geotags_all";
-            const mimeType = "data:text/csv;charset=utf-8";
+        formatVideosToCSV: function (channelId) {
+            //const fileName = channelId ? channelId : "geotags_all";
+            //const mimeType = "data:text/csv;charset=utf-8";
             const headerColumns = ["channelId", "channelTitle", "videoId", "videoTitle",
                 "videoDesc", "published", "latitude", "longitude", "locationDescription",
                 "language"];
             const dataRows = [];
 
-            for (let i = 0; i < internal.markersList.length; i++) {
-                const marker = internal.markersList[i];
-                const position = marker.getPosition();
-                const about = marker.about;
+            function csvSanitize(textValue) {
+                if (!textValue) {
+                    return "";
+                }
+                return encodeURI(textValue.replace(/#/g, '%23'))
+                    .replace(/%20/g, " ")
+            }
 
+            for (let videoId in popupMap) {
+                const about = popupMap[videoId].about;
                 if (!channelId || channelId === about.channelId) {
-                    function csvSanitize(textValue) {
-                        if (!textValue) {
-                            return "";
-                        }
-                        return encodeURI(textValue.replace(/#/g, '%23'))
-                            .replace(/%20/g, " ")
-                    }
-
                     const rowData = [
                         about.channelId,
                         csvSanitize(about.channelTitle),
@@ -1738,8 +2008,8 @@ const geofind = (function () {
                         csvSanitize(about.videoTitle),
                         csvSanitize(about.videoDesc),
                         about.published,
-                        position.lat(),
-                        position.lng(),
+                        about.position.lat,
+                        about.position.lng,
                         csvSanitize(about.locationDescription),
                         csvSanitize(about.language)
                     ];
@@ -1748,16 +2018,36 @@ const geofind = (function () {
                 }
             }
 
-            const fileContents = mimeType + "," + headerColumns.join("\t") + "\n" + dataRows.join("\n");
-            const encodedContents = encodeURI(fileContents);
+            return headerColumns.join("\t") + "\n" + dataRows.join("\n")
+        },
 
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedContents);
-            link.setAttribute("download", fileName + ".txt");
+        closeAnnouncement: function () {
+            const announcement = $(".announcement");
+            const id = announcement.attr('id');
 
-            document.body.appendChild(link);
+            localStorage.setItem(id, 'closed')
 
-            link.click();
+            this.checkAnnouncement();
+        },
+
+        checkAnnouncement: function () {
+            const announcement = $(".announcement");
+            const id = announcement.attr('id');
+
+            if (localStorage.getItem(id) === 'closed') {
+                announcement.hide();
+            }
+        },
+
+        resetAnnouncement: function () {
+            const announcement = $(".announcement");
+            const id = announcement.attr('id');
+
+            localStorage.removeItem(id);
+
+            if (announcement.length) {
+                announcement.show();
+            }
         }
     };
 
@@ -1803,12 +2093,34 @@ const geofind = (function () {
                 }
             }
         },
+        paramSafeSearch: {
+            param: 'safeSearch',
+            updatePage: function (parsedQuery) {
+                const paramValue = parsedQuery[this.param];
+
+                if (paramValue && $("#safeSearch option[value='" + paramValue + "']").length) {
+                    controls.comboSafeSearch.val(paramValue);
+                    controls.comboSafeSearch.trigger("change");
+                }
+            }
+        },
+        paramRelevanceLanguage: {
+            param: 'relevanceLanguage',
+            updatePage: function (parsedQuery) {
+                const paramValue = parsedQuery[this.param];
+
+                if (paramValue && $("#relevanceLanguage option[value='" + paramValue + "']").length) {
+                    controls.comboRelevanceLanguage.val(paramValue);
+                    controls.comboRelevanceLanguage.trigger("change");
+                }
+            }
+        },
         paramSort: {
             param: 'sort',
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (paramValue && $("#sort option[value='" + paramValue + "']").length) {
+                if (paramValue && $("#sortBy option[value='" + paramValue + "']").length) {
                     controls.comboSortBy.val(paramValue);
                     controls.comboSortBy.trigger("change");
                 }

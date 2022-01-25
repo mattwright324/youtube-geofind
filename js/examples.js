@@ -1,6 +1,6 @@
 const CHANNELS = [
-    "https://www.youtube.com/channel/",
-    "https://www.youtube.com/channel/"
+    "https://www.youtube.com/channel/UC6lT5sasqj6Qcdh6NNABS1A",
+    "https://www.youtube.com/channel/UCms2m2qPsk_gqBaApq2gNyA"
 ];
 
 const TOPICS = [
@@ -14,7 +14,14 @@ const TOPICS = [
     "AMBA",
     "geotag",
     "storm",
-    "disaster"
+    "disaster",
+    "crisis",
+    "conflict",
+    "scare",
+    "…ø·ø ̈ùšù„ø© … ø£øoù†ùšø© ù„ù„ø£ø·ù ø§ù„ … ù„ùšø ̈ùšø§",
+    "walk around",
+    "nature walk",
+    "nursery rhymes"
 ];
 
 // List of prominent cities.

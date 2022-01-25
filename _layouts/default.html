@@ -110,6 +110,20 @@
 </div>
 {% include announcement.html %}
 {{ content }}
+{% include export_share.html %}
+<div class="container">
+    <h2>Geotags</h2>
+    <p>
+        Alternate view of results that are in the map.
+        Want to see, search, and filter more detailed data about these videos?
+        Export this result and import into
+        <a target="_blank" href="https://mattw.io/youtube-metadata/bulk">YouTube Metadata Bulk</a>.
+    </p>
+</div>
+<div class="container mb-15">
+    <table id="geotagsTable" class="table table-hover" style="width:100%"></table>
+</div>
+
 <div class="ui container" style="padding-top:3%;padding-bottom:3%;color:darkgray;text-align:center">
     mattwright324 | 2022 | <a href="/">home</a> | <a href="https://github.com/mattwright324">github</a> |
     <a href="https://github.com/mattwright324/youtube-geofind">youtube-geofind</a>

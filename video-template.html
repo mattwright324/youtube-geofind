@@ -4,12 +4,14 @@
     </div>
     <div class="row">
         <div class="col-auto" style="padding-right: 0">
-            <div style="width:{videoThumbWidth}px">
-                <div style="position:absolute">
-                    <img src="{videoThumb}" width="{videoThumbWidth}" height="{videoThumbHeight}">
-                    <div class="videoLength">{videoLength}</div>
+            <a target="_blank" href="https://youtu.be/{videoId}">
+                <div style="width:{videoThumbWidth}px;height:{videoThumbHeight}px">
+                    <div style="position:absolute">
+                        <img src="{videoThumb}" width="{videoThumbWidth}" height="{videoThumbHeight}" loading="lazy">
+                        <div class="videoLength">{videoLength}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col" style="word-break: break-all;">
             <div class="title" style="font-size: 1.25em">
@@ -18,7 +20,7 @@
             <div class="author">
                 <a target="_blank" href="https://www.youtube.com/channel/{channelId}">
                     <img class='authorThumb {channelId}' src="{authorThumb}"
-                         width="{authorThumbWidth}" height="{authorThumbHeight}">
+                         width="{authorThumbWidth}" height="{authorThumbHeight}" loading="lazy">
                     {channelTitle}
                 </a>
             </div>
@@ -29,7 +31,11 @@
             <div class="openInMap-link">
                 <a href="javascript:geofind.openInMap('{videoId}')">
                     Open in map
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="gray" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path><path d="M0 0h24v24H0z" fill="none"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="gray"
+                              d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
+                        <path d="M0 0h24v24H0z" fill="none"></path>
+                    </svg>
                 </a>
             </div>
             <div class="viewMetadata-link">

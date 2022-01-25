@@ -13,7 +13,12 @@ type: channel
 </div>
 <div class="container mb-15">
     <h2>Channel Search</h2>
-    <p>Check the uploads of channel(s) for geotagged videos.</p>
+    <p>
+        Check the uploads of channel(s) for geotagged videos.
+        This page is essentially <a target="_blank" href="https://mattw.io/youtube-metadata/bulk">YouTube Metadata Bulk</a>
+        but with a map and results filtered to only the geotagged ones.
+        Recommended to instead export data from YMB and import here if you want the data for everything not geotagged too.
+    </p>
     <p>
         Submit a comma separated list of channel url(s) and/or id(s)
     </p>
@@ -42,17 +47,4 @@ type: channel
             </li>
         </ul>
     </div>
-</div>
-{% include export_share.html %}
-<div class="container">
-    <h2>Geotags</h2>
-    <p>
-        Alternate view of results that are in the map.
-        Want to see, search, filter more detailed data about these videos?
-        Export this result and import into
-        <a target="_blank" href="https://mattw.io/youtube-metadata/bulk">YouTube Metadata Bulk</a>.
-    </p>
-</div>
-<div class="container mb-15">
-    <table id="geotagsTable" class="table table-hover" style="width:100%"></table>
 </div>

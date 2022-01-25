@@ -4,7 +4,7 @@ body {
 }
 
 #map {
-    height: 400px;
+    height: 450px;
     width: 100%;
     resize: vertical;
 }
@@ -190,18 +190,18 @@ html.channel .absolute-timeframe {
 }
 
 .videoLength {
-    position:absolute;
-    bottom: 3px;
-    right: 3px;
-    color: white !important;
     background-color: rgba(0, 0, 0, 0.8) !important;
-    padding: 3px 4px;
     border-radius: 2px;
-    font-size: 0.7em;
+    bottom: 3px;
+    color: white !important;
     font-family: Roboto, Arial, sans-serif;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.35px;
     line-height: 12px;
+    padding: 3px 4px;
+    position:absolute;
+    right: 3px;
     user-select: none;
 }
 
@@ -239,4 +239,9 @@ html.dark .gm-ui-hover-effect {
 
 html.dark .context-menu-content {
     color: #fff
+}
+
+/* Darkmode Scrollbar color fix for Chrome */
+html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track, html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece {
+    background-color: rgb(34, 34, 34);
 }
