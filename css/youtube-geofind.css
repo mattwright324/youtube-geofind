@@ -1,122 +1,175 @@
-* {
-    font-family: 'Open Sans', sans-serif;
-}
-
-body, html {
-    height: 100%;
-}
-
-#content {
-    box-shadow: 0 -5px 100px 10px rgba(127, 127, 127, 0.01);
+body {
+    background-repeat: repeat;
+    font-weight: 350 !important;
 }
 
 #map {
-    height: 400px;
+    height: 450px;
     width: 100%;
+    resize: vertical;
 }
 
-.control {
-    margin-top: 10px;
+html.dark .bg-dark {
+    background-color: rgb(34, 34, 34)!important;
 }
 
-#btnFind {
-    cursor: pointer;
+label[for] {
+    user-select: none;
 }
 
-#btnSaveAll {
-    margin-bottom: 8px;
+html.dark .context-menu-content {
+    color: black;
 }
 
-#advanced-form {
-    margin-bottom: 5px;
+a[href] {
+    text-decoration: none;
 }
 
-#geotags {
-    width: 100%;
-    display: block;
-    overflow: auto;
-    margin-bottom: 50px;
+ul {
+    line-height: 20px;
 }
 
-#geotag {
+code {
+    max-height: 180px;
 }
 
-#geotag a {
-    font-weight: bold;
+.mb-15 {
+    margin-bottom: 1.5%;
 }
 
-#table-entry {
-    background: transparent;
+p.mb-15 {
+    margin-bottom: 0.75%;
 }
 
-#channelInput {
-    margin-right: 15px;
+.mt-15 {
+    margin-top: 1.5%;
 }
 
-#channel {
-    background-color: rgba(127, 127, 127, 0.05);
-    padding: 10px;
-    margin-bottom: 10px;
+.pb-15 {
+    padding-bottom: 1.5%;
 }
 
-#channel-thumb {
-    margin-right: 25px;
+.pt-15 {
+    padding-top: 1.5%;
 }
 
-#channel-name {
-    font-size: 1.3em;
+.navbar-brand {
+    font-size: 1.75rem!important;
 }
 
-#example-list li {
-    font-size: 1.2em;
+.navbar {
+    font-size: 1.5rem!important;
+    margin-bottom: 0;
 }
 
-.content-section {
-    padding: 10px;
+.orange {
+    color: orange;
 }
 
-.special-border {
-    border: 3px dotted rgba(127, 127, 127, 0.1);
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
 }
 
 .section-header {
-    border: 6px none rgb(153, 192, 255);
-    border-bottom-style: solid;
-    padding-bottom: 4px;
-    margin-bottom: 15px;
-    padding-right: 10px;
-    padding-left: 10px;
+    font-size: 1.5em;
+    margin: 0 0 0.3em;
 }
 
-@media (max-width: 640px) {
-    .col-form-label {
-        display: none;
-    }
+.unknown {
+    color: mediumpurple;
 }
 
-.btn-link {
-    cursor: pointer;
+.good {
+    color: mediumseagreen;
 }
 
-.footer {
-    /*background-color: rgba(127, 127, 127, 0.1);*/
-    padding-top: 15px;
-    padding-bottom: 20px;
-    font-size: 0.9em;
-    line-height: 200%;
+.bad, .gray {
+    color: lightgray;
+}
+
+.profile {
+    width: 100px;
+    height: 100px;
+}
+
+.navbar-brand img {
+    width: 40px !important;
+    height: 40px !important;
+}
+
+.section-header span {
+    margin-left: 8px;
+}
+
+#export, #import {
+    width: 100px;
+}
+
+button .countdown, button .spinner {
+    display: none;
+}
+
+button.loading .countdown, button.loading .spinner {
+    display: initial;
+}
+
+button.loading .text {
+    display: none;
+}
+
+.dropdown-toggle::after {
+    content: none
+}
+
+.progress {
+    height: 2em;
+}
+
+.tag {
+    background-color: lightgray;
+    padding: 2px 5px;
+    border-radius: 5px;
+    margin-right: 4px;
+    margin-bottom: 3px;
+    display: inline-block;
+}
+
+.comma {
+    color: transparent;
+    width: 0;
+    display: inline-block;
+}
+
+.openInMap-link a, .viewMetadata-link a {
+    color: gray !important;
+}
+
+.type-marker .openInMap-link {
+    display: none;
+}
+
+.video .description {
+    padding: 10px 0;
+}
+
+.author {
+    padding-top: 5px;
+}
+
+.authorThumb {
+    border-radius: 5px;
+}
+
+html.channel .absolute-timeframe {
+    display: none;
+}
+
+#langFilterContainer {
     text-align: center;
-}
-
-.blurry {
-    -webkit-filter: blur(5px); /* Safari */
-    filter: blur(5px);
-}
-
-.custom-checkbox {
-    -webkit-user-select: none; /* Chrome all / Safari all */
-    -moz-user-select: none; /* Firefox all */
-    -ms-user-select: none; /* IE 10+ */
-    user-select: none; /* Likely future */
 }
 
 #loading {
@@ -130,96 +183,65 @@ body, html {
     white-space: nowrap;
 }
 
-.spinner {
-    top: 35%;
-}
-
-#btnSubmit {
-    margin-top: 1rem;
-}
-
-#advanced-form {
-    padding: 10px;
-    background-color: rgba(200, 200, 255, 0.1);
-    border: 0px solid gray;
-    border-left-width: 5px;
-}
-
-#toggle {
-    width: 100%;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-left-width: 5px;
-}
-
 #loading-page {
     color: #fffffc;
     font-size: 4em;
-    margin-left: 75px;
+    margin-left: 25px;
 }
 
-.marker img, .table-item img {
-    width: 120px;
-    height: 90px;
+.videoLength {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    border-radius: 2px;
+    bottom: 3px;
+    color: white !important;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.35px;
+    line-height: 12px;
+    padding: 3px 4px;
+    position:absolute;
+    right: 3px;
+    user-select: none;
 }
 
-/*.progress {
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: white;
-    height: 25px;
-    margin-bottom: 10px;
-}*/
-
-.progress {
-    margin-bottom: 0.75em;
+/* Dark mode tweaks */
+html.dark .tag {
+    background-color: gray;
 }
 
-.channel-title {
-    font-size: 1.25em;
+html.dark .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
 }
 
-.example {
-    align-items: center;
-    justify-content: center;
-    color: lightgray;
-    font-size: 1.25em;
+html.dark a {
+    color: lightskyblue;
 }
 
-.video a:hover {
-    text-decoration: none;
+html.dark .progress-bar {
+    color: #fff;
 }
 
-.video .authorLink {
-    color: gray;
+html.dark .gm-style-iw {
+    background-color: rgb(34, 34, 34);
+    box-shadow: 0 2px 7px 1px rgba(255,255,255,0.3);
 }
 
-.video .authorLink:hover {
-    color: darkgray;
+html.dark .gm-style .gm-style-iw-t::after {
+    background: rgb(34, 34, 34)
 }
 
-.video .authorLink div {
-    margin-top: 2px;
+html.dark .gm-ui-hover-effect {
+    background: rgba(255,255,255,0.3)!important;
+    border-bottom-left-radius: 12px;
 }
 
-.openInMap {
-    color: gray;
+html.dark .context-menu-content {
+    color: #fff
 }
 
-.openInMap:hover {
-    color: darkgray;
-}
-
-#geolocate {
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-#langFilterContainer {
-    text-align: center;
-}
-
-.btn {
-    height: 38px;
+/* Darkmode Scrollbar color fix for Chrome */
+html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track, html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece {
+    background-color: rgb(34, 34, 34);
 }

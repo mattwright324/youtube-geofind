@@ -1,52 +1,59 @@
 ---
-layout: search
-title : Location Search
-title_text: By Location
-is_topic: false
+layout: default
+title: Location Search
+type: location
 ---
-
-<div class="form-group row">
-    <label class="col-2 col-form-label"><b>Location</b></label>
-    <div class="col-10">
-        <div class="input-group">
-            <input type="text" class="form-control" id="address"
-                   aria-describedby="help"
-                   placeholder="name, address, or city"/>
-            <div class="input-group-append">
+<div class="container mb-15">
+    <div class="progress" style="margin-bottom:5px">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="" aria-valuenow="0" aria-valuemin="0"
+             aria-valuemax="100">
+            <div class="label"></div>
+        </div>
+    </div>
+    <div id="progressText" style="width: 100%;text-align: center;">Idle</div>
+</div>
+<div class="container mb-15">
+    <h2>Location Search</h2>
+    <p>Search YouTube by location for geotagged videos.</p>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label for="address" class="form-label"><strong>Location</strong></label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="address" aria-describedby="addressHelp"
+                       placeholder="Search Google Maps" autocomplete="off">
                 <button id="geolocate" class="btn btn-secondary" title="Find me!" onclick="geofind.findMyLocation()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                         <path d="M0 0h24v24H0z" fill="none"/>
                         <path fill="white"
                               d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
                     </svg>
+                    <span class="countdown"></span>
                 </button>
-                <button id="randomLocation" class="btn btn-secondary" title="Random location" onclick="geofind.randomLocation()">
-                    <img src="./img/random-location.png" width="24" height="24">
+                <button id="randomLocation" class="btn btn-secondary" title="Random location"
+                        onclick="geofind.randomLocation()">
+                    <span id="text"><img src="./img/random-location.png" width="24" height="24"></span>
+                    <span class="countdown"></span>
                 </button>
             </div>
+
+            <div id="addressHelp" class="form-text">
+                As if searching in Google Maps (hit enter). Also drag and drop point on map, right click in map, or use
+                buttons.
+            </div>
         </div>
-        <small class="form-text text-muted">Drag and drop the green point or type desired location and hit
-            enter.</small>
-    </div>
-</div>
-<div class="form-group row">
-    <label class="col-2 col-form-label"><b>Radius</b></label>
-    <div class="col-10">
-        <select id="radius" class="custom-select">
-            <option value="1">1km</option>
-            <option value="2">2km</option>
-            <option value="5">5km</option>
-            <option value="10" selected>10km</option>
-            <option value="15">15km</option>
-            <option value="20">20km</option>
-            <option value="50">50km</option>
-            <option value="100">100km</option>
-            <option value="200">200km</option>
-            <option value="500">500km</option>
-            <option value="1000">1000km</option>
-        </select>
-        <small for="radius" class="form-text text-muted">
-            YouTube may return results close yet outside the specific search radius.
-        </small>
+        <div class="col-md-4">
+            <label for="radius" class="form-label"><strong>Radius</strong></label>
+            <input id="radius" data-suffix="km" value="15" min="1" max="1000" step="5" type="number"
+                   aria-describedby="radiusHelp" autocomplete="off">
+            <div id="radiusHelp" class="form-text">Results may be close yet outside the radius. Max 1000km.</div>
+        </div>
+
+        <div class="col-12">
+            <label for="keywords" class="form-label">Keywords</label>
+            <input type="text" class="form-control" id="keywords" placeholder="Search" aria-describedby="keywordsHelp"
+                   autocomplete="off">
+            <div id="keywordsHelp" class="form-text">As if searching in YouTube.</div>
+        </div>
+        {% include form_controls.html %}
     </div>
 </div>
