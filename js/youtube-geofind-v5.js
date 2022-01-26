@@ -2154,7 +2154,7 @@ const geofind = (function () {
                 const paramValue = parsedQuery[this.param];
 
                 const rfcDate = moment(paramValue).utcOffset(0, true).format(RFC_3339);
-                if (controls.inputDateFrom.length && rfcDate && rfcDate !== 'Invalid date') {
+                if (paramValue && controls.inputDateFrom.length && rfcDate && rfcDate !== 'Invalid date') {
                     controls.inputDateFrom.val(rfcDate);
                 }
             }
@@ -2165,7 +2165,7 @@ const geofind = (function () {
                 const paramValue = parsedQuery[this.param];
 
                 const rfcDate = moment(paramValue).utcOffset(0, true).format(RFC_3339);
-                if (controls.inputDateTo.length && rfcDate && rfcDate !== 'Invalid date') {
+                if (paramValue && controls.inputDateTo.length && rfcDate && rfcDate !== 'Invalid date') {
                     controls.inputDateTo.val(rfcDate);
                 }
             }
