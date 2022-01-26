@@ -27,7 +27,8 @@ const geofind = (function () {
         const videoId = idx(["id"], video) || '';
         const videoTitle = idx(["snippet", "title"], video) || '';
         const videoDescription = idx(["snippet", "description"], video) || '';
-        const publishDate = idx(["snippet", "publishedAt"], video) || '';
+        const publishDate = idx(["snippet", "publishedAt"], video);
+        const publishedFromNow = publishDate ? publishDate + " (" + moment(publishDate).utc().fromNow() + ")" : '';
         const channelId = idx(["snippet", "channelId"], video) || '';
         const channelTitle = idx(["snippet", "channelTitle"], video) || '';
         const latitude = idx(["recordingDetails", "location", "latitude"], video);
@@ -54,6 +55,10 @@ const geofind = (function () {
         if (language) {
             properties.push("lang:" + language)
         }
+        const dimension = idx(["contentDetails", "dimension"], video);
+        if (dimension === "3d") {
+            properties.push("3d");
+        }
         const propertiesHtml = properties.length ?
             "<span class='tag'>" +
             properties.join("</span><span class='comma'>, </span><span class='tag'>") +
@@ -75,7 +80,7 @@ const geofind = (function () {
             .replace(/{videoTitle}/g, videoTitle)
             .replace(/{videoDescription}/g, videoDescription.trunc(140))
             .replace(/{videoLength}/g, videoLength)
-            .replace(/{publishDate}/g, publishDate)
+            .replace(/{publishDate}/g, publishedFromNow)
             .replace(/{channelId}/g, channelId)
             .replace(/{channelTitle}/g, channelTitle)
             .replace(/{authorThumb}/g, authorThumbUrl)
