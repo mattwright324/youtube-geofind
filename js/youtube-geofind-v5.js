@@ -119,7 +119,9 @@ const geofind = (function () {
             "day-7": day * 7,
             "day-30": day * 30,
             "day-90": day * 90,
-            "day-365": day * 365
+            "day-180": day * 180,
+            "day-365": day * 365, // support old value for 'year'
+            "year": day * 365
         }
     };
     const pageTypes = {
