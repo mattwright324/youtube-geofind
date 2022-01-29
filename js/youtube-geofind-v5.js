@@ -119,7 +119,9 @@ const geofind = (function () {
             "day-7": day * 7,
             "day-30": day * 30,
             "day-90": day * 90,
-            "day-365": day * 365
+            "day-180": day * 180,
+            "day-365": day * 365, // support old value for 'year'
+            "year": day * 365
         }
     };
     const pageTypes = {
@@ -1939,6 +1941,15 @@ const geofind = (function () {
                 }, 1000);
             }
             countdown(3)
+        },
+
+        randomTopic: function () {
+            let newTopic;
+            do {
+                newTopic = TOPICS[rando(0, TOPICS.length-1)];
+            } while (controls.inputKeywords.val() === newTopic);
+
+            controls.inputKeywords.val(newTopic);
         },
 
         openInMap: function (videoId, focusOnSelect) {
