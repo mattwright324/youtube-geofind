@@ -1943,6 +1943,15 @@ const geofind = (function () {
             countdown(3)
         },
 
+        randomTopic: function () {
+            let newTopic;
+            do {
+                newTopic = TOPICS[rando(0, TOPICS.length-1)];
+            } while (controls.inputKeywords.val() === newTopic);
+
+            controls.inputKeywords.val(newTopic);
+        },
+
         openInMap: function (videoId, focusOnSelect) {
             if (!popupMap.hasOwnProperty(videoId)) {
                 console.log('Video does not have popup [' + videoId + ']')
