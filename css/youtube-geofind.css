@@ -235,6 +235,7 @@ html.dark .gm-style .gm-style-iw-t::after {
 html.dark .gm-ui-hover-effect {
     background: rgba(255,255,255,0.3)!important;
     border-bottom-left-radius: 12px;
+    filter: invert(1);
 }
 
 html.dark .context-menu-content {
@@ -244,4 +245,11 @@ html.dark .context-menu-content {
 /* Darkmode Scrollbar color fix for Chrome */
 html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track, html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece {
     background-color: rgb(34, 34, 34);
+}
+
+html.dark .poi-info-window div, html.dark .poi-info-window a {
+    background: initial;
+}
+html.dark .poi-info-window div {
+    color: white;
 }
