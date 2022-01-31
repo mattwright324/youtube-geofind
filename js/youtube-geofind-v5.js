@@ -56,8 +56,9 @@ const geofind = (function () {
             properties.push("lang:" + language)
         }
         const dimension = idx(["contentDetails", "dimension"], video);
+        const projection = idx(["contentDetails", "projection"], video);
         if (dimension === "3d") {
-            properties.push("3d");
+            properties.push(projection === "rectangular" ? "3d" : "360°");
         }
         const propertiesHtml = properties.length ?
             "<span class='tag'>" +
