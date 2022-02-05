@@ -6,7 +6,7 @@ Videos are viewable in a map and exportabled to CSV.
 
 * https://mattw.io/youtube-geofind/location
 
-![Example](https://i.imgur.com/nZErA91.png)
+![Example](https://i.imgur.com/VCuvjU8.png)
 
 What's unique about this tool? How can you use it?
 
@@ -18,10 +18,14 @@ What's unique about this tool? How can you use it?
     - Topic searching allows you to check if any uploads found by regular searching or keywords have geotags (though,
       not many do).
     - Location searching allows you to find videos with geotags within your chosen radius and timeframe.
-    - Export results to save your findings and use elsewhere.
     - Results can be directly opened in my YouTube Metadata tool to give all details about that video and its
       author.
+    - Export results in CSV and JSON and import back to view again
 3. Query API to share a search or linked custom search from your own site/tool
+
+### Wiki
+
+For more details about this app and YouTube geotags, [check out the wiki](https://github.com/mattwright324/youtube-geofind/wiki)!
 
 ### Query API
 
