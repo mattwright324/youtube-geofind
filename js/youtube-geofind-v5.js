@@ -56,8 +56,9 @@ const geofind = (function () {
             properties.push("lang:" + language)
         }
         const dimension = idx(["contentDetails", "dimension"], video);
+        const projection = idx(["contentDetails", "projection"], video);
         if (dimension === "3d") {
-            properties.push("3d");
+            properties.push(projection === "rectangular" ? "3d" : "360°");
         }
         const propertiesHtml = properties.length ?
             "<span class='tag'>" +
@@ -94,9 +95,9 @@ const geofind = (function () {
 
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
-    const randomChannel = CHANNELS[rando(0, CHANNELS.length-1)];
-    const randomTopic = TOPICS[rando(0, TOPICS.length-1)];
-    const randomCoords = CITIES[rando(0, CITIES.length-1)];
+    const randomChannel = shared.randomFromList(CHANNELS);
+    const randomTopic = shared.randomFromList(TOPICS);
+    const randomCoords = shared.randomFromList(CITIES);
     const idx = (p, o) => p.reduce((xs, x) => (xs && xs[x]) ? xs[x] : null, o);
 
     const defaults = {
@@ -717,44 +718,28 @@ const geofind = (function () {
 
                 console.log("handleChannelCustoms.get(" + index + ")")
 
-                youtube.ajax("search", {
-                    part: "snippet",
-                    maxResults: 50,
-                    q: channelCustoms[index],
-                    type: 'channel',
-                    order: 'relevance'
-                }).done(function (res) {
-                    console.log(res);
+                $.ajax({
+                    url: "https://cors.eu.org/https://www.youtube.com/c/" + channelCustoms[index],
+                    dataType: 'html'
+                }).then(function (res) {
+                    const pageHtml = $("<div>").html(res);
+                    const ogUrl = pageHtml.find("meta[property='og:url']").attr('content');
+                    console.log('Retrieved og:url ' + ogUrl);
 
-                    const ids = [];
-                    (res.items || []).forEach(function (channel) {
-                        ids.push(shared.idx(["id", "channelId"], channel));
-                    });
+                    const newParsed = shared.determineInput(ogUrl);
+                    if (newParsed.type === "channel_id") {
+                        channelIds.push(newParsed.value);
+                        setTimeout(function () {get(index + 1);}, 100);
+                    } else {
+                        console.log('Could not resolve custom url');
+                        console.warn(newParsed);
 
-                    youtube.ajax("channels", {
-                        part: "snippet",
-                        id: ids.join(","),
-                        maxResults: 50
-                    }).done(function (res2) {
-                        console.log(res2);
-
-                        (res2.items || []).forEach(function (channel) {
-                            const channelId = shared.idx(["id"], channel);
-                            const customUrl = shared.idx(["snippet", "customUrl"], channel);
-
-                            if (String(customUrl).toLowerCase() === String(channelCustoms[index]).toLowerCase()) {
-                                channelIds.push(channelId);
-                            }
-                        });
-
-                        get(index + 1);
-                    }).fail(function (err) {
-                        console.error(err);
-                        get(index + 1);
-                    });
+                        setTimeout(function () {get(index + 1);}, 100);
+                    }
                 }).fail(function (err) {
-                    console.error(err);
-                    get(index + 1);
+                    console.warn(err);
+
+                    setTimeout(function () {get(index + 1);}, 100);
                 });
             }
 
@@ -1917,7 +1902,7 @@ const geofind = (function () {
         randomLocation: function () {
             $("#randomLocation").addClass("loading").addClass("disabled")
 
-            const randomCoords = CITIES[rando(0, CITIES.length)];
+            const randomCoords = shared.randomFromList(CITIES);
 
             defaults.mapCenterCoords = {
                 lat: randomCoords[0],
@@ -1946,7 +1931,7 @@ const geofind = (function () {
         randomTopic: function () {
             let newTopic;
             do {
-                newTopic = TOPICS[rando(0, TOPICS.length-1)];
+                newTopic = shared.randomFromList(TOPICS);
             } while (controls.inputKeywords.val() === newTopic);
 
             controls.inputKeywords.val(newTopic);
@@ -2210,7 +2195,7 @@ const geofind = (function () {
             }
         },
         paramCC: {
-            param: 'cc',
+            param: 'creativeCommons',
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
