@@ -52,9 +52,13 @@ type: location
 
         <div class="col-12">
             <label for="keywords" class="form-label">Keywords</label>
-            <input type="text" class="form-control" id="keywords" placeholder="Search" aria-describedby="keywordsHelp"
-                   autocomplete="off">
-            <div id="keywordsHelp" class="form-text">As if searching in YouTube.</div>
+            <div class="input-group">
+                <input type="text" class="form-control" id="keywords" placeholder="Search" aria-describedby="keywordsHelp" autocomplete="off">
+                <button class="btn btn-secondary" title="Random topic" onclick="geofind.randomTopic()">
+                    <i class="bi bi-shuffle"></i>
+                </button>
+            </div>
+            <div id="keywordsHelp" class="form-text">As if searching in YouTube. Best used with a large radius or population-dense locations.</div>
         </div>
         {% include form_controls.html %}
     </div>

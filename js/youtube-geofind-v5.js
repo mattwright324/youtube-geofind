@@ -1687,15 +1687,18 @@ const geofind = (function () {
             });
 
             if (!coordsMap.hasOwnProperty(latLng)) {
+                const defaultThumb = "https://placehold.it/128x128"
                 const authorThumbs = idx([channelId, "snippet", "thumbnails"], rawChannelMap) || {};
                 const authorThumbUrl = (authorThumbs.default || authorThumbs.medium ||
-                    {url: "https://placehold.it/18x18"}).url;
+                    {url: defaultThumb}).url;
+
                 const icon = {
-                    url: authorThumbUrl,
+                    url: defaultThumb,
                     scaledSize: new google.maps.Size(defaults.mapMarkerWidth, defaults.mapMarkerWidth),
                     origin: new google.maps.Point(0, 0),
                     anchor: new google.maps.Point(0, 0)
                 };
+
                 const marker = new google.maps.Marker({
                     position: position,
                     map: internal.map,
@@ -1715,6 +1718,26 @@ const geofind = (function () {
                 marker.addListener("click", () => {
                     marker.openPopup();
                 });
+
+                const image = new Image();
+                image.onload = function () {
+                    console.info("Image loaded, adding marker with image !");
+                    icon.url = authorThumbUrl;
+
+                    marker.setIcon(icon);
+                }
+                image.onerror = function () {
+                    console.error("Cannot load image, adding marker without image");
+                    icon.url = defaultThumb;
+
+                    marker.setIcon(icon);
+                }
+
+                // delay retrieving images by milliseconds per 50
+                // fixes 403 (rate limits) when loading profile pictures locally
+                setTimeout(function () {
+                    image.src = authorThumbUrl;
+                }, Object.keys(coordsMap).length / 25)
 
                 internal.markersList.push(marker);
                 internal.adjustMapToResults();
