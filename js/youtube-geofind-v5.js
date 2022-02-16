@@ -1483,14 +1483,17 @@ const geofind = (function () {
                         }
                     });
 
-                    // When radius selection changes, adjust zoom on map.
-                    controls.inputRadius.change(function () {
+                    function updateRadius() {
                         const radiusInMeters = getSafeRadiusValue() * 1000;
 
                         controls.mapRadius.setRadius(radiusInMeters);
 
                         internal.adjustMapToCenter();
-                    });
+                    }
+
+                    // When radius selection changes, adjust zoom on map.
+                    controls.inputRadius.on('input', updateRadius);
+                    controls.inputRadius.on('change', updateRadius);
 
                     internal.reverseGeocode(internal.map.getCenter());
                     internal.adjustMapToCenter();
@@ -1687,7 +1690,8 @@ const geofind = (function () {
             });
 
             if (!coordsMap.hasOwnProperty(latLng)) {
-                const defaultThumb = "https://placehold.it/128x128"
+                const firstChar = (idx(["snippet", "channelTitle"], video) || "").charAt(0);
+                const defaultThumb = "https://dummyimage.com/50x50/aaaaaa/fff.png&text=" + firstChar;
                 const authorThumbs = idx([channelId, "snippet", "thumbnails"], rawChannelMap) || {};
                 const authorThumbUrl = (authorThumbs.default || authorThumbs.medium ||
                     {url: defaultThumb}).url;
@@ -1721,19 +1725,18 @@ const geofind = (function () {
 
                 const image = new Image();
                 image.onload = function () {
-                    console.info("Image loaded, adding marker with image !");
                     icon.url = authorThumbUrl;
 
                     marker.setIcon(icon);
                 }
                 image.onerror = function () {
-                    console.error("Cannot load image, adding marker without image");
+                    console.warn("Thumb failed to load, using default placeholder");
                     icon.url = defaultThumb;
 
                     marker.setIcon(icon);
                 }
 
-                // delay retrieving images by milliseconds per 50
+                // delay retrieving images by milliseconds
                 // fixes 403 (rate limits) when loading profile pictures locally
                 setTimeout(function () {
                     image.src = authorThumbUrl;
@@ -1834,10 +1837,8 @@ const geofind = (function () {
         },
 
         closeAllPopups: function () {
-            for (let i = 0; i < internal.markersList.length; i++) {
-                const marker = internal.markersList[i];
-
-                marker.closePopup();
+            for (const videoId in popupMap) {
+                popupMap[videoId].close();
             }
         }
     };
