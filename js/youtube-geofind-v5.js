@@ -1465,14 +1465,17 @@ const geofind = (function () {
                     controls.mapLocationMarker.setMap(this.map);
                     controls.mapRadius.setMap(this.map);
 
-                    // Move radius circle and map to drop location.
+                    // Move radius with currently dragging marker
+                    controls.mapLocationMarker.addListener("drag", () => {
+                        const center = controls.mapLocationMarker.getPosition();
+                        controls.mapRadius.setCenter(center);
+                    });
+                    // Geocode when drag ends, marker dropped
                     controls.mapLocationMarker.addListener("dragend", () => {
                         const center = controls.mapLocationMarker.getPosition();
-
                         controls.mapRadius.setCenter(center);
 
                         internal.adjustMapToCenter();
-
                         internal.reverseGeocode(controls.mapRadius.getCenter());
                     });
 
