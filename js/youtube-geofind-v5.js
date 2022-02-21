@@ -189,7 +189,7 @@ const geofind = (function () {
 
         const copyParams = $.extend({}, searchParams);
         if (copyParams.hasOwnProperty("timeframe")) {
-            if (!absolute) {
+            if (!absolute && copyParams.timeframe !== 'custom') {
                 // relative time should not show calculated timestamps
                 delete copyParams["start"];
                 delete copyParams["end"];
@@ -202,7 +202,6 @@ const geofind = (function () {
         const params = [];
         for (let key in copyParams) {
             if (defaultParams.hasOwnProperty(key) && defaultParams[key] === copyParams[key]) {
-                console.log('skip ' + key + '==' + defaultParams[key])
                 continue;
             }
             params.push(key + "=" + encodeURIComponent(copyParams[key]));
@@ -719,7 +718,7 @@ const geofind = (function () {
                 console.log("handleChannelCustoms.get(" + index + ")")
 
                 $.ajax({
-                    url: "https://cors.eu.org/https://www.youtube.com/c/" + channelCustoms[index],
+                    url: "https://cors-proxy-mw324.herokuapp.com/https://www.youtube.com/c/" + channelCustoms[index],
                     dataType: 'html'
                 }).then(function (res) {
                     const pageHtml = $("<div>").html(res);
@@ -1202,6 +1201,12 @@ const geofind = (function () {
 
             module.params.updatePageFromAll();
 
+            if (!module.params.didSetLocation && this.pageType === pageTypes.LOCATION) {
+                console.log('didSetLocation=' + module.params.didSetLocation + ' reverseGeocode')
+                // don't geocode on page load when location param used
+                internal.reverseGeocode(internal.map.getCenter());
+            }
+
             elements.loadingDiv.fadeOut(defaults.animationMs);
         },
         pageType: 'undefined',
@@ -1282,7 +1287,6 @@ const geofind = (function () {
 
             processSearch(searchParams);
         },
-
 
         setupPageControls: function () {
             const KEY_ENTER = 13;
@@ -1498,7 +1502,6 @@ const geofind = (function () {
                     controls.inputRadius.on('input', updateRadius);
                     controls.inputRadius.on('change', updateRadius);
 
-                    internal.reverseGeocode(internal.map.getCenter());
                     internal.adjustMapToCenter();
                 } else {
                     controls.inputKeywords.val(randomTopic);
@@ -1763,23 +1766,50 @@ const geofind = (function () {
          * @param callback called when done
          */
         geocode: function (address, callback) {
-            this.geocoder.geocode({address: address}, (res, stat) => {
-                if (stat === "OK") {
-                    if (res[0]) {
-                        const results = res[0];
-                        const latlng = results.geometry.location;
+            function isNumeric(input){
+                return (/^-?\d*\.?\d+$/.test(input));
+            }
 
-                        controls.mapLocationMarker.setPosition(latlng);
-                        controls.mapRadius.setCenter(controls.mapLocationMarker.getPosition());
+            const split = address.replaceAll(/\s+/g, '').split(',');
+            if (split.length >= 2 && isNumeric(split[0]) && isNumeric(split[1])) {
+                const lat = Number(split[0]);
+                const lng = Number(split[1]);
 
-                        internal.adjustMapToCenter();
+                console.log('input looked like coords, not geocoding: ' + lat + "," + lng);
 
-                        if (callback) {
-                            callback.call();
+                controls.mapLocationMarker.setPosition({
+                    lat: lat,
+                    lng: lng
+                });
+                controls.mapRadius.setCenter(controls.mapLocationMarker.getPosition());
+
+                internal.adjustMapToCenter();
+
+                if (callback) {
+                    callback.call();
+                }
+            } else {
+                console.log('input did not look like coords, geocoding')
+                this.geocoder.geocode({address: address}, (res, stat) => {
+                    console.log(res);
+                    console.log(stat);
+                    if (stat === "OK") {
+                        if (res[0]) {
+                            const results = res[0];
+                            const latlng = results.geometry.location;
+
+                            controls.mapLocationMarker.setPosition(latlng);
+                            controls.mapRadius.setCenter(controls.mapLocationMarker.getPosition());
+
+                            internal.adjustMapToCenter();
+
+                            if (callback) {
+                                callback.call();
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         },
 
         /**
@@ -1787,12 +1817,16 @@ const geofind = (function () {
          * @param callback called when done
          */
         reverseGeocode: function (position, callback) {
+            console.log('reverseGeocode()');
+
             this.geocoder.geocode({"location": position}, (res, stat) => {
+                console.log(res);
+                console.log(stat);
                 if (stat === "OK") {
                     if (res[0]) {
-                        controls.inputAddress.attr("value", res[0].formatted_address);
+                        controls.inputAddress.val(res[0].formatted_address);
                     } else {
-                        controls.inputAddress.attr("value", pos.lat() + "," + pos.lng());
+                        controls.inputAddress.val(pos.lat() + "," + pos.lng());
                     }
 
                     if (callback) {
@@ -2083,6 +2117,7 @@ const geofind = (function () {
      * Handles reading query parameters and updating the page based on their value.
      */
     module.params = {
+        didSetLocation: false,
         // Parameter values, will be called in order defined below.
         // Location Page Only
         paramLocation: {
@@ -2095,6 +2130,7 @@ const geofind = (function () {
 
                     if (parts.length === 2) {
                         internal.setMapCenter(parts[0], parts[1]);
+                        module.params.didSetLocation = true;
                     }
                 }
             }
