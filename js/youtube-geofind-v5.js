@@ -189,7 +189,7 @@ const geofind = (function () {
 
         const copyParams = $.extend({}, searchParams);
         if (copyParams.hasOwnProperty("timeframe")) {
-            if (!absolute) {
+            if (!absolute && copyParams.timeframe !== 'custom') {
                 // relative time should not show calculated timestamps
                 delete copyParams["start"];
                 delete copyParams["end"];
@@ -1813,7 +1813,7 @@ const geofind = (function () {
          * @param callback called when done
          */
         reverseGeocode: function (position, callback) {
-            controls.inputAddress.val(position.lat() + "," + position.lng())
+            // controls.inputAddress.val(position.lat() + "," + position.lng())
             // console.log('reverseGeocode()')
             // this.geocoder.geocode({"location": position}, (res, stat) => {
             //     console.log(res);
