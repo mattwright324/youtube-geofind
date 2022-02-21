@@ -1201,6 +1201,12 @@ const geofind = (function () {
 
             module.params.updatePageFromAll();
 
+            if (!module.params.didSetLocation && this.pageType === pageTypes.LOCATION) {
+                console.log('didSetLocation=' + module.params.didSetLocation + ' reverseGeocode')
+                // don't geocode on page load when location param used
+                internal.reverseGeocode(internal.map.getCenter());
+            }
+
             elements.loadingDiv.fadeOut(defaults.animationMs);
         },
         pageType: 'undefined',
@@ -1281,7 +1287,6 @@ const geofind = (function () {
 
             processSearch(searchParams);
         },
-
 
         setupPageControls: function () {
             const KEY_ENTER = 13;
@@ -1497,7 +1502,6 @@ const geofind = (function () {
                     controls.inputRadius.on('input', updateRadius);
                     controls.inputRadius.on('change', updateRadius);
 
-                    internal.reverseGeocode(internal.map.getCenter());
                     internal.adjustMapToCenter();
                 } else {
                     controls.inputKeywords.val(randomTopic);
@@ -1813,23 +1817,23 @@ const geofind = (function () {
          * @param callback called when done
          */
         reverseGeocode: function (position, callback) {
-            // controls.inputAddress.val(position.lat() + "," + position.lng())
-            // console.log('reverseGeocode()')
-            // this.geocoder.geocode({"location": position}, (res, stat) => {
-            //     console.log(res);
-            //     console.log(stat);
-            //     if (stat === "OK") {
-            //         if (res[0]) {
-            //             controls.inputAddress.val(res[0].formatted_address);
-            //         } else {
-            //             controls.inputAddress.val(pos.lat() + "," + pos.lng());
-            //         }
-            //
-            //         if (callback) {
-            //             callback.call();
-            //         }
-            //     }
-            // });
+            console.log('reverseGeocode()');
+
+            this.geocoder.geocode({"location": position}, (res, stat) => {
+                console.log(res);
+                console.log(stat);
+                if (stat === "OK") {
+                    if (res[0]) {
+                        controls.inputAddress.val(res[0].formatted_address);
+                    } else {
+                        controls.inputAddress.val(pos.lat() + "," + pos.lng());
+                    }
+
+                    if (callback) {
+                        callback.call();
+                    }
+                }
+            });
         },
 
         /**
@@ -2113,6 +2117,7 @@ const geofind = (function () {
      * Handles reading query parameters and updating the page based on their value.
      */
     module.params = {
+        didSetLocation: false,
         // Parameter values, will be called in order defined below.
         // Location Page Only
         paramLocation: {
@@ -2125,6 +2130,7 @@ const geofind = (function () {
 
                     if (parts.length === 2) {
                         internal.setMapCenter(parts[0], parts[1]);
+                        module.params.didSetLocation = true;
                     }
                 }
             }
