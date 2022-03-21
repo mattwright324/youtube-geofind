@@ -401,7 +401,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= newVideoIds.length) {
                     console.log("finished videoIds");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -478,7 +478,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= newChannelIds.length) {
                     console.log("finished channelIds");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -656,7 +656,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= channelUsers.length) {
                     console.log("finished channelUsers");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -711,7 +711,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= channelCustoms.length) {
                     console.log("finished channelCustoms");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -769,7 +769,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= channelIds.length) {
                     console.log("finished channelIds");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -834,7 +834,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= notYetRetrieved.length) {
                     console.log("finished notYetRetrieved");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
@@ -887,7 +887,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= playlistIds.length) {
                     console.log("finished playlistIds");
-                    resolve();
+                    setTimeout(resolve, 250);
                     return;
                 }
 
