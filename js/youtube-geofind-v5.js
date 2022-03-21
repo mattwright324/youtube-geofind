@@ -1024,6 +1024,12 @@ const geofind = (function () {
                 bDeferRender: true,
             });
 
+            controls.geotagsTable.on('page.dt', function() {
+                $('html, body').animate({
+                    scrollTop: $('#geotagsTable_wrapper').offset().top
+                }, 'slow');
+            });
+
             const defaultContextMenu = new GmapsContextMenu(internal.map, {
                 options: [
                     {

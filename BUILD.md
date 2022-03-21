@@ -1,7 +1,7 @@
 Build Documentation
 =
 
-### Building youtube-geofind
+### Setup
 Get a copy of the repository
 
 ```
@@ -17,7 +17,7 @@ Install Ruby (and gems jekyll and bundler) following the steps for your operatin
 In CMD or terminal, cd to the project directory you cloned to and run `bundle install` to install necessary gems
 for github-pages in the project Gemfile (this may take some time).
 
-### Running youtube-geofind
+### Build and Run
 
 In CMD or terminal, cd to the project directory you cloned to and run `bundle exec jekyll serve`
  and you can view a live version at http://localhost:4000
