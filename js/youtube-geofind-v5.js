@@ -358,7 +358,9 @@ const geofind = (function () {
                     });
 
                     if (res.hasOwnProperty("nextPageToken") && page < maxPages) {
-                        doSearch(page + 1, res.nextPageToken);
+                        setTimeout(function () {
+                            doSearch(page + 1, res.nextPageToken);
+                        }, 150);
                     } else {
                         resolve(results);
                     }
@@ -438,10 +440,14 @@ const geofind = (function () {
                         text: processed + " / " + newVideoIds.length
                     })
 
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 }).fail(function (err) {
                     console.error(err);
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 });
             }
 
@@ -504,10 +510,14 @@ const geofind = (function () {
                         text: processed + " / " + newChannelIds.length
                     });
 
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 }).fail(function (err) {
                     console.error(err);
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 });
             }
 
@@ -803,10 +813,14 @@ const geofind = (function () {
                         text: processed + " / " + channelIds.length
                     });
 
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 }).fail(function (err) {
                     console.error(err);
-                    get(index + slice, slice);
+                    setTimeout(function () {
+                        get(index + slice, slice);
+                    }, 150);
                 });
             }
 
@@ -916,13 +930,19 @@ const geofind = (function () {
                         })
 
                         if (res.hasOwnProperty("nextPageToken")) {
-                            paginate(res.nextPageToken);
+                            setTimeout(function () {
+                                paginate(res.nextPageToken);
+                            }, 150);
                         } else {
-                            get(index + 1);
+                            setTimeout(function () {
+                                get(index + 1);
+                            }, 150);
                         }
                     }).fail(function (err) {
                         console.error(err);
-                        get(index + 1);
+                        setTimeout(function () {
+                            get(index + 1);
+                        }, 150);
                     });
                 }
 
