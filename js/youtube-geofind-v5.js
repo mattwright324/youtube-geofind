@@ -1386,7 +1386,9 @@ const geofind = (function () {
                 let file = event.target.files[0];
 
                 if (file) {
-                    controls.inputValue.val(file.name);
+                    if (internal.pageType === pageTypes.CHANNEL) {
+                        controls.inputChannels.val(file.name);
+                    }
                 } else {
                     return;
                 }
