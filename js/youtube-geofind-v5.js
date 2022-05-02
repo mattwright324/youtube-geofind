@@ -10,6 +10,11 @@ const geofind = (function () {
 
     const RFC_3339 = 'YYYY-MM-DDTHH:mm:ss';
 
+    if (typeof gtag === 'undefined') {
+        // prevent error if gtag removed
+        window['gtag'] = function() {}
+    }
+
     let videoTemplateHtml = '';
     $.ajax({
         url: './video-template.html'
@@ -718,6 +723,8 @@ const geofind = (function () {
                 return;
             }
 
+            gtag('event', 'call', {'event_category': 'cors_proxy', 'event_label': 'cors_proxy for custom channel(s)', 'value': channelCustoms.length});
+
             function get(index) {
                 if (index >= channelCustoms.length) {
                     console.log("finished channelCustoms");
@@ -1062,6 +1069,8 @@ const geofind = (function () {
                             controls.mapRadius.setCenter(latLng);
 
                             internal.reverseGeocode(controls.mapRadius.getCenter());
+
+                            gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from context move'});
                         }
                     },
                     {
@@ -1074,6 +1083,8 @@ const geofind = (function () {
                             controls.mapRadius.setCenter(latLng);
 
                             internal.reverseGeocode(controls.mapRadius.getCenter());
+
+                            gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from context search'});
 
                             new Promise(function (resolve) {
                                 internal.submit();
@@ -1231,6 +1242,8 @@ const geofind = (function () {
                 console.log('didSetLocation=' + module.params.didSetLocation + ' reverseGeocode')
                 // don't geocode on page load when location param used
                 internal.reverseGeocode(internal.map.getCenter());
+
+                gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode on page load'});
             }
 
             elements.loadingDiv.fadeOut(defaults.animationMs);
@@ -1263,6 +1276,8 @@ const geofind = (function () {
             controls.shareLink.attr("disabled", false);
 
             module.clearResults();
+
+            gtag('event', 'click', {'event_category': 'button', 'event_label': 'submit ' + internal.pageType});
 
             const parsed = [];
             controls.inputChannels.val().split(",").forEach(function (part) {
@@ -1311,6 +1326,8 @@ const geofind = (function () {
                 absoluteShareUrls.push(shareAbsolute);
             }
 
+            gtag('event', 'click', {'event_category': 'button', 'event_label': 'submit ' + internal.pageType, 'value': searchParams.pages});
+
             processSearch(searchParams);
         },
 
@@ -1325,6 +1342,8 @@ const geofind = (function () {
 
             controls.btnExport.on('click', function () {
                 controls.btnExport.addClass("loading").addClass("disabled");
+
+                gtag('event', 'click', {'event_category': 'button', 'event_label': 'export ' + internal.pageType});
 
                 const zip = new JSZip();
                 console.log("Creating about.txt...")
@@ -1397,6 +1416,8 @@ const geofind = (function () {
             });
 
             function importFile(file) {
+                gtag('event', 'click', {'event_category': 'button', 'event_label': 'import ' + internal.pageType});
+
                 console.log("Importing from file " + file.name);
 
                 controls.btnImport.addClass("loading").addClass("disabled");
@@ -1509,6 +1530,8 @@ const geofind = (function () {
 
                         internal.adjustMapToCenter();
                         internal.reverseGeocode(controls.mapRadius.getCenter());
+
+                        gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from marker move'});
                     });
 
                     // Geocode address on pressing Enter in address textfield
@@ -1817,6 +1840,8 @@ const geofind = (function () {
                     callback.call();
                 }
             } else {
+                gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'geocode from address'});
+
                 console.log('input did not look like coords, geocoding')
                 this.geocoder.geocode({address: address}, (res, stat) => {
                     console.log(res);
@@ -1969,6 +1994,8 @@ const geofind = (function () {
                     internal.setMapCenter(pos.coords.latitude, pos.coords.longitude);
 
                     internal.reverseGeocode(internal.map.getCenter());
+
+                    gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from find me'});
                 });
             }
 
@@ -2000,6 +2027,8 @@ const geofind = (function () {
 
             internal.setMapCenter(randomCoords[0], randomCoords[1]);
             internal.reverseGeocode(internal.map.getCenter());
+
+            gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from random location'});
 
             function countdown(count) {
                 console.log(count);
