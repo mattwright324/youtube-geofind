@@ -572,6 +572,7 @@ const geofind = (function () {
         console.log(parsed);
 
         const channelUsers = [];
+        const channelHandles = [];
         const channelCustoms = [];
         const channelIds = [];
         const channelIdsCreatedPlaylists = [];
@@ -589,6 +590,8 @@ const geofind = (function () {
                 playlistIds.push(p.value);
             } else if (p.type === "channel_id" && channelIds.indexOf(p.value) === -1) {
                 channelIds.push(p.value);
+            } else if (p.type === "channel_handle" && channelHandles.indexOf(p.value) === -1) {
+                channelHandles.push(p.value);
             } else if (p.type === "channel_custom" && channelCustoms.indexOf(p.value) === -1) {
                 channelCustoms.push(p.value);
             } else if (p.type === "channel_user" && channelUsers.indexOf(p.value) === -1) {
@@ -601,7 +604,8 @@ const geofind = (function () {
         });
 
         Promise.all([
-            handleChannelCustoms(channelCustoms, channelIds)
+            handleChannelCustoms(channelCustoms, channelIds),
+            handleChannelHandles(channelHandles, channelIds),
         ]).then(function () {
             return Promise.all([
                 // Channels condense to uploads playlist ids and channel ids
@@ -708,6 +712,59 @@ const geofind = (function () {
                 }).fail(function (err) {
                     console.error(err);
                     get(index + 1);
+                });
+            }
+
+            get(0);
+        });
+    }
+
+    function handleChannelHandles(channelHandles, channelIds) {
+        return new Promise(function (resolve) {
+            if (channelHandles.length === 0) {
+                console.log("no channelHandles")
+                resolve();
+                return;
+            }
+
+            gtag('event', 'call', {'event_category': 'cors_proxy', 'event_label': 'cors_proxy for channel handle(s)', 'value': channelHandles.length});
+
+            function get(index) {
+                if (index >= channelHandles.length) {
+                    console.log("finished channelHandles");
+                    setTimeout(resolve, 250);
+                    return;
+                }
+
+                console.log("handleChannelHandles.get(" + index + ")")
+
+                $.ajax({
+                    url: "https://cors-proxy-mw324.herokuapp.com/https://www.youtube.com/@" + channelHandles[index],
+                    dataType: 'html'
+                }).then(function (res) {
+                    const pageHtml = $("<div>").html(res);
+                    const channelId = pageHtml.find("meta[itemprop='channelId']").attr('content');
+
+                    const newParsed = shared.determineInput(channelId);
+                    if (newParsed.type === "channel_id") {
+                        channelIds.push(newParsed.value);
+                        setTimeout(function () {
+                            get(index + 1);
+                        }, 100);
+                    } else {
+                        console.log('Could not resolve handle');
+                        console.warn(newParsed);
+
+                        setTimeout(function () {
+                            get(index + 1);
+                        }, 100);
+                    }
+                }).fail(function (err) {
+                    console.warn(err);
+
+                    setTimeout(function () {
+                        get(index + 1);
+                    }, 100);
                 });
             }
 
