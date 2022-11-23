@@ -253,3 +253,7 @@ html.dark .poi-info-window div, html.dark .poi-info-window a {
 html.dark .poi-info-window div {
     color: white;
 }
+
+.optional {
+    opacity: 0.75;
+}
