@@ -2437,17 +2437,19 @@ const geofind = (function () {
             updatePage: function (parsedQuery) {
                 const paramValue = parsedQuery[this.param];
 
-                if (controls.inputAddress.length && paramValue) {
-                    controls.inputAddress.val(paramValue);
+                // TODO: Disable query param for now
 
-                    if (paramValue.length) {
-                        internal.geocode(paramValue, function () {
-                            if (module.params.paramDoSearch.shouldSearch(parsedQuery)) {
-                                controls.btnSubmit.click();
-                            }
-                        });
-                    }
-                }
+                // if (controls.inputAddress.length && paramValue) {
+                //     controls.inputAddress.val(paramValue);
+                //
+                //     if (paramValue.length) {
+                //         internal.geocode(paramValue, function () {
+                //             if (module.params.paramDoSearch.shouldSearch(parsedQuery)) {
+                //                 controls.btnSubmit.click();
+                //             }
+                //         });
+                //     }
+                // }
             }
         },
 
