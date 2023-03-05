@@ -109,7 +109,7 @@ p.mb-15 {
     width: 100px;
 }
 
-button .countdown, button .spinner {
+button .spinner {
     display: none;
 }
 

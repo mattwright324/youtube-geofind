@@ -10,6 +10,38 @@ const geofind = (function () {
 
     const RFC_3339 = 'YYYY-MM-DDTHH:mm:ss';
 
+    const findMeKey = 'last-submit-geofind-findme-date';
+    const randomLocKey = 'last-submit-geofind-randomLoc-date';
+    const submitKey = 'last-submit-geofind-date';
+
+    const seconds = 15;
+    const millis = seconds * 1000;
+
+    const seconds2 = 5;
+    const millis2 = seconds2 * 1000;
+
+    const can = {
+        submit: true,
+        findMe: true,
+        randomLoc: true,
+    }
+
+    function countdown(selector, flag, count) {
+        $(selector).addClass("loading").addClass("disabled");
+        $(selector + " .countdown").text(Math.trunc(count));
+
+        setTimeout(function () {
+            if (count <= 1) {
+                $(selector).removeClass("loading").removeClass("disabled");
+                $(selector + " .countdown").text("");
+
+                can[flag] = true;
+            } else {
+                countdown(selector, flag, count - 1);
+            }
+        }, 1000);
+    }
+
     if (typeof gtag === 'undefined') {
         // prevent error if gtag removed
         window['gtag'] = function() {}
@@ -1188,6 +1220,8 @@ const geofind = (function () {
             elements.channelsDiv = $("#channel-list");
             elements.channelPlaceholder = $(".example");
 
+            controls.btnSubmit = $("#submit");
+
             controls.inputAddress = $("#address");
             controls.btnGeolocate = $("#geolocate");
             controls.inputRadius = $("#radius");
@@ -1257,6 +1291,27 @@ const geofind = (function () {
             controls.checkClearResults = $("#clearOnSearch");
             controls.checkAbsoluteTimeframe = $("#absoluteTimeframe");
 
+            const lastSubmit = localStorage.getItem(submitKey);
+            if (submitKey in localStorage && moment(lastSubmit).isValid() && moment().diff(lastSubmit) < millis) {
+                countdown("#submit", "submit", (millis - moment().diff(lastSubmit)) / 1000);
+            } else {
+                $("#submit").removeClass("loading").removeClass("disabled");
+            }
+
+            const lastFindMe = localStorage.getItem(findMeKey);
+            if (findMeKey in localStorage && moment(lastFindMe).isValid() && moment().diff(lastFindMe) < millis2) {
+                countdown("#geolocate", "findMe", (millis2 - moment().diff(lastFindMe)) / 1000);
+            } else {
+                $("#geolocate").removeClass("loading").removeClass("disabled");
+            }
+
+            const lastRandomLoc = localStorage.getItem(randomLocKey);
+            if (randomLocKey in localStorage && moment(lastRandomLoc).isValid() && moment().diff(lastRandomLoc) < millis2) {
+                countdown("#randomLocation", "randomLoc", (millis2 - moment().diff(lastRandomLoc)) / 1000);
+            } else {
+                $("#randomLocation").removeClass("loading").removeClass("disabled");
+            }
+
             $("div#langFilterContainer").html(
                 "Language: " +
                 "<select id='langFilter' class='form-select form-select-sm' style='display:inline; width:auto;'>" +
@@ -1274,8 +1329,6 @@ const geofind = (function () {
             $("#langFilter").change(function () {
                 controls.geotagsTable.draw();
             });
-
-            controls.btnSubmit = $("#btnSubmit");
 
             const typeMeta = $("meta[name='pagetype']").attr('content');
             console.log(typeMeta);
@@ -1312,21 +1365,13 @@ const geofind = (function () {
         coordsMap: {},
 
         channelSubmit: function () {
-            $("#btnSubmit").addClass("loading").addClass("disabled")
-            function countdown(count) {
-                console.log(count);
-
-                $("#btnSubmit .countdown").text(count);
-
-                setTimeout(function () {
-                    if (count === 1) {
-                        $("#btnSubmit").removeClass("loading").removeClass("disabled")
-                    } else {
-                        countdown(count - 1);
-                    }
-                }, 1000);
+            const lastSubmit = localStorage.getItem(submitKey);
+            if (!can.submit || (submitKey in localStorage && moment(lastSubmit).isValid() && moment().diff(lastSubmit) < millis)) {
+                return;
             }
-            countdown(3);
+            can.submit = false;
+            localStorage.setItem(submitKey, moment())
+            countdown("#submit", "submit", seconds);
 
             controls.shareLink.val(location.origin + location.pathname +
                 "?channels=" + encodeURIComponent(controls.inputChannels.val()) + "&doSearch=true");
@@ -1351,21 +1396,13 @@ const geofind = (function () {
         },
 
         submit: function () {
-            $("#btnSubmit").addClass("loading").addClass("disabled")
-            function countdown(count) {
-                console.log(count);
-
-                $("#btnSubmit .countdown").text(count);
-
-                setTimeout(function () {
-                    if (count === 1) {
-                        $("#btnSubmit").removeClass("loading").removeClass("disabled")
-                    } else {
-                        countdown(count - 1);
-                    }
-                }, 1000);
+            const lastSubmit = localStorage.getItem(submitKey);
+            if (!can.submit || (submitKey in localStorage && moment(lastSubmit).isValid() && moment().diff(lastSubmit) < millis)) {
+                return;
             }
-            countdown(3)
+            can.submit = false;
+            localStorage.setItem(submitKey, moment())
+            countdown("#submit", "submit", seconds);
 
             elements.loadingDiv.show();
 
@@ -2044,7 +2081,13 @@ const geofind = (function () {
         onMapInitCalled: false,
 
         findMyLocation: function () {
-            $("#geolocate").addClass("loading").addClass("disabled")
+            const lastSubmit = localStorage.getItem(findMeKey);
+            if (!can.findMe || (findMeKey in localStorage && moment(lastSubmit).isValid() && moment().diff(lastSubmit) < millis2)) {
+                return;
+            }
+            can.findMe = false;
+            localStorage.setItem(findMeKey, moment())
+            countdown("#geolocate", "findMe", seconds2);
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
@@ -2055,25 +2098,16 @@ const geofind = (function () {
                     gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from find me'});
                 });
             }
-
-            function countdown(count) {
-                console.log(count);
-
-                $("#geolocate .countdown").text(count);
-
-                setTimeout(function () {
-                    if (count === 1) {
-                        $("#geolocate").removeClass("loading").removeClass("disabled")
-                    } else {
-                        countdown(count - 1);
-                    }
-                }, 1000);
-            }
-            countdown(3)
         },
 
         randomLocation: function () {
-            $("#randomLocation").addClass("loading").addClass("disabled")
+            const lastSubmit = localStorage.getItem(randomLocKey);
+            if (!can.randomLoc || (submitKey in localStorage && moment(lastSubmit).isValid() && moment().diff(lastSubmit) < millis2)) {
+                return;
+            }
+            can.randomLoc = false;
+            localStorage.setItem(randomLocKey, moment())
+            countdown("#randomLocation", "randomLoc", seconds2);
 
             const randomCoords = shared.randomFromList(CITIES);
 
@@ -2086,21 +2120,6 @@ const geofind = (function () {
             internal.reverseGeocode(internal.map.getCenter());
 
             gtag('event', 'call', {'event_category': 'geocode', 'event_label': 'reverse_geocode from random location'});
-
-            function countdown(count) {
-                console.log(count);
-
-                $("#randomLocation .countdown").text(count);
-
-                setTimeout(function () {
-                    if (count === 1) {
-                        $("#randomLocation").removeClass("loading").removeClass("disabled")
-                    } else {
-                        countdown(count - 1);
-                    }
-                }, 1000);
-            }
-            countdown(3)
         },
 
         randomTopic: function () {
