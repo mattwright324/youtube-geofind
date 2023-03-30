@@ -4,9 +4,9 @@ body {
 }
 
 #map {
-    height: 450px;
+    height: 500px;
     width: 100%;
-    resize: vertical;
+    /*resize: vertical;*/
 }
 
 html.dark .bg-dark {
@@ -256,4 +256,48 @@ html.dark .poi-info-window div {
 
 .optional {
     opacity: 0.75;
+}
+
+.mapboxgl-popup {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+    max-width: 700px !important;
+    font-size: 14px;
+}
+html.dark .mapboxgl-popup-content {
+    background-color: rgb(34, 34, 34) !important;
+}
+html.dark .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+html.dark .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+html.dark .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: rgb(34, 34, 34) !important;
+}
+html.dark .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+html.dark .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+html.dark .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+    border-bottom-color: rgb(34, 34, 34) !important;
+}
+html.dark .mapboxgl-popup-close-button {
+    background-color: transparent !important;
+    color: white !important;
+}
+
+html.dark .context-menu-list {
+    background-color: rgb(34, 34, 34) !important;
+}
+html.dark .context-menu-item {
+    background-color: rgb(34, 34, 34) !important;
+    color: white !important;
+}
+
+.mapboxgl-ctrl-geolocate, .mapboxgl-ctrl-geolocate * {
+    display: none !important;
+    user-input: none !important;
+    cursor: none !important;
+    background-color: transparent !important;
+}
+.mapboxgl-ctrl-geocoder, .mapboxgl-ctrl-geocoder * {
+    display: none !important;
+    user-input: none !important;
+    cursor: none !important;
+    background-color: transparent !important;
 }
