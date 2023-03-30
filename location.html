@@ -24,8 +24,12 @@ type: location
             <label for="address" class="form-label"><strong>Location</strong></label>
             <div class="input-group">
                 <input type="text" class="form-control" id="address" aria-describedby="addressHelp"
-                       placeholder="Search Google Maps" autocomplete="off">
-                <button id="geolocate" class="btn btn-secondary disabled" title="Find me!" onclick="geofind.findMyLocation()">
+                       placeholder="Search Mapbox" autocomplete="off">
+                <button id="searchAddress" class="btn btn-secondary disabled" title="Search address">
+                    <span><i class="bi bi-search"></i></span>
+                    <span class="countdown"></span>
+                </button>
+                <button id="geolocate" class="btn btn-secondary disabled" title="Find me!">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                         <path d="M0 0h24v24H0z" fill="none"/>
                         <path fill="white"
@@ -33,21 +37,20 @@ type: location
                     </svg>
                     <span class="countdown"></span>
                 </button>
-                <button id="randomLocation" class="btn btn-secondary disabled" title="Random location"
-                        onclick="geofind.randomLocation()">
-                    <span id="text"><img src="./img/random-location.png" width="24" height="24"></span>
+                <button id="randomLocation" class="btn btn-secondary disabled" title="Random location">
+                    <span><img src="./img/random-location.png" width="24" height="24"></span>
                     <span class="countdown"></span>
                 </button>
             </div>
 
             <div id="addressHelp" class="form-text">
-                As if searching in Google Maps (hit enter). Also drag and drop point on map, right click in map, or use
+                Search with a location name (hit enter). Also drag and drop point on map, right click in map, or use
                 buttons.
             </div>
         </div>
         <div class="col-md-4">
             <label for="radius" class="form-label"><strong>Radius</strong></label>
-            <input id="radius" data-suffix="km" value="15" min="1" max="1000" step="5" type="number"
+            <input id="radius" data-suffix="km" value="25" min="1" max="1000" step="5" type="number"
                    aria-describedby="radiusHelp" autocomplete="off">
             <div id="radiusHelp" class="form-text">Results may be close yet outside the radius. Max 1000km.</div>
         </div>
@@ -56,7 +59,7 @@ type: location
             <label for="keywords" class="form-label">Keywords</label>
             <div class="input-group">
                 <input type="text" class="form-control" id="keywords" placeholder="Search" aria-describedby="keywordsHelp" autocomplete="off">
-                <button class="btn btn-secondary" title="Random topic" onclick="geofind.randomTopic()">
+                <button class="btn btn-secondary" title="Random topic" id="randomTopic">
                     <i class="bi bi-shuffle"></i>
                 </button>
             </div>
