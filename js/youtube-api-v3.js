@@ -44,4 +44,4 @@ let youtube = (function () {
     };
     return module;
 }());
-youtube.setDefaultKey(atob("QUl6YVN5Q0dXYW5PRU1FZ2RIcXN4TkRhYV9aWFRaNmhvWVFybkFJ"));
+youtube.setDefaultKey(atob('QUl6YVN5QWEtbzU1YUlNdDRZQzBtaFB5cDhXZkdxbDVEVmdfZnA0'));
