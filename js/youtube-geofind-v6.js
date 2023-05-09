@@ -1484,7 +1484,7 @@ const geofind = (function () {
                     if (res.hasOwnProperty("nextPageToken") && page < maxPages) {
                         setTimeout(function () {
                             doSearch(page + 1, res.nextPageToken);
-                        }, 150);
+                        }, apiNextPageMs);
                     } else {
                         resolve(results);
                     }
