@@ -33,6 +33,7 @@ const geofind = (function () {
         searchInput: true,
     };
 
+    const apiNextPageMs = 600;
     const delay15Sec = 15;
     const delay15SecMs = delay15Sec * 1000;
     const delay5Sec = 5;
@@ -1526,7 +1527,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= newVideoIds.length) {
                     console.log("finished videoIds");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1565,12 +1566,12 @@ const geofind = (function () {
 
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 }).fail(function (err) {
                     console.error(err);
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 });
             }
 
@@ -1607,7 +1608,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= newChannelIds.length) {
                     console.log("finished channelIds");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1635,12 +1636,12 @@ const geofind = (function () {
 
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 }).fail(function (err) {
                     console.error(err);
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 });
             }
 
@@ -1773,7 +1774,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= channelUsers.length) {
                     console.log("finished channelUsers");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1828,7 +1829,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= channelHandles.length) {
                     console.log("finished channelHandles");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1846,21 +1847,21 @@ const geofind = (function () {
                         channelIds.push(newParsed.value);
                         setTimeout(function () {
                             get(index + 1);
-                        }, 100);
+                        }, apiNextPageMs);
                     } else {
                         console.log('Could not resolve handle');
                         console.warn(newParsed);
 
                         setTimeout(function () {
                             get(index + 1);
-                        }, 100);
+                        }, apiNextPageMs);
                     }
                 }).fail(function (err) {
                     console.warn(err);
 
                     setTimeout(function () {
                         get(index + 1);
-                    }, 100);
+                    }, apiNextPageMs);
                 });
             }
 
@@ -1879,7 +1880,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= channelCustoms.length) {
                     console.log("finished channelCustoms");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1937,7 +1938,7 @@ const geofind = (function () {
             function get(index, slice) {
                 if (index >= channelIds.length) {
                     console.log("finished channelIds");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -1973,12 +1974,12 @@ const geofind = (function () {
 
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 }).fail(function (err) {
                     console.error(err);
                     setTimeout(function () {
                         get(index + slice, slice);
-                    }, 150);
+                    }, apiNextPageMs);
                 });
             }
 
@@ -2006,7 +2007,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= notYetRetrieved.length) {
                     console.log("finished notYetRetrieved");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -2033,11 +2034,15 @@ const geofind = (function () {
                         if (res.hasOwnProperty("nextPageToken")) {
                             paginate(res.nextPageToken);
                         } else {
-                            get(index + 1);
+                            setTimeout(function () {
+                                get(index + 1);
+                            }, apiNextPageMs);
                         }
                     }).fail(function (err) {
                         console.error(err);
-                        get(index + 1);
+                        setTimeout(function () {
+                            get(index + 1);
+                        }, apiNextPageMs);
                     });
                 }
 
@@ -2059,7 +2064,7 @@ const geofind = (function () {
             function get(index) {
                 if (index >= playlistIds.length) {
                     console.log("finished playlistIds");
-                    setTimeout(resolve, 250);
+                    setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
@@ -2090,17 +2095,17 @@ const geofind = (function () {
                         if (res.hasOwnProperty("nextPageToken")) {
                             setTimeout(function () {
                                 paginate(res.nextPageToken);
-                            }, 150);
+                            }, apiNextPageMs);
                         } else {
                             setTimeout(function () {
                                 get(index + 1);
-                            }, 150);
+                            }, apiNextPageMs);
                         }
                     }).fail(function (err) {
                         console.error(err);
                         setTimeout(function () {
                             get(index + 1);
-                        }, 150);
+                        }, apiNextPageMs);
                     });
                 }
 
