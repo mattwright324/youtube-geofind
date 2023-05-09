@@ -1,47 +1,71 @@
-/*
+/**
  * YouTube API v3
  * Reference documentation:
  * https://developers.google.com/youtube/v3/docs/
  *
- * youtube.ajax("youtube", data)
+ * youtube.ajax("videos", {
+ *     part: 'snippet'
+ * }).done(function (res) {
  *
- * @requires jquery.js
+ * }).fail(function (err) {
+ *
+ * });
+ *
+ * @requires jquery
  * @author mattwright324
  */
-let youtube = (function () {
-    let module = {};
+const youtube = (function ($) {
+    'use strict';
+
+    function makeStr(length) {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        let counter = 0;
+        while (counter < length) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            counter += 1;
+        }
+        return result;
+    }
+
+    const tempId = localStorage.getItem("tempId") || makeStr(40);
+    localStorage.setItem("tempId", tempId);
+
     let defaultKey = "";
     let currentKey = "";
-    module.setDefaultKey = function (key) {
-        defaultKey = key;
-        this.setKey(key);
-    };
-    module.getDefaultKey = function () {
-        return defaultKey;
-    };
-    module.setKey = function (key) {
-        if (defaultKey === "") {
-            this.setDefaultKey(key);
+
+    return {
+        setDefaultKey: function (key) {
+            defaultKey = key;
+            this.setKey(key);
+        },
+        getDefaultKey: function () {
+            return defaultKey;
+        },
+        setKey: function (key) {
+            if (defaultKey === "") {
+                this.setDefaultKey(key);
+            }
+            currentKey = key;
+        },
+        getKey: function () {
+            return currentKey;
+        },
+        ajax: function (type, data) {
+            if (!defaultKey && defaultKey === "" && !currentKey && currentKey === "") {
+                console.error("YouTube API Key Missing");
+            } else {
+                return $.ajax({
+                    cache: false,
+                    data: $.extend({key: currentKey, quotaUser: tempId}, data),
+                    dataType: "json",
+                    type: "GET",
+                    timeout: 5000,
+                    url: "https://www.googleapis.com/youtube/v3/" + type
+                });
+            }
         }
-        currentKey = key;
     };
-    module.getKey = function () {
-        return currentKey;
-    };
-    module.ajax = function (type, data) {
-        if (!defaultKey && defaultKey === "" && !currentKey && currentKey === "") {
-            console.error("YouTube API Key Missing");
-        } else {
-            return $.ajax({
-                cache: !1,
-                data: $.extend({key: currentKey}, data),
-                dataType: "json",
-                type: "GET",
-                timeout: 5e3,
-                url: "https://www.googleapis.com/youtube/v3/" + type
-            });
-        }
-    };
-    return module;
-}());
+}($));
 youtube.setDefaultKey(atob('QUl6YVN5QWEtbzU1YUlNdDRZQzBtaFB5cDhXZkdxbDVEVmdfZnA0'));
