@@ -1,4 +1,4 @@
-YouTube Geofind
+MW Geofind
 =
 
 Search YouTube for geographically tagged videos by location, topic, or channel. 
