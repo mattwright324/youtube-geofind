@@ -301,3 +301,7 @@ html.dark .context-menu-item {
     cursor: none !important;
     background-color: transparent !important;
 }
+
+.export {
+    display: none;
+}
