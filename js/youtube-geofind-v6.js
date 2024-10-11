@@ -1836,7 +1836,7 @@ const geofind = (function () {
                 console.log("handleChannelHandles.get(%s)", index)
 
                 $.ajax({
-                    url: "https://cors-proxy-mw324.herokuapp.com/https://www.youtube.com/@" + channelHandles[index],
+                    url: "https://cors.apps.mattw.io/https://www.youtube.com/@" + channelHandles[index],
                     dataType: 'html'
                 }).then(function (res) {
                     const pageHtml = $("<div>").html(res);
@@ -1887,7 +1887,7 @@ const geofind = (function () {
                 console.log("handleChannelCustoms.get(%s)", index)
 
                 $.ajax({
-                    url: "https://cors-proxy-mw324.herokuapp.com/https://www.youtube.com/c/" + channelCustoms[index],
+                    url: "https://cors.apps.mattw.io/https://www.youtube.com/c/" + channelCustoms[index],
                     dataType: 'html'
                 }).then(function (res) {
                     const pageHtml = $("<div>").html(res);

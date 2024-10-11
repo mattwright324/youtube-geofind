@@ -20,7 +20,6 @@ What's unique about this tool? How can you use it?
     - Location searching allows you to find videos with geotags within your chosen radius and timeframe.
     - Results can be directly opened in my YouTube Metadata tool to give all details about that video and its
       author.
-    - Export results in CSV and JSON and import back to view again
 3. Query API to share a search or linked custom search from your own site/tool
 
 ### Wiki
