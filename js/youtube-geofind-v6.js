@@ -1057,9 +1057,7 @@ const geofind = (function () {
             });
             console.log(parsed);
 
-            const channelUsers = [];
-            const channelHandles = [];
-            const channelCustoms = [];
+            const channelVanities = [];
             const channelIds = [];
             const channelIdsCreatedPlaylists = [];
             const playlistIds = [];
@@ -1076,12 +1074,12 @@ const geofind = (function () {
                     playlistIds.push(p.value);
                 } else if (p.type === "channel_id" && channelIds.indexOf(p.value) === -1) {
                     channelIds.push(p.value);
-                } else if (p.type === "channel_handle" && channelHandles.indexOf(p.value) === -1) {
-                    channelHandles.push(p.value);
-                } else if (p.type === "channel_custom" && channelCustoms.indexOf(p.value) === -1) {
-                    channelCustoms.push(p.value);
-                } else if (p.type === "channel_user" && channelUsers.indexOf(p.value) === -1) {
-                    channelUsers.push(p.value);
+                } else if (p.type === "channel_handle" && channelVanities.indexOf(p.original) === -1) {
+                    channelVanities.push(p.original);
+                } else if (p.type === "channel_custom" && channelVanities.indexOf(p.original) === -1) {
+                    channelVanities.push(p.original);
+                } else if (p.type === "channel_user" && channelVanities.indexOf(p.original) === -1) {
+                    channelVanities.push(p.original);
                 }
             });
 
@@ -1089,15 +1087,8 @@ const geofind = (function () {
                 subtext: 'Grabbing unique video ids'
             });
 
-            Promise.all([
-                handleChannelCustoms(channelCustoms, channelIds),
-                handleChannelHandles(channelHandles, channelIds),
-            ]).then(function () {
-                return Promise.all([
-                    // Channels condense to uploads playlist ids and channel ids
-                    handleChannelUsers(channelUsers, playlistIds, channelIdsCreatedPlaylists),
-                    handleChannelIds(channelIds, playlistIds, channelIdsCreatedPlaylists)
-                ]);
+            handleChannelVanities(channelVanities, channelIds).then(function () {
+                return handleChannelIds(channelIds, playlistIds, channelIdsCreatedPlaylists);
             }).then(function () {
                 // Grab playlist names
                 return handlePlaylistNames(playlistIds);
@@ -1763,93 +1754,36 @@ const geofind = (function () {
         });
     }
 
-    function handleChannelUsers(channelUsers, playlistIds, channelIdsCreatedPlaylists) {
-        return new Promise(function (resolve) {
-            if (channelUsers.length === 0) {
-                console.log("no channelUsers")
+    function handleChannelVanities(channelVanities, channelIds) {
+        return new Promise(function(resolve) {
+            if (channelVanities.length === 0) {
+                console.log("no channelVanities")
                 resolve();
                 return;
             }
 
             function get(index) {
-                if (index >= channelUsers.length) {
-                    console.log("finished channelUsers");
+                if (index >= channelVanities.length) {
+                    console.log("finished channelVanities");
                     setTimeout(resolve, apiNextPageMs);
                     return;
                 }
 
-                console.log("handleChannelUsers.get(%s)", index)
-                console.log(channelUsers[index])
-
-                youtube.ajax("channels", {
-                    part: "snippet,statistics,brandingSettings,contentDetails,localizations,status,topicDetails",
-                    forUsername: channelUsers[index]
-                }).done(function (res) {
-                    console.log(res);
-
-                    const channel = res?.items?.[0];
-                    if (!channel) {
-                        get(index + 1);
-                        return;
-                    }
-
-                    const channelId = channel?.id;
-                    rawChannelMap[channelId] = channel;
-
-                    if (channelIdsCreatedPlaylists.indexOf(channelId) === -1) {
-                        channelIdsCreatedPlaylists.push(channelId);
-                    }
-
-                    const uploadsPlaylistId = res?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-                    console.log(uploadsPlaylistId);
-
-                    if (playlistIds.indexOf(uploadsPlaylistId) === -1) {
-                        playlistIds.push(uploadsPlaylistId);
-                    }
-
-                    get(index + 1);
-                }).fail(function (err) {
-                    console.error(err);
-                    get(index + 1);
-                });
-            }
-
-            get(0);
-        });
-    }
-
-    function handleChannelHandles(channelHandles, channelIds) {
-        return new Promise(function (resolve) {
-            if (channelHandles.length === 0) {
-                console.log("no channelHandles")
-                resolve();
-                return;
-            }
-
-            function get(index) {
-                if (index >= channelHandles.length) {
-                    console.log("finished channelHandles");
-                    setTimeout(resolve, apiNextPageMs);
-                    return;
-                }
-
-                console.log("handleChannelHandles.get(%s)", index)
+                console.log("handleChannelVanities.get(" + index + ")")
 
                 $.ajax({
-                    url: "https://cors.apps.mattw.io/https://www.youtube.com/@" + channelHandles[index],
-                    dataType: 'html'
-                }).then(function (res) {
-                    const pageHtml = $("<div>").html(res);
-                    const channelId = pageHtml.find("meta[itemprop='channelId']").attr('content');
-
-                    const newParsed = shared.determineInput(channelId);
+                    url: "https://ytapi.apps.mattw.io/v1/resolve_url",
+                    dataType: "json",
+                    data: {url: channelVanities[index]}
+                }).then(function(res) {
+                    const newParsed = shared.determineInput(res.channelId);
                     if (newParsed.type === "channel_id") {
                         channelIds.push(newParsed.value);
                         setTimeout(function () {
                             get(index + 1);
                         }, apiNextPageMs);
                     } else {
-                        console.log('Could not resolve handle');
+                        console.log('Could not resolve custom url');
                         console.warn(newParsed);
 
                         setTimeout(function () {
@@ -1866,53 +1800,7 @@ const geofind = (function () {
             }
 
             get(0);
-        });
-    }
-
-    function handleChannelCustoms(channelCustoms, channelIds) {
-        return new Promise(function (resolve) {
-            if (channelCustoms.length === 0) {
-                console.log("no channelCustoms")
-                resolve();
-                return;
-            }
-
-            function get(index) {
-                if (index >= channelCustoms.length) {
-                    console.log("finished channelCustoms");
-                    setTimeout(resolve, apiNextPageMs);
-                    return;
-                }
-
-                console.log("handleChannelCustoms.get(%s)", index)
-
-                $.ajax({
-                    url: "https://cors.apps.mattw.io/https://www.youtube.com/c/" + channelCustoms[index],
-                    dataType: 'html'
-                }).then(function (res) {
-                    const pageHtml = $("<div>").html(res);
-                    const ogUrl = pageHtml.find("meta[property='og:url']").attr('content');
-                    console.log('Retrieved og:url ' + ogUrl);
-
-                    const newParsed = shared.determineInput(ogUrl);
-                    if (newParsed.type === "channel_id") {
-                        channelIds.push(newParsed.value);
-                        setTimeout(function () {get(index + 1);}, 100);
-                    } else {
-                        console.log('Could not resolve custom url');
-                        console.warn(newParsed);
-
-                        setTimeout(function () {get(index + 1);}, 100);
-                    }
-                }).fail(function (err) {
-                    console.warn(err);
-
-                    setTimeout(function () {get(index + 1);}, 100);
-                });
-            }
-
-            get(0);
-        });
+        })
     }
 
     function handleChannelIds(channelIds, playlistIds, channelIdsCreatedPlaylists) {
