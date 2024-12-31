@@ -180,6 +180,10 @@ const geofind = (function () {
         if (dimension === "3d") {
             properties.push(projection === "rectangular" ? "3d" : "360°");
         }
+        const paidProducts = video?.paidProductPlacementDetails?.hasPaidProductPlacement;
+        if (paidProducts) {
+            properties.push("paid promotion")
+        }
         const propertiesHtml = properties.length ?
             "<span class='tag'>" +
             properties.join("</span><span class='comma'>, </span><span class='tag'>") +
@@ -478,6 +482,7 @@ const geofind = (function () {
             controls.checkCC = $("#creativeCommons");
             controls.checkHQ = $("#highQuality");
             controls.checkDimension3d = $("#dimension3d");
+            controls.checkPaidProduct = $("#paidProduct");
             controls.checkClearResults = $("#clearOnSearch");
             controls.checkAbsoluteTimeframe = $("#absoluteTimeframe");
             controls.btnSubmit = $("#submit");
@@ -986,6 +991,9 @@ const geofind = (function () {
             if (controls.checkDimension3d.is(":checked")) {
                 params.videoDimension = "3d";
             }
+            if (controls.checkPaidProduct.is(":checked")) {
+                params.videoPaidProductPlacement = "true";
+            }
 
             let maxPages = Number(controls.comboPageLimit.find(":selected").val());
             if (!Number.isInteger(maxPages) || maxPages < 1) {
@@ -1397,6 +1405,9 @@ const geofind = (function () {
         if (controls.checkDimension3d.is(":checked")) {
             params["3d"] = true;
         }
+        if (controls.checkPaidProduct.is(":checked")) {
+            params["paidProduct"] = true;
+        }
 
         if (params.hasOwnProperty("timeframe")) {
             if (!absolute && params.timeframe !== 'custom') {
@@ -1532,7 +1543,7 @@ const geofind = (function () {
                 youtube.ajax("videos", {
                     part: "snippet,statistics,recordingDetails," +
                         "status,liveStreamingDetails,localizations," +
-                        "contentDetails,topicDetails",
+                        "contentDetails,topicDetails,paidProductPlacementDetails",
                     maxResults: 50,
                     id: ids.join(",")
                 }).done(function (res) {
@@ -1717,6 +1728,9 @@ const geofind = (function () {
             }
             if (parsedQuery["3d"] && controls.checkDimension3d.length) {
                 controls.checkDimension3d.prop("checked", parsedQuery["3d"] === "true");
+            }
+            if (parsedQuery["paidProduct"] && controls.checkPaidProduct.length) {
+                controls.checkPaidProduct.prop("checked", parsedQuery["paidProduct"] === "true");
             }
             if (parsedQuery.pages && controls.comboPageLimit.length) {
                 controls.comboPageLimit.val(parsedQuery.pages);
