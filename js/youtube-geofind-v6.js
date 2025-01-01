@@ -420,7 +420,7 @@ const geofind = (function () {
 
             controls.map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v12?optimize=true',
+                // style: 'mapbox://styles/mapbox/streets-v12?optimize=true',
                 center: swapCoords(randomCoords),
                 zoom: 8,
             });
