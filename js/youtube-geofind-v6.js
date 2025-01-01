@@ -787,10 +787,15 @@ const geofind = (function () {
             countdownCheck(delayFindMeKey, controls.btnFindMe, delay15SecMs, "findMe");
             countdownCheck(delaySearchInputKey, controls.btnSearchInput, delay15SecMs, "searchInput");
 
-            controls.geotagsTable = $("#geotagsTable").DataTable({
-                dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'<'#langFilterContainer'>><'col-sm-12 col-md-4'f>>" +
-                    "<'row'<'col-sm-12'tr>>" +
-                    "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            const langFilterDiv = document.createElement("div")
+            langFilterDiv.id = "langFilterContainer"
+
+            controls.geotagsTable = new DataTable("#geotagsTable", {
+                layout: {
+                    topStart: null,
+                    topEnd: null,
+                    top: ['pageLength', langFilterDiv, 'search']
+                },
                 iDisplayLength: 25,
                 columnDefs: [
                     {

@@ -9,15 +9,11 @@ body {
     /*resize: vertical;*/
 }
 
-html.dark .bg-dark {
-    background-color: rgb(34, 34, 34)!important;
-}
-
 label[for] {
     user-select: none;
 }
 
-html.dark .context-menu-content {
+html[data-bs-theme='dark'] .context-menu-content {
     color: black;
 }
 
@@ -130,7 +126,7 @@ button.loading .text {
 }
 
 .tag {
-    background-color: lightgray;
+    background-color: gray;
     padding: 2px 5px;
     border-radius: 5px;
     margin-right: 4px;
@@ -206,51 +202,66 @@ html.channel .absolute-timeframe {
 }
 
 /* Dark mode tweaks */
-html.dark .tag {
+html[data-bs-theme='dark'] .tag {
     background-color: gray;
 }
 
-html.dark .btn-primary {
+html[data-bs-theme='dark'] .btn-primary {
     background-color: #0d6efd;
     border-color: #0d6efd;
 }
 
-html.dark a {
+html[data-bs-theme='dark'] a {
     color: lightskyblue;
 }
 
-html.dark .progress-bar {
+html[data-bs-theme='dark'] .nav-link {
+    color: rgba(250,250,250,.55);
+}
+html[data-bs-theme='dark'] .nav-link:hover {
+    color: rgba(250,250,250,.7);
+}
+
+html[data-bs-theme='dark'] .progress-bar {
     color: #fff;
 }
 
-html.dark .gm-style-iw {
+.progress-bar.error {
+    background-color:  #e67e22;
+}
+
+html[data-bs-theme='dark'] .progress-bar.error {
+    background-color:  #ca6f1e;
+}
+
+html[data-bs-theme='dark'] .gm-style-iw {
     background-color: rgb(34, 34, 34);
     box-shadow: 0 2px 7px 1px rgba(255,255,255,0.3);
 }
 
-html.dark .gm-style .gm-style-iw-t::after {
+html[data-bs-theme='dark'] .gm-style .gm-style-iw-t::after {
     background: rgb(34, 34, 34)
 }
 
-html.dark .gm-ui-hover-effect {
+html[data-bs-theme='dark'] .gm-ui-hover-effect {
     background: rgba(255,255,255,0.3)!important;
     border-bottom-left-radius: 12px;
     filter: invert(1);
 }
 
-html.dark .context-menu-content {
+html[data-bs-theme='dark'] .context-menu-content {
     color: #fff
 }
 
 /* Darkmode Scrollbar color fix for Chrome */
-html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track, html.dark .gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece {
+html[data-bs-theme='dark'] .gm-style .gm-style-iw-d::-webkit-scrollbar-track, html[data-bs-theme='dark'] .gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece {
     background-color: rgb(34, 34, 34);
 }
 
-html.dark .poi-info-window div, html.dark .poi-info-window a {
+html[data-bs-theme='dark'] .poi-info-window div, html[data-bs-theme='dark'] .poi-info-window a {
     background: initial;
 }
-html.dark .poi-info-window div {
+html[data-bs-theme='dark'] .poi-info-window div {
     color: white;
 }
 
@@ -263,28 +274,28 @@ html.dark .poi-info-window div {
     max-width: 700px !important;
     font-size: 14px;
 }
-html.dark .mapboxgl-popup-content {
+html[data-bs-theme='dark'] .mapboxgl-popup-content {
     background-color: rgb(34, 34, 34) !important;
 }
-html.dark .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
-html.dark .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
-html.dark .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
     border-top-color: rgb(34, 34, 34) !important;
 }
-html.dark .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
-html.dark .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
-html.dark .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+html[data-bs-theme='dark'] .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
     border-bottom-color: rgb(34, 34, 34) !important;
 }
-html.dark .mapboxgl-popup-close-button {
+html[data-bs-theme='dark'] .mapboxgl-popup-close-button {
     background-color: transparent !important;
     color: white !important;
 }
 
-html.dark .context-menu-list {
+html[data-bs-theme='dark'] .context-menu-list {
     background-color: rgb(34, 34, 34) !important;
 }
-html.dark .context-menu-item {
+html[data-bs-theme='dark'] .context-menu-item {
     background-color: rgb(34, 34, 34) !important;
     color: white !important;
 }
@@ -312,7 +323,6 @@ Use Stylus extension!
 https://chrome.google.com/webstore/detail/stylus/clngdbkpkpeebahjckkjfobafhncgmne
 https://addons.mozilla.org/en-US/firefox/addon/styl-us/
 
-.export {
-    display: revert!important;
-}
+Install fix
+https://mattw.io/youtube-geofind/css/export.user.css
 */
